@@ -1,4 +1,4 @@
-### Loading
+### Initializing
 ```python
 from metabase_api import Metabase_API
 
