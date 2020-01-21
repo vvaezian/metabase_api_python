@@ -1,3 +1,8 @@
+### Installation
+```python
+pip install metabase-api
+```
+
 ### Initializing
 ```python
 from metabase_api import Metabase_API
