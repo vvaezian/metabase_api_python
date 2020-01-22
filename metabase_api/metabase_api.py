@@ -14,13 +14,13 @@ class Metabase_API():
   
   
   def authenticate(self):
-    """Get a Session ID"""
+    """Gets a Session ID"""
     conn_header = {'username':self.email,
                    'password':self.password}
 
     res = requests.post(self.domain + '/api/session', json = conn_header)
     if not res.ok:
-      raise Exception(res)
+      raise Excecption(res)
     
     self.session_id = res.json()['id']
     self.header = {'X-Metabase-Session':self.session_id}
@@ -62,6 +62,7 @@ class Metabase_API():
     self.validate_session()
     res = requests.delete(self.domain + endpoint, headers=self.header, **kwargs)
     return res.status_code
+  
   
   
   ##### Custom Functions #####
@@ -144,13 +145,22 @@ class Metabase_API():
     return card_IDs[0]
   
   
+  def get_collection_name(self, collection_id):
+    collections = self.get("/api/collection/")
+    collection_name = [ i.get('slug', 'root') for i in collections if i['id'] == collection_id ]
+    if len(collection_name) == 0:
+      raise ValueError('There is no collection with the id {}'.format(collection_id))
+
+    return collection_name[0]
+
+  
   def get_table_name(self, table_id):
     tables = self.get("/api/table/")
-    table_names = [i['name'] for i in tables if i['id'] == table_id]
-    if len(table_names) == 0:
+    table_name = [i['name'] for i in tables if i['id'] == table_id]
+    if len(table_name) == 0:
       raise ValueError('There is no table with the id {}'.format(table_id))
     
-    return table_names[0]
+    return table_name[0]
   
   
   @staticmethod
@@ -160,7 +170,7 @@ class Metabase_API():
   
   
   def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False):
-    '''return a dictionary with col_id as key and col_name as value, for the given table_id/table_name in the given db_id/db_name'''
+    '''returns a dictionary with col_id key and col_name value, for the given table_id/table_name in the given db_id/db_name'''
     if not db_id:
       if not db_name:
         raise ValueError('Either the name or id of the db must be provided.')
@@ -196,34 +206,29 @@ class Metabase_API():
     custom_json -- key-value pairs that can provide some or all the data needed for creating the card (default None).
                    If you are providing only this argument, the keys 'name', 'dataset_query' and 'display' are required
                    (https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#post-apicard).
-                   Although the key 'visualization_settings' is also required for the endpoint, but since it can be an 
-                   empty dict ({}), the function adds it automatically if it is not part of the keys in the provided json.
+                   Although the key 'visualization_settings' is also required for the endpoint, since it can be an 
+                   empty dict ({}) the function adds it automatically if it is not part of the keys in the provided json.
     verbose -- print extra information (default False) 
     """
-    complete_json = False
-    
     if custom_json:
-      if 'name' in custom_json and 'dataset_query' in custom_json and 'display' in custom_json:
-        complete_json = True
-      else:
-        print('The provided json is detected as a partial json because not all the following keys are defined:\n "name", "dataset_query", "display"')
-    
-    if complete_json:
-      # Adding visualization_settings if it is not present in the custom_json
-      if 'visualization_settings' not in custom_json:
-        custom_json['visualization_settings'] = {}
-        
-      self.verbose_print(verbose, "Creating the card using only the provided custom_json ...") 
-      res = self.post("/api/card/", json=custom_json)
-      self.verbose_print(verbose, 'Card Created Successfully.') if res else print('Card Creation Failed.')
+      complete_json = True
+      for item in ['name', 'dataset_query', 'display']:
+        if item not in custom_json:
+          complete_json = False
+          self.verbose_print(verbose, 'The provided json is detected as partial.')
+          break
       
-      return res
+      if complete_json:
+        # Adding visualization_settings if it is not present in the custom_json
+        if 'visualization_settings' not in custom_json:
+          custom_json['visualization_settings'] = {}
+          
+        self.verbose_print(verbose, "Creating the card using only the provided custom_json ...") 
+        res = self.post("/api/card/", json=custom_json)
+        self.verbose_print(verbose, 'Card Created Successfully.') if res else print('Card Creation Failed.')
+        
+        return res
     
-    ### not comple_json 
-
-    if card_name is None:
-      raise ValueError('Please provide a name for the card.')
-
     # getting table_id
     if not table_id:
       if not table_name:
@@ -311,7 +316,7 @@ class Metabase_API():
     self.verbose_print(verbose, "Creating the card ...") 
     res = self.post("/api/card/", json=json)
     
-    # getting collection_name (will be used in the final message)
+    # getting collection_name to be used in the final message
     if not collection_name:
       if not collection_id:
         collection_name = 'root'
