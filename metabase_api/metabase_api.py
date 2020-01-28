@@ -20,7 +20,7 @@ class Metabase_API():
 
     res = requests.post(self.domain + '/api/session', json = conn_header)
     if not res.ok:
-      raise Excecption(res)
+      raise Exception(res)
     
     self.session_id = res.json()['id']
     self.header = {'X-Metabase-Session':self.session_id}
@@ -98,6 +98,18 @@ class Metabase_API():
       raise ValueError('There is no DB with the name {}'.format(db_name))
     
     return db_IDs[0]
+  
+  
+  def get_db_id_from_table_name(self, table_name):
+    tables = [(i['name'], i['db']['id']) for i in self.get("/api/table/") if i['name'] == table_name]
+    
+    if len(tables) > 1:
+      raise KeyError('There is more than one DB containing the table name {}. Please provide the DB name or id as well.'.format(table_name))
+    if len(tables) == 0:
+      raise ValueError('There is no DB containing the table {}'.format(table_name))
+    
+    return tables[0][1]
+  
   
   
   def get_table_id(self, table_name, db_name=None, db_id=None):
@@ -237,6 +249,7 @@ class Metabase_API():
         if not db_name:
           self.verbose_print(verbose, "Getting table_id ...")
           table_id = self.get_table_id(table_name)
+          db_id = self.get_db_id_from_table_name(table_name)
         else:
           self.verbose_print(verbose, "Getting db_id ...")
           db_id = self.get_db_id(db_name)
@@ -324,9 +337,8 @@ class Metabase_API():
         collection_name = self.get_collection_name(collection_id)
     
     if res and not res.get('error'):
-      self.verbose_print(verbose, "The card '{}' was created successfully in the collection '{}'.".format(card_name, 
-                                                                                                          collection_name))
-      return res
+      self.verbose_print(verbose, "The card '{}' was created successfully in the collection '{}'.".format(card_name,                                                                                       collection_name))
+      #return res
     else:
       print('Card Creation Failed.\n', res)
       return res
