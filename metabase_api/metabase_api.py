@@ -337,7 +337,7 @@ class Metabase_API():
         collection_name = self.get_collection_name(collection_id)
     
     if res and not res.get('error'):
-      self.verbose_print(verbose, "The card '{}' was created successfully in the collection '{}'.".format(card_name,                                                                                       collection_name))
+      self.verbose_print(verbose, "The card '{}' was created successfully in the collection '{}'.".format(card_name, collection_name))
       #return res
     else:
       print('Card Creation Failed.\n', res)
