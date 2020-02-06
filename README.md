@@ -15,7 +15,7 @@ Calling Metabase API endpoints (documented [here](https://github.com/metabase/me
 E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#get-apidatabase) `GET /api/database/`, use `mb.get('/api/database/')`.
 
 ### Custom Functions
-There are several custom functions such as *move_to_archive, get_collection_id, get_db_id*, ..., the main custom function is the *create_card* function. 
+There are several custom functions such as *move_to_archive, get_collection_id, get_db_id*, .... the main custom function is the *create_card* function. We need to tell the function which table to use as the data source 
 
 ## Notes
 - There are also two other Python wrappers for Metabase API [here](https://github.com/mertsalik/metabasepy) and [here](https://github.com/STUnitas/metabase-py).
