@@ -16,7 +16,7 @@ E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/doc
 
 ### Custom Functions
 There are several custom functions such as *move_to_archive, get_collection_id, get_db_id*, .... the main custom function is the *create_card* function.  
-#### **create_card** function
+#### `create_card` function
 - We need to provide a name for the card, tell the function which table to use as the source of data and optionally say in which collection to save the card (if no collection is given the card is saved in the root collection).  
 ```python
 mb.create_card(card_name='test_card', table_nam='mySourceTable')
