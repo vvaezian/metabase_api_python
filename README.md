@@ -26,6 +26,8 @@ mb.create_card(card_name='test_card', table_nam='mySourceTable')
 mb.create_card(custom_json=myCustomJson)
 ```
 - Using the `column_order` parameter we can specify how the order of column should be in the created card. Accepted values are *'alphabetical', 'db_table_order'* (default) or a list of column names.
+```python
 mb.create_card(card_name='test_card', table_nam='mySourceTable', column_order=[myCol5, myCol3, myCol8])
+```
 ## Notes
 - There are also two other Python wrappers for Metabase API [here](https://github.com/mertsalik/metabasepy) and [here](https://github.com/STUnitas/metabase-py).
