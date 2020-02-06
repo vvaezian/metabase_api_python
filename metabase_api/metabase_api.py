@@ -200,7 +200,7 @@ class Metabase_API():
 
   
   def create_card(self, card_name=None, collection_name=None, collection_id=None, 
-                  db_name=None, table_name=None, db_id=None, table_id=None, 
+                  db_name=None, db_id=None, table_name=None,  table_id=None, 
                   column_order='db_table_order', custom_json=None, verbose=False):
     """Create a card using the given arguments utilizing the endpoint 'POST /api/card/'.
     
