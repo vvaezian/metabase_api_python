@@ -10,7 +10,7 @@ from metabase_api import Metabase_API
 mb = Metabase_API('https://...', 'username', 'password')  # if password is not given, it will prompt for password
 ```
 ## Functions
-### Rest Methods (get, post, put, delete)
+### REST functions (get, post, put, delete)
 Calling Metabase API endpoints (documented [here](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md)) can be done using the corresponding REST function in the wrapper.  
 E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#get-apidatabase) `GET /api/database/`, use `mb.get('/api/database/')`.
 
