@@ -219,7 +219,7 @@ class Metabase_API():
                    If you are providing only this argument, the keys 'name', 'dataset_query' and 'display' are required
                    (https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#post-apicard).
                    Although the key 'visualization_settings' is also required for the endpoint, since it can be an 
-                   empty dict ({}) the function adds it automatically if it is not part of the keys in the provided json.
+                   empty dict ({}), if it is absent in the provided json, the function adds it automatically. 
     verbose -- print extra information (default False) 
     """
     if custom_json:
