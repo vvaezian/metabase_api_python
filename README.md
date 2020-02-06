@@ -1,4 +1,4 @@
-## Installation
+### Installation
 ```python
 pip install metabase-api
 ```
