@@ -21,7 +21,7 @@ E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/doc
 ### Custom Functions
 There are several custom functions such as *move_to_archive, get_collection_id, get_db_id*, .... the main custom function is the *create_card* function which is described below.  
 #### `create_card` function
-- You need to provide a name for the card, tell the function which table to use as the source of data and optionally say in which collection to save the card (if no collection is given the card is saved in the root collection).  
+- Specify the name to be used for the card, which table to use as the source of data and where (i.e. which collection) to save the card (default is the root collection).  
 ```python
 mb.create_card(card_name='test_card', table_name='mySourceTable')
 ```
@@ -39,5 +39,6 @@ raw_json = ''' {"name":"test","dataset_query":{"database":165,"query":{"fields":
 myJson = mb.make_json(raw_json, prettyprint=True)
 mb.create_card('test_card2', table_name='mySourceTable', custom_json={'visualization_settings':myJson['visualization_settings']})
 ```
+For the complete list of arguments see the [definition](https://github.com/vvaezian/metabase_api_python/blob/8decd21c0e03aeb0f5d4243e081c1bc1a08d627b/metabase_api/metabase_api.py#L202) of the function.
 ## Notes
 - There are also two other Python wrappers for Metabase API [here](https://github.com/mertsalik/metabasepy) and [here](https://github.com/STUnitas/metabase-py).
