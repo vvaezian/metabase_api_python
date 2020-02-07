@@ -21,7 +21,7 @@ There are several custom functions such as *move_to_archive, get_collection_id, 
 #### `create_card` function
 - You need to provide a name for the card, tell the function which table to use as the source of data and optionally say in which collection to save the card (if no collection is given the card is saved in the root collection).  
 ```python
-mb.create_card(card_name='test_card', table_nam='mySourceTable')
+mb.create_card(card_name='test_card', table_name='mySourceTable')
 ```
 - All or part of the function arguments and many more information (e.g. visualisation settings) can be provided to the function in a dictionary (using the *custom_json* parameter).
 ```python
