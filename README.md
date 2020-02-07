@@ -1,4 +1,5 @@
 [![PyPI version](https://badge.fury.io/py/metabase-api.svg)](https://badge.fury.io/py/metabase-api)
+[![HitCount](http://hits.dwyl.com/vvaezian/metabase_api_python.svg)](http://hits.dwyl.com/vvaezian/metabase_api_python)
 
 ## Installation
 ```python
