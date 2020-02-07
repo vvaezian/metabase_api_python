@@ -207,7 +207,6 @@ class Metabase_API():
     Keyword arguments:
     card_name -- the name used to create the card (default None) 
     collection_name -- name of the collection to place the card (default None).
-                       Use 'root' to create the card in the root.
     collection_id -- id of the collection to place the card (default None) 
     db_name -- name of the db that is used as the source of data (default None) 
     table_name -- name of the table used as the source of data (default None) 
