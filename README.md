@@ -1,3 +1,5 @@
+[![PyPI version](https://badge.fury.io/py/metabase-api.svg)](https://badge.fury.io/py/metabase-api)
+
 ## Installation
 ```python
 pip install metabase-api
