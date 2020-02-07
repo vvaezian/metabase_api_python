@@ -27,7 +27,7 @@ mb.create_card(card_name='test_card', table_name='mySourceTable')
 ```
 - Using the `column_order` parameter we can specify how the order of columns should be in the created card. Accepted values are *'alphabetical', 'db_table_order'* (default), or a list of column names.
 ```python
-mb.create_card(card_name='test_card', table_nam='mySourceTable', column_order=['myCol5', 'myCol3', 'myCol8'])
+mb.create_card(card_name='test_card', table_name='mySourceTable', column_order=['myCol5', 'myCol3', 'myCol8'])
 ```
 - All or part of the function arguments and many more information (e.g. visualisation settings) can be provided to the function in a dictionary (using the *custom_json* parameter).
 ```python
