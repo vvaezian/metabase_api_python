@@ -14,7 +14,7 @@ class Metabase_API():
   
   
   def authenticate(self):
-    """Gets a Session ID"""
+    """Get a Session ID"""
     conn_header = {'username':self.email,
                    'password':self.password}
 
@@ -27,7 +27,7 @@ class Metabase_API():
   
   
   def validate_session(self):
-    """Gets a new session ID if the previous one has expired"""
+    """Get a new session ID if the previous one has expired"""
     res = requests.get(self.domain + '/api/user/current', headers = self.header)
     
     if res.ok:  # 200
@@ -182,7 +182,7 @@ class Metabase_API():
   
   
   def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False):
-    '''returns a dictionary with col_id key and col_name value, for the given table_id/table_name in the given db_id/db_name'''
+    '''Return a dictionary with col_id key and col_name value, for the given table_id/table_name in the given db_id/db_name'''
     if not db_id:
       if not db_name:
         raise ValueError('Either the name or id of the db must be provided.')
@@ -272,7 +272,12 @@ class Metabase_API():
     
     if type(column_order) == list:
       column_name_id_dict = self.get_columns_name_id(db_id=db_id, table_id=table_id, table_name=table_name, verbose=verbose)
-      column_id_list = [column_name_id_dict[i] for i in column_order]
+      try:
+        column_id_list = [column_name_id_dict[i] for i in column_order]
+      except KeyError as e:
+        print('The column name {} is not in the table {}. \nThe card creation failed!'.format(e, table_name))
+        return
+
       column_id_list_str = [['field-id', i] for i in column_id_list]
 
     elif column_order == 'db_table_order':  # default
@@ -342,3 +347,15 @@ class Metabase_API():
     else:
       print('Card Creation Failed.\n', res)
       return res
+  
+  
+  @staticmethod
+  def make_json(raw_json, prettyprint=False):
+    """Turn the string copied from the Inspect->Network window into a Dict."""
+    json = eval(raw_json.replace('null', 'None') \
+                        .replace('false', 'False')
+               )
+    if prettyprint:
+      import pprint
+      pprint.pprint(json)
+    return json
