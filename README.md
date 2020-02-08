@@ -29,7 +29,7 @@ mb.create_card(card_name='test_card', table_name='mySourceTable')
 ```python
 mb.create_card(card_name='test_card', table_name='mySourceTable', column_order=['myCol5', 'myCol3', 'myCol8'])
 ```
-- All or part of the function arguments and many more information (e.g. visualisation settings) can be provided to the function in a dictionary (using the *custom_json* parameter).
+- All or part of the function parameters and many more information (e.g. visualisation settings) can be provided to the function in a dictionary (using the *custom_json* parameter).
 ```python
 mb.create_card(custom_json=myCustomJson)
 ```
@@ -39,6 +39,6 @@ raw_json = ''' {"name":"test","dataset_query":{"database":165,"query":{"fields":
 myJson = mb.make_json(raw_json)  # setting 'prettyprint=True' will print the output in a structured format.
 mb.create_card('test_card2', table_name='mySourceTable', custom_json={'visualization_settings':myJson['visualization_settings']})
 ```
-For the complete list of arguments see the [definition](https://github.com/vvaezian/metabase_api_python/blob/8decd21c0e03aeb0f5d4243e081c1bc1a08d627b/metabase_api/metabase_api.py#L202) of the function.
+For the complete list of parameters see the [definition](https://github.com/vvaezian/metabase_api_python/blob/8decd21c0e03aeb0f5d4243e081c1bc1a08d627b/metabase_api/metabase_api.py#L202) of the function.
 ## Notes
 - There are also two other Python wrappers for Metabase API [here](https://github.com/mertsalik/metabasepy) and [here](https://github.com/STUnitas/metabase-py).
