@@ -23,7 +23,7 @@ There are several custom functions such as *move_to_archive, get_collection_id, 
 #### `create_card` function
 - Specify the name to be used for the card, which table to use as the source of data and where (i.e. which collection) to save the card (default is the root collection).  
 ```python
-mb.create_card(card_name='test_card', table_name='mySourceTable')
+mb.create_card(card_name='test_card', table_name='mySourceTable')  # Setting `verbose=True` will print extra information while creating the card.
 ```
 - Using the `column_order` parameter we can specify how the order of columns should be in the created card. Accepted values are *'alphabetical', 'db_table_order'* (default), or a list of column names.
 ```python
