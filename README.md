@@ -19,7 +19,7 @@ Calling Metabase API endpoints (documented [here](https://github.com/metabase/me
 E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#get-apidatabase) `GET /api/database/`, use `mb.get('/api/database/')`.
 
 ### Custom Functions
-There are several custom functions such as *move_to_archive, get_collection_id, get_db_id*, .... the main custom function is the *create_card* function which is described below.  
+There are several custom functions such as *move_to_archive, get_collection_id, get_db_id*, ... . the main custom function is the *create_card* function which is described below.  
 #### `create_card` function
 - Specify the name to be used for the card, which table to use as the source of data and where (i.e. which collection) to save the card (default is the root collection).  
 ```python
