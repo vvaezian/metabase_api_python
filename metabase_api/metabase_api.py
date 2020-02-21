@@ -352,7 +352,8 @@ class Metabase_API():
   def make_json(raw_json, prettyprint=False):
     """Turn the string copied from the Inspect->Network window into a Dict."""
     json = eval(raw_json.replace('null', 'None') \
-                        .replace('false', 'False')
+                        .replace('false', 'False') \
+                        .replace('true', 'True')
                )
     if prettyprint:
       import pprint
