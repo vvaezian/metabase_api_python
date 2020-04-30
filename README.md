@@ -52,7 +52,7 @@ mb.copy_card(source_card_name='test_card', destination_collection_id=123)
 For the complete list of parameters see the definition of the function.
 
 #### `copy_pulse`
-Similar to `copy_card` but now for pulses.
+Similar to `copy_card` but for pulses.
 
 #### `copy_dashboard`
 You can determine whether you want to *deepcopy* the dashboard or not (default False).  
