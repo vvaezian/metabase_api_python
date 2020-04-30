@@ -56,7 +56,7 @@ Similar to `copy_card` but now for pulses.
 
 #### `copy_dashboard`
 You can determine whether you want to *deepcopy* the dashboard or not (default False).  
-If you don't deepcopy (default behaviour), the duplicated dashboard will use the same cards as the original dashboard. Therefore making change in one dashboard changes the other dashboard as well.  
+If you don't deepcopy, the duplicated dashboard will use the same cards as the original dashboard. Therefore making a change in one dashboard changes the other dashboard as well.  
 When you deepcopy a dashboard the cards of the original dashboard are duplicated and these cards are used in the duplicate dashboard. Therefore if you make changes in one dashboard, the other one is not affected.  The duplicated cards are saved in a collection called `[source_dashboard_name]'s cards` and placed in the same collection as the duplicated dashboard.
 ```python
 mb.copy_dashboard(source_dashboard_id=123, destination_collection_id=456, deepcopy=True)
