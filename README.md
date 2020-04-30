@@ -22,6 +22,7 @@ E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/doc
 You usually don't need to deal with these functions directly (e.g. [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/master/metabase_api/metabase_api.py#L76))
 
 ### Custom Functions
+
 - [create_card](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L202)
 - [copy_card](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L356)
 - [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L411)
@@ -29,6 +30,8 @@ You usually don't need to deal with these functions directly (e.g. [get_item_id]
 - [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L545)
 - [make_json](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L645)
 - [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L657)
+
+*For a complete list of functions parameters see the functions definitions using the above links. Here we provide a short description:*
 
 #### `create_card`
 Specify the name to be used for the card, which table (name/id) to use as the source of data and where (i.e. which collection (name/id)) to save the card (default is the root collection).  
@@ -49,10 +52,12 @@ At the minimum you need to provide the name/id of the card to copy and the name/
 ```python
 mb.copy_card(source_card_name='test_card', destination_collection_id=123)
 ```
-For the complete list of parameters see the definition of the function.
 
 #### `copy_pulse`
 Similar to `copy_card` but for pulses.
+```python
+mb.copy_pulse(source_pulse_name='test_pulse', destination_collection_id=123)
+```
 
 #### `copy_dashboard`
 You can determine whether you want to *deepcopy* the dashboard or not (default False).  
@@ -63,7 +68,7 @@ mb.copy_dashboard(source_dashboard_id=123, destination_collection_id=456, deepco
 ```
 
 #### `copy_collection`
-Copies all the items in the given collection to the given `destination_parent_collection`. You can determine whether to deepcopy the dashboards.
+Copies all the items in the given collection (name/id) into the given `destination_parent_collection` (name/id). You can determine whether to deepcopy the dashboards.
 ```python
 mb.copy_collection(source_collection_id=123, destination_parent_collection_id=456, deepcopy_dashboards=True)
 ```
