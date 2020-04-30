@@ -72,7 +72,7 @@ Copies all the items in the given collection (name/id) into the given `destinati
 ```python
 mb.copy_collection(source_collection_id=123, destination_parent_collection_id=456, deepcopy_dashboards=True, verbose=True)
 ```
-You can also use postfixes for the names of copied child items.
+You can also specify a postfix for the names of copied child items.
 
 #### `make_json`
 It's very helpful to use the Inspect tool of the browser (network tab) to see what Metabase is doing. You can then use the generated json code to build your automation. To turn the generated json in the browser into a Python dictionary, you can copy the code, paste it into triple quotes (`'''  '''`) and apply the function `make_json`:
