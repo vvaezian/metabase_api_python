@@ -431,7 +431,7 @@ class Metabase_API():
       if not source_pulse_name:
         raise ValueError('Either the name or id of the source pulse must be provided.')
       else:
-        source_pulse_id = self.get_item_id(item_type=pulse,item_name=source_pulse_name, 
+        source_pulse_id = self.get_item_id(item_type='pulse',item_name=source_pulse_name, 
                                            collection_id=source_collection_id, 
                                            collection_name=source_collection_name)
     
@@ -462,7 +462,7 @@ class Metabase_API():
                      source_collection_name=None, source_collection_id=None,
                      destination_dashboard_name=None, 
                      destination_collection_name=None, destination_collection_id=None,
-                     deepcopy_dashboards=False, postfix=''):
+                     deepcopy=False, postfix=''):
     """Copy the dashboard with the given name/id to the given destination collection. 
     
     Keyword arguments:
@@ -474,9 +474,9 @@ class Metabase_API():
                                   If None, it will use the name of the source dashboard + postfix.
     destination_collection_name -- name of the collection to copy the dashboard to (default None) 
     destination_collection_id -- id of the collection to copy the dashboard to (default None) 
-    deepcopy_dashboards -- whether to duplicate the cards inside dashboards (default False).
-                           If True, puts the duplicated cards in a collection called 
-                           "[dashboard_name]'s duplicated cards" in the same path as the duplicated dashboard.
+    deepcopy -- whether to duplicate the cards inside the dashboard (default False).
+                If True, puts the duplicated cards in a collection called "[dashboard_name]'s duplicated cards" 
+                in the same path as the duplicated dashboard.
     postfix -- if destination_dashboard_name is None, adds this string to the end of source_dashboard_name 
                to make destination_dashboard_name
     """
@@ -506,7 +506,7 @@ class Metabase_API():
     dup_dashboard_id = res['id']
     
     ### deepcopy
-    if deepcopy_dashboards:
+    if deepcopy:
       # Getting the source dashboard info
       source_dashboard = self.get('/api/dashboard/{}'.format(source_dashboard_id))
       
@@ -586,7 +586,7 @@ class Metabase_API():
     source_collection = self.get('/api/collection/{}'.format(source_collection_id))
     
     ### copying the items of the source collection to the new collection
-    items = mb.get('/api/collection/{}/items'.format(source_collection_id))
+    items = self.get('/api/collection/{}/items'.format(source_collection_id))
     
     for item in items:
       
@@ -598,7 +598,7 @@ class Metabase_API():
         self.verbose_print(verbose, 'Copying the collection {} ...'.format(collection_name))
         
         # creating an empty collection in the destination
-        res = mb.post('/api/collection/', json={'name':collection_name, 
+        res = self.post('/api/collection/', json={'name':collection_name, 
                                                 'color':'#509EE3', 
                                                 'parent_id':destination_parent_collection_id})
         created_collection_id = res['id']
@@ -618,7 +618,7 @@ class Metabase_API():
         self.copy_dashboard(source_dashboard_id=dashboard_id,
                             destination_collection_id=destination_parent_collection_id,
                             destination_dashboard_name=destination_dashboard_name,
-                            deepcopy_dashboards=deepcopy_dashboards)
+                            deepcopy=deepcopy_dashboards)
       
       ### copying a card
       if item['model'] == 'card':
@@ -666,3 +666,4 @@ class Metabase_API():
     self.verbose_print(verbose, 'Successfully Archived.') if res == 202 else print('Archiving Failed.')
     
     return res
+  
