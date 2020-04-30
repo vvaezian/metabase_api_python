@@ -512,7 +512,7 @@ class Metabase_API():
       
       # creating an empty collection to copy the cards into it
       res = self.post('/api/collection/', 
-                      json={'name':source_dashboard['name'] + "'s cards", 
+                      json={'name':destination_dashboard_name + "'s cards", 
                             'color':'#509EE3', 
                             'parent_id':destination_collection_id})
       cards_collection_id = res['id']
