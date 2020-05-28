@@ -356,8 +356,8 @@ class Metabase_API():
     column_name -- name of the column used for filtering.
     column_values -- list of values for filtering in the given column.
     segment_description -- description of the segment (default '') 
-    table_name -- name of the table used as the source of data (default None)  
-    table_id -- id of the table used as the source of data (default None) 
+    table_name -- name of the table used for creating the segmnet on it (default None)  
+    table_id -- id of the table used for creating the segmnet on it (default None)  
     """
     # making sure we have the data needed
     if not table_name and not table_id:
