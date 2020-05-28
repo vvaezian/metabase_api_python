@@ -19,7 +19,7 @@ Calling Metabase API endpoints (documented [here](https://github.com/metabase/me
 E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#get-apidatabase) `GET /api/database/`, use `mb.get('/api/database/')`.
 
 ### Auxilliary Functions
-You usually don't need to deal with these functions directly (e.g. [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L87),[get_item_name](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L76))
+You usually don't need to deal with these functions directly (e.g. [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L87), [get_item_name](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L76))
 
 ### Custom Functions
 
@@ -46,6 +46,11 @@ mb.create_card(card_name='test_card', table_name='mySourceTable', column_order=[
 All or part of the function parameters and many more information (e.g. visualisation settings) can be provided to the function in a dictionary, using the *custom_json* parameter. (also see the `make_json` function below)
 ```python
 mb.create_card(custom_json=myCustomJson)
+```
+
+#### `create_segment`
+```python
+mb.create_segment(segment_name='test_segment', column_name='user_id', column_values=[123, 456, 789], table_name='user_table')
 ```
 
 #### `copy_card`
