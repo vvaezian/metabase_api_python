@@ -348,7 +348,7 @@ class Metabase_API():
   
   
   def create_segment(self, segment_name, column_name, column_values, 
-                     segment_description='', table_name=None, table_id=None):
+                     segment_description='', table_name=None, table_id=None, return_segment=False):
     """Create a segment using the given arguments utilizing the endpoint 'POST /api/segment/'. 
     
     Keyword arguments:
@@ -358,6 +358,7 @@ class Metabase_API():
     segment_description -- description of the segment (default '') 
     table_name -- name of the table used for creating the segmnet on it (default None)  
     table_id -- id of the table used for creating the segmnet on it (default None)  
+    return_segment --  whather to return the created segment info (default False)
     """
     # making sure we have the data needed
     if not table_name and not table_id:
@@ -382,7 +383,8 @@ class Metabase_API():
     
     # creating the segment
     res = self.post('/api/segment/', json=segment_blueprint)
-    return res
+    if return_segment:
+      return res
 
 
   def copy_card(self, source_card_name=None, source_card_id=None, 
