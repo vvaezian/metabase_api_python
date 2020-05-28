@@ -73,6 +73,17 @@ class Metabase_API():
   ##################### Auxiliary Functions ########################
   ##################################################################
   
+  def get_item_name(self, item_type, item_id):
+    
+    assert item_type in ['card', 'table', 'dashboard', 'collection', 'pulse']
+
+    res = self.get("/api/{}/{}".format(item_type, item_id))
+    if res:
+      return res['name']
+    else:
+      raise ValueError('There is no {} with the id {}'.format(item_type, item_id))
+  
+  
   def get_item_id(self, item_type, item_name, collection_id=None, collection_name=None):
     
     assert item_type in ['card', 'dashboard', 'pulse']
@@ -128,18 +139,6 @@ class Metabase_API():
     return db_IDs[0]
   
   
-  def get_db_id_from_table_name(self, table_name):
-    tables = [(i['name'], i['db']['id']) for i in self.get("/api/table/") if i['name'] == table_name]
-    
-    if len(tables) > 1:
-      raise KeyError('There is more than one DB containing the table name {}. \
-                      Please provide the DB name or id as well.'.format(table_name))
-    if len(tables) == 0:
-      raise ValueError('There is no DB containing the table {}'.format(table_name))
-    
-    return tables[0][1]
-  
-  
   def get_table_id(self, table_name, db_name=None, db_id=None):
     tables = self.get("/api/table/")
     
@@ -156,32 +155,33 @@ class Metabase_API():
       raise ValueError('There is no table with the name {} (in the provided db, if any)'.format(table_name))
     
     return table_IDs[0]
-  
-  
-  def get_item_name(self, item_type, item_id):
-    
-    assert item_type in ['card', 'table', 'dashboard', 'collection', 'pulse']
 
-    res = self.get("/api/{}/{}".format(item_type, item_id))
-    if res:
-      return res['name']
-    else:
-      raise ValueError('There is no {} with the id {}'.format(item_type, item_id))
+
+  def get_db_id_from_table_id(self, table_id):
+    tables = [ i['db_id'] for i in self.get("/api/table/") if i['id'] == table_id ]
+    
+    if len(tables) == 0:
+      raise ValueError('There is no DB containing the table with the ID: {}'.format(table_id))
+    
+    return tables[0]
 
   
   def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False):
     '''Return a dictionary with col_id key and col_name value, 
-       for the given table_id/table_name in the given db_id/db_name
+       for the given table_id/table_name in the given db_id/db_name.
+       We need to have the table_name because the endpoint /api/database/:db_id/fields shows only table name
     '''
-    if not db_id:
-      if not db_name:
-        raise ValueError('Either the name or id of the db must be provided.')
-      db_id = self.get_db_id(db_name)
-      
     if not table_name:
       if not table_id:
         raise ValueError('Either the name or id of the table must be provided.')
       table_name = self.get_item_name(item_type='table', item_id=table_id)
+
+    if not db_id:
+      if not db_name:
+        if not table_id:
+          table_id = self.get_table_id(table_name)
+        db_id = self.get_db_id_from_table_id(table_id)
+      db_id = self.get_db_id(db_name)
     
     # Getting column names and id's 
     return {i['name']: i['id'] for i in self.get("/api/database/{}/fields".format(db_id)) 
@@ -201,7 +201,7 @@ class Metabase_API():
   
   def create_card(self, card_name=None, collection_name=None, collection_id=None, 
                   db_name=None, db_id=None, table_name=None,  table_id=None, 
-                  column_order='db_table_order', custom_json=None, verbose=False):
+                  column_order='db_table_order', custom_json=None, verbose=False, return_card=False):
     """Create a card using the given arguments utilizing the endpoint 'POST /api/card/'. 
        If collection is not given, the root collection is used.
     
@@ -220,7 +220,8 @@ class Metabase_API():
                    (https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#post-apicard).
                    Although the key 'visualization_settings' is also required for the endpoint, since it can be an 
                    empty dict ({}), if it is absent in the provided json, the function adds it automatically. 
-    verbose -- prints extra information (default False) 
+    verbose -- whether to print extra information (default False)
+    return_card --  whather to return the created card info (default False)
     """
     if custom_json:
       complete_json = True
@@ -239,28 +240,21 @@ class Metabase_API():
         res = self.post("/api/card/", json=custom_json)
         if res and not res.get('error'):
           self.verbose_print(verbose, 'The card was created successfully.')
-          return res
+          if return_card: return res
         else:
           print('Card Creation Failed.\n', res)
           return res
     
-    # getting table_id
+    # making sure we have table_id and table_name and db_id
     if not table_id:
       if not table_name:
         raise ValueError('Either the name or id of the table must be provided.')
-      if not db_id:
-        if not db_name:
-          table_id = self.get_table_id(table_name)
-          db_id = self.get_db_id_from_table_name(table_name)
-        else:
-          db_id = self.get_db_id(db_name)
-          table_id = self.get_table_id(table_name=table_name, db_id=db_id)
-      else:
-        table_id = self.get_table_id(table_name, db_id=db_id)
-    else:
-      if not table_name:
-        table_name = self.get_item_name(item_type='table', item_id=table_id)
-    
+      table_id = self.get_table_id(table_name)
+    if not table_name:
+      table_name = self.get_item_name(item_type='table', item_id=table_id)
+    if not db_id:
+      db_id = self.get_db_id_from_table_id(table_id)
+
     # getting collection_id if a collection is specified
     if not collection_id:
       if not collection_name:
@@ -347,12 +341,50 @@ class Metabase_API():
     if res and not res.get('error'):
       self.verbose_print(verbose, "The card '{}' was created successfully in the collection '{}'."
                          .format(card_name, collection_name))
-      return res
+      if return_card: return res
     else:
       print('Card Creation Failed.\n', res)
       return res
   
   
+  def create_segment(self, segment_name, column_name, column_values, 
+                     segment_description='', table_name=None, table_id=None):
+    """Create a segment using the given arguments utilizing the endpoint 'POST /api/segment/'. 
+    
+    Keyword arguments:
+    segment_name -- the name used for the created segment.
+    column_name -- name of the column used for filtering.
+    column_values -- list of values for filtering in the given column.
+    segment_description -- description of the segment (default '') 
+    table_name -- name of the table used as the source of data (default None)  
+    table_id -- id of the table used as the source of data (default None) 
+    """
+    # making sure we have the data needed
+    if not table_name and not table_id:
+      raise ValueError('Either the name or id of the table must be provided.')
+    if not table_id:
+      table_id = self.get_table_id(table_name)
+    if not table_name:
+      table_name = self.get_item_name(item_type='table', item_id=table_id)
+    db_id = self.get_db_id_from_table_id(table_id)
+      
+    comuns_name_id_mapping = self.get_columns_name_id(table_name=table_name, db_id=db_id)
+    column_id = comuns_name_id_mapping[column_name]
+    
+    # creating a segment blueprint
+    segment_blueprint = {'name': segment_name,
+                        'description': segment_description,
+                        'table_id': table_id,
+                        'definition': {'source-table': table_id, 'filter': ['=', ['field-id', column_id]]}}
+    
+    # adding filtering values
+    segment_blueprint['definition']['filter'].extend(column_values)
+    
+    # creating the segment
+    res = self.post('/api/segment/', json=segment_blueprint)
+    return res
+
+
   def copy_card(self, source_card_name=None, source_card_id=None, 
                 source_collection_name=None, source_collection_id=None,
                 destination_card_name=None, 
@@ -402,7 +434,7 @@ class Metabase_API():
     card_json['name'] = destination_card_name
     
     # saving as a new card
-    res = self.create_card(custom_json=card_json, verbose=verbose)
+    res = self.create_card(custom_json=card_json, verbose=verbose, return_card=True)
     
     # returning the id of the created card
     return res['id']
