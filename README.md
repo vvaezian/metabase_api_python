@@ -49,8 +49,9 @@ mb.create_card(custom_json=myCustomJson)
 ```
 
 #### `create_segment`
+Provide the name to be used for creating the segment, the name or id of the table you want to create the segment on, the column of that table to filter on and the filter values.
 ```python
-mb.create_segment(segment_name='test_segment', column_name='user_id', column_values=[123, 456, 789], table_name='user_table')
+mb.create_segment(segment_name='test_segment', table_name='user_table', column_name='user_id', column_values=[123, 456, 789])
 ```
 
 #### `copy_card`
