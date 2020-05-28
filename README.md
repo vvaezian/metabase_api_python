@@ -19,11 +19,12 @@ Calling Metabase API endpoints (documented [here](https://github.com/metabase/me
 E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#get-apidatabase) `GET /api/database/`, use `mb.get('/api/database/')`.
 
 ### Auxilliary Functions
-You usually don't need to deal with these functions directly (e.g. [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/master/metabase_api/metabase_api.py#L76))
+You usually don't need to deal with these functions directly (e.g. [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L87),[get_item_name](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L76))
 
 ### Custom Functions
 
 - [create_card](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L202)
+- [create_segment](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L350)
 - [copy_card](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L356)
 - [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L411)
 - [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L461)
