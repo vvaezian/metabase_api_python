@@ -13,7 +13,7 @@ class Metabase_API():
     self.authenticate()
   
   
-  def authenticate(self)
+  def authenticate(self):
     """Get a Session ID"""
     conn_header = {'username':self.email,
                    'password':self.password}
