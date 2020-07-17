@@ -21,7 +21,7 @@ class Metabase_API():
     res = requests.post(self.domain + '/api/session', json = conn_header)
     if not res.ok:
       raise Exception(res)
-    
+    print('hi')
     self.session_id = res.json()['id']
     self.header = {'X-Metabase-Session':self.session_id}
   
