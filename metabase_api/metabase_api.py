@@ -552,7 +552,7 @@ class Metabase_API():
       cards_collection_id = res['id']
 
       # duplicating cards and putting them in the created collection and making a card_id mapping
-      source_dashboard_card_IDs = [ i['card_id'] for i in source_dashboard['ordered_cards'] ]
+      source_dashboard_card_IDs = [ i['card_id'] for i in source_dashboard['ordered_cards'] if i['card_id'] is not None ]
       card_id_mapping = {}
       for card_id in source_dashboard_card_IDs:
         dup_card_id = self.copy_card(source_card_id=card_id, destination_collection_id=cards_collection_id)
@@ -561,6 +561,11 @@ class Metabase_API():
       # replacing cards in the duplicated dashboard with duplicated cards
       dup_dashboard = self.get('/api/dashboard/{}'.format(dup_dashboard_id))
       for card in dup_dashboard['ordered_cards']:
+        
+        # ignoring text boxes. These get copied in the shallow-copy stage.
+        if card['card_id'] is None:
+          continue
+          
         # preparing a json to be used for replacing the cards in the duplicated dashboard
         new_card_id = card_id_mapping[card['card_id']]
         card_json = {}
@@ -700,4 +705,3 @@ class Metabase_API():
     self.verbose_print(verbose, 'Successfully Archived.') if res == 202 else print('Archiving Failed.')
     
     return res
-  
