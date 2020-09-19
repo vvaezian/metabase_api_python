@@ -23,14 +23,14 @@ You usually don't need to deal with these functions directly (e.g. [get_item_id]
 
 ### Custom Functions
 
-- [create_card](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L202)
-- [create_segment](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L350)
-- [copy_card](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L356)
-- [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L411)
-- [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L461)
-- [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L545)
-- [make_json](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L645)
-- [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/9f1d9cad6c0193a8301fa523701931d24b9ebbea/metabase_api/metabase_api.py#L657)
+- [create_card](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L202)
+- [create_segment](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L350)
+- [copy_card](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L390)
+- [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L445)
+- [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L495)
+- [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L584)
+- [make_json](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L684)
+- [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L696)
 
 *For a complete list of functions parameters see the functions definitions using the above links. Here we provide a short description:*
 
