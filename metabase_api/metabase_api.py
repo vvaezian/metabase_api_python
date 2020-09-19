@@ -32,7 +32,7 @@ class Metabase_API():
     
     if res.ok:  # 200
       return True
-    elif res.unauthorized:  # 401
+    elif res.status_code == 401:  # unauthorized
       return self.authenticate()
     else:
       raise Exception(res)
@@ -702,6 +702,9 @@ class Metabase_API():
       item_id = self.get_item_id(item_type, item_name, collection_id, collection_name)
     
     res = self.put('/api/{}/{}'.format(item_type, item_id), json={'archived':True})
-    self.verbose_print(verbose, 'Successfully Archived.') if res == 202 else print('Archiving Failed.')
+    if res == 202:
+      self.verbose_print(verbose, 'Successfully Archived.')  
+    else: 
+      print('Archiving Failed.')
     
     return res
