@@ -249,7 +249,7 @@ class Metabase_API():
     if not table_id:
       if not table_name:
         raise ValueError('Either the name or id of the table must be provided.')
-      table_id = self.get_table_id(table_name)
+      table_id = self.get_table_id(table_name=table_name, db_id=db_id, db_name=db_name)
     if not table_name:
       table_name = self.get_item_name(item_type='table', item_id=table_id)
     if not db_id:
