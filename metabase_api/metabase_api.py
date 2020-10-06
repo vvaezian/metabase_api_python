@@ -150,7 +150,7 @@ class Metabase_API():
       table_IDs = [ i['id'] for i in tables if i['name'] == table_name ]
       
     if len(table_IDs) > 1:
-      raise KeyError('There is more than one table with the name {} (in the provided db, if any)'.format(table_name))
+      raise KeyError('There is more than one table with the name {}. Provide db_id or db_name.'.format(table_name))
     if len(table_IDs) == 0:
       raise ValueError('There is no table with the name {} (in the provided db, if any)'.format(table_name))
     
