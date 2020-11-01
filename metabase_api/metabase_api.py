@@ -128,6 +128,17 @@ class Metabase_API():
     return collection_IDs[0] 
 
   
+  def get_segment_id(self, segment_name, table_id=None):
+    segment_IDs = [ i['id'] for i in self.get("/api/segment/") if i['name'] == segment_name 
+                                                              and (not table_id or i['table_id'] == table_id) ]
+    if len(segment_IDs) > 1:
+      raise KeyError('There is more than one segment with the name {}'.format(segment_name))
+    if len(segment_IDs) == 0:
+      raise ValueError('There is no segment with the name {}'.format(segment_name))
+    
+    return segment_IDs[0]
+
+
   def get_db_id(self, db_name):
     db_IDs = [ i['id'] for i in self.get("/api/database/") if i['name'] == db_name ]
     
@@ -209,9 +220,9 @@ class Metabase_API():
     card_name -- the name used to create the card (default None) 
     collection_name -- name of the collection to place the card (default None).
     collection_id -- id of the collection to place the card (default None) 
-    db_name -- name of the db that is used as the source of data (default None) 
-    table_name -- name of the table used as the source of data (default None) 
+    db_name -- name of the db that is used as the source of data (default None)  
     db_id -- id of the db used as the source of data (default None) 
+    table_name -- name of the table used as the source of data (default None)
     table_id -- id of the table used as the source of data (default None) 
     column_order -- order for showing columns. Accepted values are 'alphabetical', 'db_table_order' (default) 
                     or a list of column names
@@ -347,8 +358,8 @@ class Metabase_API():
       return res
   
   
-  def create_segment(self, segment_name, column_name, column_values, 
-                     segment_description='', table_name=None, table_id=None, return_segment=False):
+  def create_segment(self, segment_name, column_name, column_values, segment_description='', 
+                     db_name=None, db_id=None, table_name=None, table_id=None, return_segment=False):
     """Create a segment using the given arguments utilizing the endpoint 'POST /api/segment/'. 
     
     Keyword arguments:
@@ -356,6 +367,8 @@ class Metabase_API():
     column_name -- name of the column used for filtering.
     column_values -- list of values for filtering in the given column.
     segment_description -- description of the segment (default '') 
+    db_name -- name of the db that is used as the source of data (default None)  
+    db_id -- id of the db used as the source of data (default None) 
     table_name -- name of the table used for creating the segmnet on it (default None)  
     table_id -- id of the table used for creating the segmnet on it (default None)  
     return_segment --  whather to return the created segment info (default False)
@@ -364,19 +377,19 @@ class Metabase_API():
     if not table_name and not table_id:
       raise ValueError('Either the name or id of the table must be provided.')
     if not table_id:
-      table_id = self.get_table_id(table_name)
+      table_id = self.get_table_id(table_name, db_name, db_id)
     if not table_name:
       table_name = self.get_item_name(item_type='table', item_id=table_id)
     db_id = self.get_db_id_from_table_id(table_id)
       
-    comuns_name_id_mapping = self.get_columns_name_id(table_name=table_name, db_id=db_id)
-    column_id = comuns_name_id_mapping[column_name]
+    colmuns_name_id_mapping = self.get_columns_name_id(table_name=table_name, db_id=db_id)
+    column_id = colmuns_name_id_mapping[column_name]
     
     # creating a segment blueprint
     segment_blueprint = {'name': segment_name,
-                        'description': segment_description,
-                        'table_id': table_id,
-                        'definition': {'source-table': table_id, 'filter': ['=', ['field-id', column_id]]}}
+                         'description': segment_description,
+                         'table_id': table_id,
+                         'definition': {'source-table': table_id, 'filter': ['=', ['field-id', column_id]]}}
     
     # adding filtering values
     segment_blueprint['definition']['filter'].extend(column_values)
@@ -694,15 +707,25 @@ class Metabase_API():
   
   
   def move_to_archive(self, item_type, item_name=None, item_id=None, 
-                      collection_name=None, collection_id=None, verbose=False):
-    assert item_type in ['card', 'dashboard', 'collection', 'pulse']
+                      collection_name=None, collection_id=None, table_id=None, verbose=False):
+    assert item_type in ['card', 'dashboard', 'collection', 'pulse', 'segment']
     if not item_id:
       if not item_name:
         raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
-      item_id = self.get_item_id(item_type, item_name, collection_id, collection_name)
+      if item_type == 'collection':
+        item_id = self.get_collection_id(item_name)
+      elif item_type == 'segment':
+        item_id = self.get_segment_id(item_name, table_id)
+      else:
+        item_id = self.get_item_id(item_type, item_name, collection_id, collection_name)
     
-    res = self.put('/api/{}/{}'.format(item_type, item_id), json={'archived':True})
-    if res == 202:
+    if item_type == 'segment':
+      # 'revision_message' is mandatory for archiving segments
+      res = self.put('/api/{}/{}'.format(item_type, item_id), json={'archived':True, 'revision_message':'archived!'})
+    else:
+      res = self.put('/api/{}/{}'.format(item_type, item_id), json={'archived':True})
+    
+    if res in [200, 202]:  # for segments the success status code returned is 200 for others it is 202
       self.verbose_print(verbose, 'Successfully Archived.')  
     else: 
       print('Archiving Failed.')
