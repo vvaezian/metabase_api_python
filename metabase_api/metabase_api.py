@@ -99,18 +99,20 @@ class Metabase_API():
                                                                             and i['collection_id'] == collection_id 
                                                                             and i['archived'] == False ]
     else:
+      collection_name = self.get_item_name('collection', collection_id)
       item_IDs = [ i['id'] for i in self.get("/api/{}/".format(item_type)) if i['name'] == item_name 
                                                                           and i['collection_id'] == collection_id 
                                                                           and i['archived'] == False ]
     
     if len(item_IDs) > 1:
       if not collection_name:
-        raise KeyError('There is more than one item with the name "{}".'.format(item_name))
-      raise KeyError('There is more than one item with the name "{}" in the collection "{}"'
-                     .format(item_name, collection_name))
+        raise ValueError('There is more than one {} with the name "{}".\n\
+            Provide collection id/name to limit the search space'.format(item_type, item_name))
+      raise ValueError('There is more than one {} with the name "{}" in the collection "{}"'
+                       .format(item_type, item_name, collection_name))
     if len(item_IDs) == 0:
       if not collection_name:
-          raise ValueError('There is no item with the name "{}"'.format(item_name))
+          raise ValueError('There is no {} with the name "{}"'.format(item_type, item_name))
       raise ValueError('There is no item with the name "{}" in the collection "{}"'
                        .format(item_name, collection_name))
     
@@ -121,9 +123,9 @@ class Metabase_API():
     collection_IDs = [ i['id'] for i in self.get("/api/collection/") if i['name'] == collection_name ]
     
     if len(collection_IDs) > 1:
-      raise KeyError('There is more than one collection with the name {}'.format(collection_name))
+      raise ValueError('There is more than one collection with the name {}'.format(collection_name))
     if len(collection_IDs) == 0:
-      raise ValueError('There is no collection with the name {}'.format(collection_name))
+      raise ValueError('There is no collection with the name "{}"'.format(collection_name))
     
     return collection_IDs[0] 
 
@@ -132,9 +134,9 @@ class Metabase_API():
     segment_IDs = [ i['id'] for i in self.get("/api/segment/") if i['name'] == segment_name 
                                                               and (not table_id or i['table_id'] == table_id) ]
     if len(segment_IDs) > 1:
-      raise KeyError('There is more than one segment with the name {}'.format(segment_name))
+      raise ValueError('There is more than one segment with the name {}'.format(segment_name))
     if len(segment_IDs) == 0:
-      raise ValueError('There is no segment with the name {}'.format(segment_name))
+      raise ValueError('There is no segment with the name "{}"'.format(segment_name))
     
     return segment_IDs[0]
 
@@ -143,9 +145,9 @@ class Metabase_API():
     db_IDs = [ i['id'] for i in self.get("/api/database/") if i['name'] == db_name ]
     
     if len(db_IDs) > 1:
-      raise KeyError('There is more than one DB with the name {}'.format(db_name))
+      raise ValueError('There is more than one DB with the name {}'.format(db_name))
     if len(db_IDs) == 0:
-      raise ValueError('There is no DB with the name {}'.format(db_name))
+      raise ValueError('There is no DB with the name "{}"'.format(db_name))
     
     return db_IDs[0]
   
@@ -161,9 +163,9 @@ class Metabase_API():
       table_IDs = [ i['id'] for i in tables if i['name'] == table_name ]
       
     if len(table_IDs) > 1:
-      raise KeyError('There is more than one table with the name {}. Provide db_id or db_name.'.format(table_name))
+      raise ValueError('There is more than one table with the name {}. Provide db id/name.'.format(table_name))
     if len(table_IDs) == 0:
-      raise ValueError('There is no table with the name {} (in the provided db, if any)'.format(table_name))
+      raise ValueError('There is no table with the name "{}" (in the provided db, if any)'.format(table_name))
     
     return table_IDs[0]
 
@@ -172,7 +174,7 @@ class Metabase_API():
     tables = [ i['db_id'] for i in self.get("/api/table/") if i['id'] == table_id ]
     
     if len(tables) == 0:
-      raise ValueError('There is no DB containing the table with the ID: {}'.format(table_id))
+      raise ValueError('There is no DB containing the table with the ID {}'.format(table_id))
     
     return tables[0]
 
@@ -280,7 +282,7 @@ class Metabase_API():
                                                      verbose=verbose)
       try:
         column_id_list = [column_name_id_dict[i] for i in column_order]
-      except KeyError as e:
+      except ValueError as e:
         print('The column name {} is not in the table {}. \nThe card creation failed!'.format(e, table_name))
         return False
 
