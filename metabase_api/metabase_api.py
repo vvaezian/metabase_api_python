@@ -594,6 +594,8 @@ class Metabase_API():
         self.delete('/api/dashboard/{}/cards'.format(dup_dashboard_id), params={'dashcardId':dash_card_id})
         # adding the new card to the duplicated dashboard
         self.post('/api/dashboard/{}/cards'.format(dup_dashboard_id), json=card_json)
+      
+      return dup_dashboard_id
   
   
   def copy_collection(self, source_collection_name=None, source_collection_id=None, 
