@@ -237,6 +237,7 @@ class Metabase_API():
     return_card --  whather to return the created card info (default False)
     """
     if custom_json:
+      # checking whether the provided json is complete or not
       complete_json = True
       for item in ['name', 'dataset_query', 'display']:
         if item not in custom_json:
@@ -244,6 +245,10 @@ class Metabase_API():
           self.verbose_print(verbose, 'The provided json is detected as partial.')
           break
       
+      # Fixing the issue #10
+      if custom_json.get('description') == '': 
+        custom_json['description'] = None
+
       if complete_json:
         # Adding visualization_settings if it is not present in the custom_json
         if 'visualization_settings' not in custom_json:
@@ -258,7 +263,9 @@ class Metabase_API():
           print('Card Creation Failed.\n', res)
           return res
     
-    # making sure we have table_id and table_name and db_id
+    # making sure we have the required data
+    if not card_name and (not custom_json or not custom_json.get('name')):
+      raise ValueError("A name must be provided for the card (either as card_name argument or as part of the custom_json ('name' key)).")
     if not table_id:
       if not table_name:
         raise ValueError('Either the name or id of the table must be provided.')
@@ -450,6 +457,10 @@ class Metabase_API():
     card_json['collection_id'] = destination_collection_id
     card_json['name'] = destination_card_name
     
+    # Fixing the issue #10
+    if card_json.get('description') == '': 
+      card_json['description'] = None
+
     # saving as a new card
     res = self.create_card(custom_json=card_json, verbose=verbose, return_card=True)
     
@@ -595,7 +606,7 @@ class Metabase_API():
         # adding the new card to the duplicated dashboard
         self.post('/api/dashboard/{}/cards'.format(dup_dashboard_id), json=card_json)
       
-      return dup_dashboard_id
+    return dup_dashboard_id
   
   
   def copy_collection(self, source_collection_name=None, source_collection_id=None, 
