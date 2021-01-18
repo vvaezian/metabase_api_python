@@ -170,6 +170,17 @@ class Metabase_API():
     return table_IDs[0]
 
 
+  def get_table_display_name(self, table_id):
+    '''since /api/database/:id/fields returns the display name of the table, we need to be able to get the display name to filter its results
+    The display name and the actualy name of the table would be different if the friendly names is enabled in Admin > Settings > General'''
+    tables_info = self.get('/api/table')
+    table_display_name = [i['display_name'] for i in tables_info if i['id'] == table_id ]
+    if len(table_display_name) == 0:
+      raise ValueError('There is no table with the id {}'.format(table_id))
+
+    return table_display_name[0]
+
+
   def get_db_id_from_table_id(self, table_id):
     tables = [ i['db_id'] for i in self.get("/api/table/") if i['id'] == table_id ]
     
@@ -179,27 +190,29 @@ class Metabase_API():
     return tables[0]
 
   
+  
   def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False):
     '''Return a dictionary with col_id key and col_name value, 
        for the given table_id/table_name in the given db_id/db_name.
-       We need to have the table_name because the endpoint /api/database/:db_id/fields shows only table name
+       We need to have the table display name because the endpoint /api/database/:db_id/fields 
+       shows only the table display name (not its actual name in the DB, and also not its ID).
     '''
-    if not table_name:
-      if not table_id:
+    if not table_id:
+      if not table_name:
         raise ValueError('Either the name or id of the table must be provided.')
-      table_name = self.get_item_name(item_type='table', item_id=table_id)
+      table_id = self.get_table_id(table_name=table_name, db_id=db_id, db_name=db_name)
 
     if not db_id:
-      if not db_name:
-        if not table_id:
-          table_id = self.get_table_id(table_name)
-        db_id = self.get_db_id_from_table_id(table_id)
-      db_id = self.get_db_id(db_name)
+      db_id = self.get_db_id_from_table_id(table_id)
     
-    # Getting column names and id's 
-    return {i['name']: i['id'] for i in self.get("/api/database/{}/fields".format(db_id)) 
-                               if i['table_name'] == table_name}
-  
+    # since /api/database/:id/fields returns the display name of the table, we need to get the display name to filter its results
+    table_display_name = self.get_table_display_name(table_id)
+    
+    # Getting column names and IDs 
+    # since /api/database/:id/fields returns the display name of the column, we need to get the actual name from /api/field
+    return {self.get('/api/field/{}'.format(i['id']))['name']: i['id'] for i in self.get("/api/database/{}/fields".format(db_id)) 
+                                                                       if i['table_name'] == table_display_name}
+
   
   @staticmethod
   def verbose_print(verbose, msg):
@@ -310,7 +323,7 @@ class Metabase_API():
         print('Card Creation Failed!')
         return res
       ordered_columns = [ i['name'] for i in res['result_metadata'] ]  # retrieving the column ordering
-    
+
       # deleting the temporary card
       card_id = res['id']
       self.delete("/api/card/{}".format(card_id))  
