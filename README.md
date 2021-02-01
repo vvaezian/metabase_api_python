@@ -20,19 +20,20 @@ Calling Metabase API endpoints (documented [here](https://github.com/metabase/me
 E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#get-apidatabase) `GET /api/database/`, use `mb.get('/api/database/')`.
 
 ### Auxilliary Functions
-You usually don't need to deal with these functions directly (e.g. [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L87), [get_item_name](https://github.com/vvaezian/metabase_api_python/blob/a376072be6fb44d9c3e1ff124a5daa1473192a2b/metabase_api/metabase_api.py#L76))
+You usually don't need to deal with these functions directly (e.g. [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L88), [get_item_name](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L76))
 
 ### Custom Functions
 
-- [create_card](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L202)
-- [create_segment](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L350)
-- [copy_card](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L390)
-- [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L445)
-- [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L495)
-- [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L584)
-- [make_json](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L684)
-- [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/0638b23b3a86dfeff999b2518515a7f0d4d6c3a7/metabase_api/metabase_api.py#L696)
-
+- [create_card](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L238)
+- [create_segment](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L403)
+- [copy_card](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L450)
+- [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L511)
+- [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L563)
+- [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L656)
+- [update_col_type_in_data_model](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L805)
+- [make_json](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L827)
+- [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L757)
+- [delete_item](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L786)  
 *For a complete list of functions parameters see the functions definitions using the above links. Here we provide a short description:*
 
 #### `create_card`
