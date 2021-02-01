@@ -86,7 +86,8 @@ mb.copy_collection(source_collection_id=123, destination_parent_collection_id=45
 You can also specify a postfix to be added to the names of the child items that get copied.
 
 #### `update_col_type_in_data_model`
-Metabase column types (Category, Latitude, ...) are different from the actual column type in the database. One of the most important column types in the data model is 'Category', because it allows the field filters to show a list of values of the column.
+Metabase column types (Category, Latitude, ...) are different from the actual column type in the database. One of the most important column types in the data model is 'Category', because it allows the field filters to show a list of values of the column.  
+Sometime the column type is not captured properly in the data model. Using this function, we can update the column types programmatically.
 ```python
 mb.update_col_type_in_data_model(column_name='myCol', table_name='myTable')
 ```
