@@ -83,6 +83,7 @@ class Metabase_API():
     else:
       raise ValueError('There is no {} with the id {}'.format(item_type, item_id))
   
+
   
   def get_item_id(self, item_type, item_name, collection_id=None, collection_name=None):
     
@@ -90,7 +91,7 @@ class Metabase_API():
 
     if not collection_id:
       if not collection_name:
-        # Collection name/id is not privided. Searching in all collections 
+        # Collection name/id is not provided. Searching in all collections 
         item_IDs = [ i['id'] for i in self.get("/api/{}/".format(item_type)) if i['name'] == item_name 
                                                                             and i['archived'] == False ]
       else:
@@ -118,6 +119,7 @@ class Metabase_API():
     
     return item_IDs[0] 
   
+
   
   def get_collection_id(self, collection_name):
     collection_IDs = [ i['id'] for i in self.get("/api/collection/") if i['name'] == collection_name ]
@@ -128,6 +130,7 @@ class Metabase_API():
       raise ValueError('There is no collection with the name "{}"'.format(collection_name))
     
     return collection_IDs[0] 
+
 
   
   def get_segment_id(self, segment_name, table_id=None):
@@ -141,6 +144,7 @@ class Metabase_API():
     return segment_IDs[0]
 
 
+
   def get_db_id(self, db_name):
     db_IDs = [ i['id'] for i in self.get("/api/database/") if i['name'] == db_name ]
     
@@ -151,6 +155,7 @@ class Metabase_API():
     
     return db_IDs[0]
   
+
   
   def get_table_id(self, table_name, db_name=None, db_id=None):
     tables = self.get("/api/table/")
@@ -170,16 +175,6 @@ class Metabase_API():
     return table_IDs[0]
 
 
-  def get_table_display_name(self, table_id):
-    '''since /api/database/:id/fields returns the display name of the table, we need to be able to get the display name to filter its results
-    The display name and the actualy name of the table would be different if the friendly names is enabled in Admin > Settings > General'''
-    tables_info = self.get('/api/table')
-    table_display_name = [i['display_name'] for i in tables_info if i['id'] == table_id ]
-    if len(table_display_name) == 0:
-      raise ValueError('There is no table with the id {}'.format(table_id))
-
-    return table_display_name[0]
-
 
   def get_db_id_from_table_id(self, table_id):
     tables = [ i['db_id'] for i in self.get("/api/table/") if i['id'] == table_id ]
@@ -189,31 +184,46 @@ class Metabase_API():
     
     return tables[0]
 
-  
+
   
   def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False):
-    '''Return a dictionary with col_id key and col_name value, 
-       for the given table_id/table_name in the given db_id/db_name.
-       We need to have the table display name because the endpoint /api/database/:db_id/fields 
-       shows only the table display name (not its actual name in the DB, and also not its ID).
     '''
-    if not table_id:
-      if not table_name:
+    Return a dictionary with col_id key and col_name value, 
+    for the given table_id/table_name in the given db_id/db_name.
+    We need to have the table display name because the endpoint /api/database/:db_id/fields 
+    shows only the table display name (not its actual name in the DB, and also not its ID).
+    '''
+    if not table_name:
+      if not table_id:
         raise ValueError('Either the name or id of the table must be provided.')
-      table_id = self.get_table_id(table_name=table_name, db_id=db_id, db_name=db_name)
+      table_name = self.get_item_name(item_type='table', item_id=table_id)
 
+    # getting db_id
     if not db_id:
-      db_id = self.get_db_id_from_table_id(table_id)
-    
-    # since /api/database/:id/fields returns the display name of the table, we need to get the display name to filter its results
-    table_display_name = self.get_table_display_name(table_id)
-    
+      if db_name:
+        db_id = self.get_db_id(db_name)
+      else:
+        if not table_id:
+          table_id = self.get_table_id(table_name)
+        db_id = self.get_db_id_from_table_id(table_id)
+        
     # Getting column names and IDs 
-    # since /api/database/:id/fields returns the display name of the column, we need to get the actual name from /api/field
-    return {self.get('/api/field/{}'.format(i['id']))['name']: i['id'] for i in self.get("/api/database/{}/fields".format(db_id)) 
-                                                                       if i['table_name'] == table_display_name}
+    return {i['name']: i['id'] for i in self.get("/api/database/{}/fields".format(db_id)) 
+                               if i['table_name'] == table_name}
 
-  
+
+
+  def friendly_names_is_disabled(self):
+    '''
+    The endpoint /api/database/:db-id/fields which is used in the function get_column_name_id relies on the display name of fields. 
+    If "Friendly Table and Field Names" (in Admin Panel > Settings > General) is not disabled, it changes the display name of fields.
+    So it is important to make sure this setting is disabled, before running the get_column_name_id function.
+    '''
+    friendly_name_setting = [ i['value'] for i in self.get('/api/setting') if i['key'] == 'humanization-strategy' ][0]
+    return friendly_name_setting == 'none'  # 'none' means disabled
+
+
+
   @staticmethod
   def verbose_print(verbose, msg):
     if verbose:
@@ -228,8 +238,9 @@ class Metabase_API():
   def create_card(self, card_name=None, collection_name=None, collection_id=None, 
                   db_name=None, db_id=None, table_name=None,  table_id=None, 
                   column_order='db_table_order', custom_json=None, verbose=False, return_card=False):
-    """Create a card using the given arguments utilizing the endpoint 'POST /api/card/'. 
-       If collection is not given, the root collection is used.
+    """
+    Create a card using the given arguments utilizing the endpoint 'POST /api/card/'. 
+    If collection is not given, the root collection is used.
     
     Keyword arguments:
     card_name -- the name used to create the card (default None) 
@@ -288,7 +299,7 @@ class Metabase_API():
     if not db_id:
       db_id = self.get_db_id_from_table_id(table_id)
 
-    # getting collection_id if a collection is specified
+    # getting collection_id if it is not given
     if not collection_id:
       if not collection_name:
         self.verbose_print(verbose, 'No collection name or id is provided. Will create the card at the root ...')
@@ -296,6 +307,10 @@ class Metabase_API():
         collection_id = self.get_collection_id(collection_name)
     
     if type(column_order) == list:
+
+      if not self.friendly_names_is_disabled():
+        raise ValueError('Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.')
+      
       column_name_id_dict = self.get_columns_name_id(db_id=db_id, 
                                                      table_id=table_id, 
                                                      table_name=table_name, 
@@ -309,6 +324,10 @@ class Metabase_API():
       column_id_list_str = [['field-id', i] for i in column_id_list]
 
     elif column_order == 'db_table_order':  # default
+      
+      if not self.friendly_names_is_disabled():
+        raise ValueError('Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.')
+
       ### Finding the actual order of columns in the table as they appear in the database
       # creating a temporary card for retrieving column ordering
       json_str = """{{'dataset_query': {{'database': {1},
@@ -327,13 +346,13 @@ class Metabase_API():
       # deleting the temporary card
       card_id = res['id']
       self.delete("/api/card/{}".format(card_id))  
-      
+
       column_name_id_dict = self.get_columns_name_id(db_id=db_id, 
                                                      table_id=table_id, 
                                                      table_name=table_name, 
                                                      verbose=verbose)
-      column_id_list = [column_name_id_dict[i] for i in ordered_columns]
-      column_id_list_str = [['field-id', i] for i in column_id_list]
+      column_id_list = [ column_name_id_dict[i] for i in ordered_columns ]
+      column_id_list_str = [ ['field-id', i] for i in column_id_list ]
     
     elif column_order == 'alphabetical':
       column_id_list_str = None
@@ -379,10 +398,12 @@ class Metabase_API():
       print('Card Creation Failed.\n', res)
       return res
   
+
   
   def create_segment(self, segment_name, column_name, column_values, segment_description='', 
                      db_name=None, db_id=None, table_name=None, table_id=None, return_segment=False):
-    """Create a segment using the given arguments utilizing the endpoint 'POST /api/segment/'. 
+    """
+    Create a segment using the given arguments utilizing the endpoint 'POST /api/segment/'. 
     
     Keyword arguments:
     segment_name -- the name used for the created segment.
@@ -403,7 +424,10 @@ class Metabase_API():
     if not table_name:
       table_name = self.get_item_name(item_type='table', item_id=table_id)
     db_id = self.get_db_id_from_table_id(table_id)
-      
+    
+    if not self.friendly_names_is_disabled():
+      raise ValueError('Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.')
+
     colmuns_name_id_mapping = self.get_columns_name_id(table_name=table_name, db_id=db_id)
     column_id = colmuns_name_id_mapping[column_name]
     
@@ -422,12 +446,14 @@ class Metabase_API():
       return res
 
 
+
   def copy_card(self, source_card_name=None, source_card_id=None, 
                 source_collection_name=None, source_collection_id=None,
                 destination_card_name=None, 
                 destination_collection_name=None, destination_collection_id=None,
                 postfix='', verbose=False):
-    """Copy the card with the given name/id to the given destination collection. 
+    """
+    Copy the card with the given name/id to the given destination collection. 
     
     Keyword arguments:
     source_card_name -- name of the card to copy (default None) 
@@ -481,11 +507,13 @@ class Metabase_API():
     return res['id']
 
 
+
   def copy_pulse(self, source_pulse_name=None, source_pulse_id=None, 
                  source_collection_name=None, source_collection_id=None,
                  destination_pulse_name=None, 
                  destination_collection_id=None, destination_collection_name=None, postfix=''):
-    """Copy the pulse with the given name/id to the given destination collection. 
+    """
+    Copy the pulse with the given name/id to the given destination collection. 
     
     Keyword arguments:
     source_pulse_name -- name of the pulse to copy (default None) 
@@ -531,12 +559,14 @@ class Metabase_API():
     self.post('/api/pulse', json=pulse_json)
     
   
+
   def copy_dashboard(self, source_dashboard_name=None, source_dashboard_id=None, 
                      source_collection_name=None, source_collection_id=None,
                      destination_dashboard_name=None, 
                      destination_collection_name=None, destination_collection_id=None,
                      deepcopy=False, postfix=''):
-    """Copy the dashboard with the given name/id to the given destination collection. 
+    """
+    Copy the dashboard with the given name/id to the given destination collection. 
     
     Keyword arguments:
     source_dashboard_name -- name of the dashboard to copy (default None) 
@@ -622,11 +652,13 @@ class Metabase_API():
     return dup_dashboard_id
   
   
+
   def copy_collection(self, source_collection_name=None, source_collection_id=None, 
                       destination_collection_name=None,
                       destination_parent_collection_name=None, destination_parent_collection_id=None, 
                       deepcopy_dashboards=False, postfix='', child_items_postfix='', verbose=False):
-    """Copy the collection with the given name/id into the given destination parent collection. 
+    """
+    Copy the collection with the given name/id into the given destination parent collection. 
     
     Keyword arguments:
     source_collection_name -- name of the collection to copy (default None) 
@@ -719,23 +751,12 @@ class Metabase_API():
         self.copy_pulse(source_pulse_id=pulse_id,
                         destination_collection_id=destination_parent_collection_id,
                         destination_pulse_name=destination_pulse_name)
-    
-    
-  @staticmethod
-  def make_json(raw_json, prettyprint=False):
-    """Turn the string copied from the Inspect->Network window into a Dict."""
-    json = eval(raw_json.replace('null', 'None') \
-                        .replace('false', 'False') \
-                        .replace('true', 'True')
-               )
-    if prettyprint:
-      import pprint
-      pprint.pprint(json)
-    return json
   
   
+
   def move_to_archive(self, item_type, item_name=None, item_id=None, 
                       collection_name=None, collection_id=None, table_id=None, verbose=False):
+    '''Archive the given item. For deleting the item use the 'delete_item' function.'''
     assert item_type in ['card', 'dashboard', 'collection', 'pulse', 'segment']
     if not item_id:
       if not item_name:
@@ -759,3 +780,57 @@ class Metabase_API():
       print('Archiving Failed.')
     
     return res
+
+      
+
+  def delete_item(self, item_type, item_name=None, item_id=None, 
+                  collection_name=None, collection_id=None, table_id=None, verbose=False):
+    '''
+    Delete the given item. Use carefully (this is different from archiving).
+    Currently Collections and Segments cannot be deleted using the Metabase API.
+    '''
+    assert item_type in ['card', 'dashboard', 'pulse', 'segment']
+    if not item_id:
+      if not item_name:
+        raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
+      if item_type == 'segment':
+        item_id = self.get_segment_id(item_name, table_id)
+      else:
+        item_id = self.get_item_id(item_type, item_name, collection_id, collection_name)
+      
+    return self.delete('/api/{}/{}'.format(item_type, item_id))
+
+
+
+  def update_col_type_in_data_model(self, column_type='Category', column_id=None, column_name=None, 
+                                    table_name=None, table_id=None, db_name=None, db_id=None):
+    '''Update the column type of the specified column to the provided "column_type", in the data model.'''
+    assert column_type in ['Category']  # will implement other types later
+    
+    # making sure we have the data we need
+    if not column_id and not column_name:
+      raise ValueError('Either the name or id of the column needs to be provided.')
+    if not table_id and not table_name:
+      raise ValueError('Either the name or id of the table needs to be provided.')
+      
+    if not column_id:
+      columns_name_id_mapping = self.get_columns_name_id(table_name=table_name, table_id=table_id)
+      column_id = columns_name_id_mapping.get(column_name)
+      if column_id is None:
+        raise ValueError('There is no column named {} in the provided table'.format(column_name))
+        
+    return self.put('/api/field/{}'.format(column_id), json={'special_type':'type/{}'.format(column_type)})
+      
+
+
+  @staticmethod
+  def make_json(raw_json, prettyprint=False):
+    """Turn the string copied from the Inspect->Network window into a Dict."""
+    json = eval(raw_json.replace('null', 'None') \
+                        .replace('false', 'False') \
+                        .replace('true', 'True')
+               )
+    if prettyprint:
+      import pprint
+      pprint.pprint(json)
+    return json
