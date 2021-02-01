@@ -789,14 +789,11 @@ class Metabase_API():
     Delete the given item. Use carefully (this is different from archiving).
     Currently Collections and Segments cannot be deleted using the Metabase API.
     '''
-    assert item_type in ['card', 'dashboard', 'pulse', 'segment']
+    assert item_type in ['card', 'dashboard', 'pulse']
     if not item_id:
       if not item_name:
         raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
-      if item_type == 'segment':
-        item_id = self.get_segment_id(item_name, table_id)
-      else:
-        item_id = self.get_item_id(item_type, item_name, collection_id, collection_name)
+      item_id = self.get_item_id(item_type, item_name, collection_id, collection_name)
       
     return self.delete('/api/{}/{}'.format(item_type, item_id))
 
