@@ -99,12 +99,12 @@ myJson = mb.make_json(raw_json)  # setting 'prettyprint=True' will print the out
 mb.create_card('test_card2', table_name='mySourceTable', custom_json={'visualization_settings':myJson['visualization_settings']})
 ```
 
-### `move_to_archive`
+#### `move_to_archive`
 Moves the item (Card, Dashboard, Collection, Pulse, Segment) to the Archive section.
 ```python
 mb.move_to_archive('card', item_id=123)
 ```
-### `delete_item`
+#### `delete_item`
 Deletes the item (Card, Dashboard, Pulse). Currently Collections and Segments cannot be deleted using the Metabase API.
 ```python
 mb.delete_item('card', item_id=123)
