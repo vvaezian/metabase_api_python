@@ -145,6 +145,12 @@ class Metabase_API():
 
 
 
+  def get_db(self, db_id):
+    columns = self.get("/api/database/{}?include=tables".format(db_id))
+    return columns
+
+
+
   def get_db_id(self, db_name):
     db_IDs = [ i['id'] for i in self.get("/api/database/") if i['name'] == db_name ]
     
@@ -173,6 +179,12 @@ class Metabase_API():
       raise ValueError('There is no table with the name "{}" (in the provided db, if any)'.format(table_name))
     
     return table_IDs[0]
+
+
+
+  def get_table_metadata(self, table_id):
+    table = self.get("/api/table/{}/query_metadata".format(table_id))
+    return table
 
 
 
@@ -796,6 +808,13 @@ class Metabase_API():
       item_id = self.get_item_id(item_type, item_name, collection_id, collection_name)
       
     return self.delete('/api/{}/{}'.format(item_type, item_id))
+
+
+
+  def update_col(self, column_id, properties={}):
+    res = self.put('/api/field/{}'.format(column_id), json=properties)
+    if res != 200:
+      raise Exception("Can't update column: %s" % res)
 
 
 
