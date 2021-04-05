@@ -30,7 +30,7 @@ You usually don't need to deal with these functions directly (e.g. [get_item_id]
 - [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L511)
 - [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L563)
 - [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L656)
-- [update_col_type_in_data_model](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L805)
+- [update_column](https://github.com/vvaezian/metabase_api_python/blob/35e4ab921d9a0dcb6dafb0fc3b6d72a002d6acf7/metabase_api/metabase_api.py#L830)
 - [make_json](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L827)
 - [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L757)
 - [delete_item](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L786)  
@@ -85,11 +85,11 @@ mb.copy_collection(source_collection_id=123, destination_parent_collection_id=45
 ```
 You can also specify a postfix to be added to the names of the child items that get copied.
 
-#### `update_col_type_in_data_model`
-Metabase column types (Category, Latitude, ...) are different from the actual column type in the database. One of the most important column types in the data model is 'Category', because it allows the field filters to show a list of values of the column.  
-Sometime the column type is not captured properly in the data model. Using this function, we can update the column types programmatically.
+#### `update_colum`
+Update the column in Data Model by providing the relevant parameter (list of all parameters can be found [here](https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid)).  
+For example to change the column type to 'Category', we can use:
 ```python
-mb.update_col_type_in_data_model(column_name='myCol', table_name='myTable')
+mb.update_column(column_name='myCol', table_name='myTable', params={'special_type':'type/Category'})
 ```
 
 #### `make_json`
