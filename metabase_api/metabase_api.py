@@ -145,12 +145,6 @@ class Metabase_API():
 
 
 
-  def get_db(self, db_id):
-    columns = self.get("/api/database/{}?include=tables".format(db_id))
-    return columns
-
-
-
   def get_db_id(self, db_name):
     db_IDs = [ i['id'] for i in self.get("/api/database/") if i['name'] == db_name ]
     
@@ -182,12 +176,6 @@ class Metabase_API():
 
 
 
-  def get_table_metadata(self, table_id):
-    table = self.get("/api/table/{}/query_metadata".format(table_id))
-    return table
-
-
-
   def get_db_id_from_table_id(self, table_id):
     tables = [ i['db_id'] for i in self.get("/api/table/") if i['id'] == table_id ]
     
@@ -197,14 +185,45 @@ class Metabase_API():
     return tables[0]
 
 
+
+  def get_db_info(self, db_name=None, db_id=None, params=None):
+    '''
+    Return Database info. Use 'params' for providing arguments.
+    For example to include tables in the result, use: params={'include':'tables'}
+    '''
+    if params:
+      assert type(params) == dict
+
+    if not db_id:
+      if not db_name:
+        raise ValueError('Either the name or id of the DB needs to be provided.')
+      db_id = self.get_db_id(db_name=db_name)
+      
+    return self.get("/api/database/{}".format(db_id), params=params)
+
+
+
+  def get_table_metadata(self, table_name=None, table_id=None, db_name=None, db_id=None, params=None):
+    
+    if params:
+      assert type(params) == dict
+    
+    if not table_id:
+      if not table_name:
+        raise ValueError('Either the name or id of the table needs to be provided.')
+      table_id = self.get_table_id(table_name=table_name, db_name=db_name, db_id=db_id)
+      
+    return self.get("/api/table/{}/query_metadata".format(table_id), params=params)
+
+
   
-  def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False):
+  def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False, column_id_name=False):
+    '''Return a dictionary with col_name key and col_id value, for the given table_id/table_name in the given db_id/db_name.
+       If column_id_name is True, return a dictionary with col_id key and col_name value.
     '''
-    Return a dictionary with col_id key and col_name value, 
-    for the given table_id/table_name in the given db_id/db_name.
-    We need to have the table display name because the endpoint /api/database/:db_id/fields 
-    shows only the table display name (not its actual name in the DB, and also not its ID).
-    '''
+    if not self.friendly_names_is_disabled():
+      raise ValueError('Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.')
+
     if not table_name:
       if not table_id:
         raise ValueError('Either the name or id of the table must be provided.')
@@ -220,8 +239,12 @@ class Metabase_API():
         db_id = self.get_db_id_from_table_id(table_id)
         
     # Getting column names and IDs 
-    return {i['name']: i['id'] for i in self.get("/api/database/{}/fields".format(db_id)) 
-                               if i['table_name'] == table_name}
+    if column_id_name:
+      return {i['id']: i['name'] for i in self.get("/api/database/{}/fields".format(db_id)) 
+                                 if i['table_name'] == table_name}
+    else:
+      return {i['name']: i['id'] for i in self.get("/api/database/{}/fields".format(db_id)) 
+                                 if i['table_name'] == table_name}
 
 
 
@@ -267,12 +290,13 @@ class Metabase_API():
     custom_json -- key-value pairs that can provide some or all the data needed for creating the card (default None).
                    If you are providing only this argument, the keys 'name', 'dataset_query' and 'display' are required
                    (https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#post-apicard).
-                   Although the key 'visualization_settings' is also required for the endpoint, since it can be an 
+                   Although the key 'visualization_settings' is required for the endpoint, but since it can be an 
                    empty dict ({}), if it is absent in the provided json, the function adds it automatically. 
     verbose -- whether to print extra information (default False)
     return_card --  whather to return the created card info (default False)
     """
     if custom_json:
+      assert type(custom_json) == dict
       # checking whether the provided json is complete or not
       complete_json = True
       for item in ['name', 'dataset_query', 'display']:
@@ -320,9 +344,6 @@ class Metabase_API():
     
     if type(column_order) == list:
 
-      if not self.friendly_names_is_disabled():
-        raise ValueError('Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.')
-      
       column_name_id_dict = self.get_columns_name_id(db_id=db_id, 
                                                      table_id=table_id, 
                                                      table_name=table_name, 
@@ -336,9 +357,6 @@ class Metabase_API():
       column_id_list_str = [['field-id', i] for i in column_id_list]
 
     elif column_order == 'db_table_order':  # default
-      
-      if not self.friendly_names_is_disabled():
-        raise ValueError('Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.')
 
       ### Finding the actual order of columns in the table as they appear in the database
       # creating a temporary card for retrieving column ordering
@@ -436,9 +454,6 @@ class Metabase_API():
     if not table_name:
       table_name = self.get_item_name(item_type='table', item_id=table_id)
     db_id = self.get_db_id_from_table_id(table_id)
-    
-    if not self.friendly_names_is_disabled():
-      raise ValueError('Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.')
 
     colmuns_name_id_mapping = self.get_columns_name_id(table_name=table_name, db_id=db_id)
     column_id = colmuns_name_id_mapping[column_name]
@@ -770,6 +785,7 @@ class Metabase_API():
                       collection_name=None, collection_id=None, table_id=None, verbose=False):
     '''Archive the given item. For deleting the item use the 'delete_item' function.'''
     assert item_type in ['card', 'dashboard', 'collection', 'pulse', 'segment']
+    
     if not item_id:
       if not item_name:
         raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
@@ -796,7 +812,7 @@ class Metabase_API():
       
 
   def delete_item(self, item_type, item_name=None, item_id=None, 
-                  collection_name=None, collection_id=None, table_id=None, verbose=False):
+                  collection_name=None, collection_id=None, verbose=False):
     '''
     Delete the given item. Use carefully (this is different from archiving).
     Currently Collections and Segments cannot be deleted using the Metabase API.
@@ -811,31 +827,37 @@ class Metabase_API():
 
 
 
-  def update_col(self, column_id, properties={}):
-    res = self.put('/api/field/{}'.format(column_id), json=properties)
-    if res != 200:
-      raise Exception("Can't update column: %s" % res)
+  def update_column(self, params,
+                    column_id=None, column_name=None, 
+                    table_id=None, table_name=None, 
+                    db_id=None, db_name=None):
+    '''
+    Update the column in data model by providing values for 'params'.
+    For example for changing the column type to 'Category' in data model, use: params={'special_type':'type/Category'}.
+    Other parameter values: https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid
+    '''
+    assert type(params) == dict
 
-
-
-  def update_col_type_in_data_model(self, column_type='Category', column_id=None, column_name=None, 
-                                    table_name=None, table_id=None, db_name=None, db_id=None):
-    '''Update the column type of the specified column to the provided "column_type", in the data model.'''
-    assert column_type in ['Category']  # will implement other types later
-    
     # making sure we have the data we need
-    if not column_id and not column_name:
-      raise ValueError('Either the name or id of the column needs to be provided.')
-    if not table_id and not table_name:
-      raise ValueError('Either the name or id of the table needs to be provided.')
-      
     if not column_id:
-      columns_name_id_mapping = self.get_columns_name_id(table_name=table_name, table_id=table_id)
+      if not column_name:
+        raise ValueError('Either the name or id of the column needs to be provided.')
+      
+      if not table_id:
+        if not table_name:
+          raise ValueError('When column_id is not given, either the name or id of the table needs to be provided.')
+        table_id = self.get_table_id(table_name=table_name, db_id=db_id, db_name=db_name)
+      
+      columns_name_id_mapping = self.get_columns_name_id(table_name=table_name, table_id=table_id, db_name=db_name, db_id=db_id)
       column_id = columns_name_id_mapping.get(column_name)
       if column_id is None:
         raise ValueError('There is no column named {} in the provided table'.format(column_name))
         
-    return self.put('/api/field/{}'.format(column_id), json={'special_type':'type/{}'.format(column_type)})
+    res_status_code = self.put('/api/field/{}'.format(column_id), json=params)
+    if res_status_code != 200:
+      print('Column Update Failed.')
+
+    return res_status_code
       
 
 
@@ -849,4 +871,5 @@ class Metabase_API():
     if prettyprint:
       import pprint
       pprint.pprint(json)
+      
     return json
