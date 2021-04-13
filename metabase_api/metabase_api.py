@@ -3,13 +3,14 @@ import getpass
 
 class Metabase_API():
   
-  def __init__(self, domain, email, password=None):
+  def __init__(self, domain, email, password=None, basic_auth=False):
     
     self.domain = domain
     self.email = email
     self.password = getpass.getpass(prompt='Please enter your password: ') if password is None else password
     self.session_id = None
     self.header = None
+    self.auth = (self.email, self.password) if basic_auth else None
     self.authenticate()
   
   
@@ -18,7 +19,7 @@ class Metabase_API():
     conn_header = {'username':self.email,
                    'password':self.password}
 
-    res = requests.post(self.domain + '/api/session', json = conn_header)
+    res = requests.post(self.domain + '/api/session', json = conn_header, auth=self.auth)
     if not res.ok:
       raise Exception(res)
     
