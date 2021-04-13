@@ -29,7 +29,7 @@ class Metabase_API():
   
   def validate_session(self):
     """Get a new session ID if the previous one has expired"""
-    res = requests.get(self.domain + '/api/user/current', headers = self.header)
+    res = requests.get(self.domain + '/api/user/current', headers = self.header, auth=self.auth)
     
     if res.ok:  # 200
       return True
@@ -46,26 +46,26 @@ class Metabase_API():
   
   def get(self, endpoint, **kwargs):
     self.validate_session()
-    res = requests.get(self.domain + endpoint, headers=self.header, **kwargs)
+    res = requests.get(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
     return res.json() if res.ok else False
   
   
   def post(self, endpoint, **kwargs):
     self.validate_session()
-    res = requests.post(self.domain + endpoint, headers=self.header, **kwargs)
+    res = requests.post(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
     return res.json() if res.ok else False
   
   
   def put(self, endpoint, **kwargs):
     """Used for updating objects (cards, dashboards, ...)"""
     self.validate_session()
-    res = requests.put(self.domain + endpoint, headers=self.header, **kwargs)
+    res = requests.put(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
     return res.status_code
   
   
   def delete(self, endpoint, **kwargs):
     self.validate_session()
-    res = requests.delete(self.domain + endpoint, headers=self.header, **kwargs)
+    res = requests.delete(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
     return res.status_code
   
   
