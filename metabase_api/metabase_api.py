@@ -19,7 +19,7 @@ class Metabase_API():
     conn_header = {'username':self.email,
                    'password':self.password}
 
-    res = requests.post(self.domain + '/api/session', json = conn_header, auth=self.auth)
+    res = requests.post(self.domain + '/api/session', json=conn_header, auth=self.auth)
     if not res.ok:
       raise Exception(res)
     
@@ -29,7 +29,7 @@ class Metabase_API():
   
   def validate_session(self):
     """Get a new session ID if the previous one has expired"""
-    res = requests.get(self.domain + '/api/user/current', headers = self.header, auth=self.auth)
+    res = requests.get(self.domain + '/api/user/current', headers=self.header, auth=self.auth)
     
     if res.ok:  # 200
       return True
