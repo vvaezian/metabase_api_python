@@ -1,4 +1,6 @@
 ## 0.2.10 (2021-04-19)
+### Added
+- Basic Auth ([PR](https://github.com/vvaezian/metabase_api_python/pull/16))
 ## 0.2.9 (2021-04-05)
 ## 0.2.8 (2021-02-01)
 ## 0.2.7 (2020-11-22)
