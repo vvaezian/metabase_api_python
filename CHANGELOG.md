@@ -1,3 +1,7 @@
+## Unreleased
+### Added
+- Search function
+- Function for getting data of the questions ([`POST /api/card/:card-id/query/:export-format`](https://www.metabase.com/docs/latest/api-documentation.html#post-apicardcard-idqueryexport-format))
 ## 0.2.10 (2021-04-19)
 ### Added
 - Basic Auth ([PR](https://github.com/vvaezian/metabase_api_python/pull/16))
