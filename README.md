@@ -31,6 +31,8 @@ You usually don't need to deal with these functions directly (e.g. [get_item_id]
 - [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L563)
 - [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L656)
 - [update_column](https://github.com/vvaezian/metabase_api_python/blob/35e4ab921d9a0dcb6dafb0fc3b6d72a002d6acf7/metabase_api/metabase_api.py#L830)
+- [search](https://github.com/vvaezian/metabase_api_python/blob/640fe70feb360e13aeff96c82ee1b51ce7e404a0/metabase_api/metabase_api.py#L797)
+- [get_card_data](https://github.com/vvaezian/metabase_api_python/blob/640fe70feb360e13aeff96c82ee1b51ce7e404a0/metabase_api/metabase_api.py#L818)
 - [make_json](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L827)
 - [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L757)
 - [delete_item](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L786)  
@@ -90,6 +92,20 @@ Update the column in Data Model by providing the relevant parameter (list of all
 For example to change the column type to 'Category', we can use:
 ```python
 mb.update_column(column_name='myCol', table_name='myTable', params={'special_type':'type/Category'})
+```
+
+#### `search`
+Searches for Metabase objects and returns basic info.
+Provide the search term and optionally `item_type` to limit the results.
+```Python
+mb.search(q='test', item_type='card')
+```
+
+#### `get_card_data`
+Returns the rows.  
+Provide the card name/id and the data format of the output (csv or json)
+```python
+results = mb.get_card_data(card_id=123, data_format='csv')
 ```
 
 #### `make_json`
