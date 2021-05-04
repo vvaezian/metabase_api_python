@@ -44,29 +44,41 @@ class Metabase_API():
   ######################### REST Methods ###########################
   ##################################################################
   
-  def get(self, endpoint, **kwargs):
+  def get(self, endpoint, *args, **kwargs):
     self.validate_session()
     res = requests.get(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
-    return res.json() if res.ok else False
+    if 'raw' in args:
+      return res
+    else:
+      return res.json() if res.ok else False
   
   
-  def post(self, endpoint, **kwargs):
+  def post(self, endpoint, *args, **kwargs):
     self.validate_session()
     res = requests.post(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
-    return res.json() if res.ok else False
+    if 'raw' in args:
+      return res
+    else:
+      return res.json() if res.ok else False
   
   
-  def put(self, endpoint, **kwargs):
+  def put(self, endpoint, *args, **kwargs):
     """Used for updating objects (cards, dashboards, ...)"""
     self.validate_session()
     res = requests.put(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
-    return res.status_code
+    if 'raw' in args:
+      return res
+    else:
+      return res.status_code
   
   
-  def delete(self, endpoint, **kwargs):
+  def delete(self, endpoint, *args, **kwargs):
     self.validate_session()
     res = requests.delete(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
-    return res.status_code
+    if 'raw' in args:
+      return res
+    else:
+      return res.status_code
   
   
   
@@ -779,63 +791,53 @@ class Metabase_API():
         self.copy_pulse(source_pulse_id=pulse_id,
                         destination_collection_id=destination_parent_collection_id,
                         destination_pulse_name=destination_pulse_name)
+  
+  
 
-
-  def search(self, q, item_type=None, archived=False, single_ret=False):
+  def search(self, q, item_type=None, archived=False):
     """
-    Search content and filter item type. Note: endpoint /api/search fall behind with web app version.
+    Search for Metabase objects (except DBs) and return their basic info. 
+    We can limit the search to a certain item type by providing a value for item_type keyword. 
 
     Keyword arguments:
     q -- search input
-    item_type -- result type (default None means all type)
-    archived -- False or True
+    item_type -- to limit the search to certain item types (default:None, means no limit)
+    archived -- whether to include archived items in the search
     """
-    assert item_type in [None, 'card', 'dashboard', 'collection']
+    assert item_type in [None, 'card', 'dashboard', 'collection', 'table', 'pulse', 'segment', 'metric' ]
     assert archived in [True, False]
-    ret = self.get(endpoint='/api/search', params={'q': q, 'archived': archived})
+
+    res = self.get(endpoint='/api/search/', params={'q':q, 'archived':archived})
     if item_type is not None:
-      ret = [item for item in ret if item['model'] == item_type]
-    if single_ret:
-      if len(ret) > 1:
-        raise ValueError("There is more than one item with the name '{}'".format(q))
-      else:
-        ret = ret[0]
-    return ret
+      res = [ item for item in res if item['model'] == item_type ]
+
+    return res
 
 
-  def query(self, card_name=None, card_id=None, collection_id=None, collection_name=None, export_format=None):
-    """
-    Get saved question data.
 
-    Keyword arguments:
-    card_name -- card_name
-    card_id -- card_id, int type
-    collection_id -- collection_id
-    collection_name -- collection_name
-    """
-    if export_format not in [None, 'csv', 'json', 'xlsx']:
-      raise ValueError('{} format not supported. Supported format are csv, json, xlsx'.format(export_format))
-    if [card_id, card_name].count(None) == 2:
-      raise ValueError('Either card_id or card_name should be available')
+  def get_card_data(self, card_name=None, card_id=None, collection_name=None, collection_id=None, data_format='json'):
+    '''
+    Run the query associated with a card and get the results.
+    The data_format keyword specifies the format of the returned data:
+      - 'json': every row is a dictionary of <column-header, cell> key-value pairs  
+      - 'csv': the entire result is returned as a string, where rows are separated by newlines and cells with commas.
+    '''
+    assert data_format in [ 'json', 'csv' ]
+    
     if card_id is None:
-      if collection_id is None and collection_name is None:
-        search_ret = self.search(card_name, item_type='card', single_ret=True)
-        card_id = search_ret['id']
-      else:
-        card_id = self.get_item_id(item_name=card_name,
-                                   collection_name=collection_name,
-                                   collection_id=collection_id,
-                                   item_type='card')
-    if export_format is None:
-      endpoint = "{}/{}/query".format('/api/card', card_id)
-    else:
-      endpoint = "{}/{}/query/{}".format('/api/card', card_id, export_format)
-    self.validate_session()
-    res = requests.post(self.domain + endpoint, headers=self.header)
-    if export_format:
-      return res.content if res.ok else False
-    else:
-      return res.json() if res.ok else False
+      if card_name is None:
+        raise ValueError('Either card_id or card_name must be provided.')
+      card_id = self.get_item_id(item_name=card_name,
+                                 collection_name=collection_name,
+                                 collection_id=collection_id,
+                                 item_type='card')
+
+    res = self.post("/api/card/{}/query/{}".format(card_id, data_format), 'raw')
+    if data_format == 'json':
+      return eval(res.text)
+    if data_format == 'csv':
+      return res.text
+
 
 
   def move_to_archive(self, item_type, item_name=None, item_id=None, 
