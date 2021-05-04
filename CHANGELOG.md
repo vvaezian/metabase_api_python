@@ -1,7 +1,7 @@
-## Unreleased
+## 0.2.11 (2021-05-03)
 ### Added
-- Search function (Endpoint: [`GET /api/search/`](https://www.metabase.com/docs/latest/api-documentation.html#get-apisearch))
-- Function for getting data of the questions (Endpoint: [`POST /api/card/:card-id/query/:export-format`](https://www.metabase.com/docs/latest/api-documentation.html#post-apicardcard-idqueryexport-format))
+- `search` function (Endpoint: [`GET /api/search/`](https://www.metabase.com/docs/latest/api-documentation.html#get-apisearch))
+- `get_card_data` function for getting data of the questions (Endpoint: [`POST /api/card/:card-id/query/:export-format`](https://www.metabase.com/docs/latest/api-documentation.html#post-apicardcard-idqueryexport-format))
 ## 0.2.10 (2021-04-19)
 ### Added
 - Basic Auth ([PR](https://github.com/vvaezian/metabase_api_python/pull/16))
