@@ -95,7 +95,7 @@ mb.update_column(column_name='myCol', table_name='myTable', params={'special_typ
 ```
 
 #### `search`
-Searches for Metabase objects and returns basic info.
+Searches for Metabase objects and returns basic info.  
 Provide the search term and optionally `item_type` to limit the results.
 ```Python
 mb.search(q='test', item_type='card')
