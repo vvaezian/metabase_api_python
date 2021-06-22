@@ -1,3 +1,6 @@
+## Unreleased
+### Changed
+- Updated the docstring of the `update_column` function to reflect the changes in v.39 of Metabase.
 ## 0.2.11 (2021-05-03)
 ### Added
 - `search` function (Endpoint: [`GET /api/search/`](https://www.metabase.com/docs/latest/api-documentation.html#get-apisearch))
