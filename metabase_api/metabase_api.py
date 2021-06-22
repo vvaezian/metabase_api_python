@@ -892,7 +892,8 @@ class Metabase_API():
                     db_id=None, db_name=None):
     '''
     Update the column in data model by providing values for 'params'.
-    For example for changing the column type to 'Category' in data model, use: params={'special_type':'type/Category'}.
+    For example for changing the column type to 'Category' in data model, use: params={'semantic_type':'type/Category'}. 
+    (For Metabase versions before v.39, use: params={'special_type':'type/Category'}).
     Other parameter values: https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid
     '''
     assert type(params) == dict
