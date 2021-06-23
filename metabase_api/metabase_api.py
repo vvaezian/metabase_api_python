@@ -331,7 +331,7 @@ class Metabase_API():
         res = self.post("/api/card/", json=custom_json)
         if res and not res.get('error'):
           self.verbose_print(verbose, 'The card was created successfully.')
-          if return_card: return res
+          return res if return_card else return None
         else:
           print('Card Creation Failed.\n', res)
           return res
