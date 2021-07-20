@@ -31,6 +31,7 @@ You usually don't need to deal with these functions directly (e.g. [get_item_id]
 - [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L563)
 - [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L656)
 - [update_column](https://github.com/vvaezian/metabase_api_python/blob/35e4ab921d9a0dcb6dafb0fc3b6d72a002d6acf7/metabase_api/metabase_api.py#L830)
+- [clone_card](https://github.com/vvaezian/metabase_api_python/blob/1032bb9df026da5f31acfbc9421cfbb8363fc385/metabase_api/metabase_api.py#L861)
 - [search](https://github.com/vvaezian/metabase_api_python/blob/640fe70feb360e13aeff96c82ee1b51ce7e404a0/metabase_api/metabase_api.py#L797)
 - [get_card_data](https://github.com/vvaezian/metabase_api_python/blob/640fe70feb360e13aeff96c82ee1b51ce7e404a0/metabase_api/metabase_api.py#L818)
 - [make_json](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L827)
