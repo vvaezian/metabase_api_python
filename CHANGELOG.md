@@ -1,5 +1,10 @@
 ## Unreleased
+## 0.2.12
+### Added
+- `clone_card` function
 ### Changed
+- Fixed the issues #12, #20
+- Updated the `search` and `get_db_id` functions to reflect the changes in v.40 of Metabase
 - Updated the docstring of the `update_column` function to reflect the changes in v.39 of Metabase.
 ## 0.2.11 (2021-05-03)
 ### Added

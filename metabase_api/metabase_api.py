@@ -5,7 +5,7 @@ class Metabase_API():
   
   def __init__(self, domain, email, password=None, basic_auth=False):
     
-    self.domain = domain
+    self.domain = domain.rstrip('/')
     self.email = email
     self.password = getpass.getpass(prompt='Please enter your password: ') if password is None else password
     self.session_id = None
@@ -159,7 +159,10 @@ class Metabase_API():
 
 
   def get_db_id(self, db_name):
-    db_IDs = [ i['id'] for i in self.get("/api/database/") if i['name'] == db_name ]
+    res = self.get("/api/database/")
+    if type(res) == dict:  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
+      res = res['data']
+    db_IDs = [ i['id'] for i in res if i['name'] == db_name ]
     
     if len(db_IDs) > 1:
       raise ValueError('There is more than one DB with the name {}'.format(db_name))
@@ -310,7 +313,7 @@ class Metabase_API():
     """
     if custom_json:
       assert type(custom_json) == dict
-      # checking whether the provided json is complete or not
+      # checking whether the provided json has the required info or not
       complete_json = True
       for item in ['name', 'dataset_query', 'display']:
         if item not in custom_json:
@@ -318,20 +321,32 @@ class Metabase_API():
           self.verbose_print(verbose, 'The provided json is detected as partial.')
           break
       
-      # Fixing the issue #10
+      # Fix for the issue #10
       if custom_json.get('description') == '': 
         custom_json['description'] = None
+
+      # setting the collection
+      if collection_id:
+        custom_json['collecion_id'] = collection_id
+      elif collection_name:
+        collection_id = self.get_collection_id(collection_name)
+        custom_json['collecion_id'] = collection_id
 
       if complete_json:
         # Adding visualization_settings if it is not present in the custom_json
         if 'visualization_settings' not in custom_json:
           custom_json['visualization_settings'] = {}
+        # adding the card name if it is provided
+        if card_name is not None:
+          custom_json['name'] = card_name
+        if not custom_json.get('collection_id'):
+          self.verbose_print(verbose, 'No collection name or id is provided. Will create the card at the root ...')
           
         # Creating the card using only the provided custom_json 
         res = self.post("/api/card/", json=custom_json)
         if res and not res.get('error'):
           self.verbose_print(verbose, 'The card was created successfully.')
-          return res if return_card else return None
+          return res if return_card else None
         else:
           print('Card Creation Failed.\n', res)
           return res
@@ -808,6 +823,8 @@ class Metabase_API():
     assert archived in [True, False]
 
     res = self.get(endpoint='/api/search/', params={'q':q, 'archived':archived})
+    if type(res) == dict:  # because in version *.40.0 the behaviour of this endpoint changed
+      res = res['data']
     if item_type is not None:
       res = [ item for item in res if item['model'] == item_type ]
 
@@ -833,10 +850,59 @@ class Metabase_API():
                                  item_type='card')
 
     res = self.post("/api/card/{}/query/{}".format(card_id, data_format), 'raw')
+
     if data_format == 'json':
-      return eval(res.text)
+      return eval(res.text.replace('null', 'None'))
     if data_format == 'csv':
-      return res.text
+      return res.text.replace('null', '')
+
+
+
+  def clone_card(self, card_id, source_table_id, target_table_id, new_card_name=None, new_card_collection_id=None, ignore_these_filters=None):
+    """ 
+    *** work in progress ***
+    Create a new card where the source of the old card is changed from 'source_table_id' to 'target_table_id'. 
+    The filters that were based on the old table would become based on the new table.
+    In the current version of the function there are some limitations which would be removed in future versions:
+      - The column names used in filters need to be the same in the source and target table (except the ones that are ignored by 'ignore_these_filters' param).
+      - The source and target tables need to be in the same DB. 
+
+    Keyword arguments:
+    card_id -- id of the card
+    source_table_id -- The table that the filters of the card are based on
+    target_table_id -- The table that the filters of the cloned card would be based on
+    new_card_name -- Name of the cloned card
+    new_card_collection_id -- The collection that the cloned card should be saved in
+    ignore_these_filters -- A list of variable names of filters. The source of these filters would not change in the cloning process.
+    """
+    card_info = self.get('/api/card/{}'.format(card_id))
+    target_table_col_name_id_mapping = self.get_columns_name_id(table_id=target_table_id)
+    source_table_col_id_name_mapping = self.get_columns_name_id(table_id=source_table_id, column_id_name=True)
+    filters_data = card_info['dataset_query']['native']['template-tags']
+
+    for filter_variable_name, data in filters_data.items():
+      if type(ignore_these_filters) == list and filter_variable_name in ignore_these_filters:
+        continue
+      column_id = data['dimension'][1]
+      column_name = source_table_col_id_name_mapping[column_id]
+      target_col_id = target_table_col_name_id_mapping[column_name]
+      card_info['dataset_query']['native']['template-tags'][filter_variable_name]['dimension'] = ['field', target_col_id, None]
+
+    new_card_json = {}
+    for key in ['dataset_query', 'display', 'visualization_settings']:
+      new_card_json[key] = card_info[key]
+
+    if new_card_name:
+      new_card_json['name'] = new_card_name
+    else:
+      new_card_json['name'] = card_info['name']
+
+    if new_card_collection_id:
+      new_card_json['collection_id'] = new_card_collection_id
+    else:
+      new_card_json['collection_id'] = card_info['collection_id']
+
+    self.create_card(custom_json=new_card_json, verbose=True)
 
 
 
@@ -892,7 +958,7 @@ class Metabase_API():
                     db_id=None, db_name=None):
     '''
     Update the column in data model by providing values for 'params'.
-    E.g. for changing the column type to 'Category' in data model, use: params={'semantic_type':'type/Category'}. 
+    E.g. for changing the column type to 'Category' in data model, use: params={'semantic_type':'type/Category'} 
     (For Metabase versions before v.39, use: params={'special_type':'type/Category'}).
     Other parameter values: https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid
     '''

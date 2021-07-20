@@ -94,6 +94,12 @@ For example to change the column type to 'Category', we can use:
 mb.update_column(column_name='myCol', table_name='myTable', params={'special_type':'type/Category'})
 ```
 
+#### `clone_card`
+Similar to `copy_card` but a different table for filters of the card is used.
+```python
+mb.clone_card(card_id=123, source_table_id=456, destination_table_id=789, new_card_name='test clone', new_card_collection_id=1)
+```
+
 #### `search`
 Searches for Metabase objects and returns basic info.  
 Provide the search term and optionally `item_type` to limit the results.
