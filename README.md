@@ -88,7 +88,7 @@ mb.copy_collection(source_collection_id=123, destination_parent_collection_id=45
 ```
 You can also specify a postfix to be added to the names of the child items that get copied.
 
-#### `update_colum`
+#### `update_column`
 Update the column in Data Model by providing the relevant parameter (list of all parameters can be found [here](https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid)).  
 For example to change the column type to 'Category', we can use:
 ```python
