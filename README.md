@@ -30,8 +30,8 @@ You usually don't need to deal with these functions directly (e.g. [get_item_id]
 - [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L511)
 - [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L563)
 - [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L656)
-- [update_column](https://github.com/vvaezian/metabase_api_python/blob/35e4ab921d9a0dcb6dafb0fc3b6d72a002d6acf7/metabase_api/metabase_api.py#L830)
 - [clone_card](https://github.com/vvaezian/metabase_api_python/blob/1032bb9df026da5f31acfbc9421cfbb8363fc385/metabase_api/metabase_api.py#L861)
+- [update_column](https://github.com/vvaezian/metabase_api_python/blob/35e4ab921d9a0dcb6dafb0fc3b6d72a002d6acf7/metabase_api/metabase_api.py#L830)
 - [search](https://github.com/vvaezian/metabase_api_python/blob/640fe70feb360e13aeff96c82ee1b51ce7e404a0/metabase_api/metabase_api.py#L797)
 - [get_card_data](https://github.com/vvaezian/metabase_api_python/blob/640fe70feb360e13aeff96c82ee1b51ce7e404a0/metabase_api/metabase_api.py#L818)
 - [make_json](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L827)
@@ -88,18 +88,18 @@ mb.copy_collection(source_collection_id=123, destination_parent_collection_id=45
 ```
 You can also specify a postfix to be added to the names of the child items that get copied.
 
-#### `update_column`
-Update the column in Data Model by providing the relevant parameter (list of all parameters can be found [here](https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid)).  
-For example to change the column type to 'Category', we can use:
-```python
-mb.update_column(column_name='myCol', table_name='myTable', params={'special_type':'type/Category'})
-```
-
 #### `clone_card`
 Similar to `copy_card` but a different table for filters of the card is used.  
 This comes in handy when you want to create similar cards with the same filters that differ only on the source of the filters (e.g. cards for 50 US states).
 ```python
 mb.clone_card(card_id=123, source_table_id=456, destination_table_id=789, new_card_name='test clone', new_card_collection_id=1)
+```
+
+#### `update_column`
+Update the column in Data Model by providing the relevant parameter (list of all parameters can be found [here](https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid)).  
+For example to change the column type to 'Category', we can use:
+```python
+mb.update_column(column_name='myCol', table_name='myTable', params={'special_type':'type/Category'})
 ```
 
 #### `search`
