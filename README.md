@@ -1,5 +1,5 @@
+<!--[![HitCount](http://hits.dwyl.com/vvaezian/metabase_api_python.svg)](http://hits.dwyl.com/vvaezian/metabase_api_python)-->
 [![PyPI version](https://badge.fury.io/py/metabase-api.svg?)](https://badge.fury.io/py/metabase-api)
-[![HitCount](http://hits.dwyl.com/vvaezian/metabase_api_python.svg)](http://hits.dwyl.com/vvaezian/metabase_api_python)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](https://github.com/vvaezian/metabase_api_python/issues)
 [![GitHub license](https://img.shields.io/github/license/vvaezian/metabase_api_python.svg)](https://github.com/vvaezian/metabase_api_python/blob/master/LICENSE)
 
@@ -99,7 +99,7 @@ mb.clone_card(card_id=123, source_table_id=456, destination_table_id=789, new_ca
 Update the column in Data Model by providing the relevant parameter (list of all parameters can be found [here](https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid)).  
 For example to change the column type to 'Category', we can use:
 ```python
-mb.update_column(column_name='myCol', table_name='myTable', params={'special_type':'type/Category'})
+mb.update_column(column_name='myCol', table_name='myTable', params={'semantic_type':'type/Category'}  # (For Metabase versions before v.39, use: params={'special_type':'type/Category'}))
 ```
 
 #### `search`
