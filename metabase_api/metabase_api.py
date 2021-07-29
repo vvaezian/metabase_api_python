@@ -871,7 +871,7 @@ class Metabase_API():
     card_id -- id of the card
     source_table_id -- The table that the filters of the card are based on
     target_table_id -- The table that the filters of the cloned card would be based on
-    new_card_name -- Name of the cloned card
+    new_card_name -- Name of the cloned card. If not provided, the name of the source card is used.
     new_card_collection_id -- The collection that the cloned card should be saved in
     ignore_these_filters -- A list of variable names of filters. The source of these filters would not change in the cloning process.
     """
