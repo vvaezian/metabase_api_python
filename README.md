@@ -25,6 +25,7 @@ You usually don't need to deal with these functions directly (e.g. [get_item_id]
 ### Custom Functions
 
 - [create_card](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L238)
+- [create_collection](https://github.com/vvaezian/metabase_api_python/blob/bebfb75e7344732a75cc8b5c4ff1b61fc16bafe8/metabase_api/metabase_api.py#L461)
 - [create_segment](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L403)
 - [copy_card](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L450)
 - [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L511)
@@ -51,6 +52,12 @@ mb.create_card(card_name='test_card', table_name='mySourceTable', column_order=[
 All or part of the function parameters and many more information (e.g. visualisation settings) can be provided to the function in a dictionary, using the *custom_json* parameter. (also see the `make_json` function below)
 ```python
 mb.create_card(custom_json=myCustomJson)
+```
+
+#### `create_collection`
+Create an empty collection. Provide the name of the collection, and the name or id of the parent collection (i.e. where you want the created collection to reside). If you want to create the collection in the root, you need to provide `parent_collection_name='Root'`.
+```python
+mb.create_collection(collection_name='test_collection', parent_collection_id=123)
 ```
 
 #### `create_segment`
