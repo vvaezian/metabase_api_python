@@ -460,7 +460,7 @@ class Metabase_API():
   
   def create_collection(self, collection_name, parent_collection_id=None, parent_collection_name=None, return_results=False):
     """
-    Create a collection using the given arguments utilizing the endpoint 'POST /api/collection/'. 
+    Create an empty collection, in the given location, utilizing the endpoint 'POST /api/collection/'. 
     
     Keyword arguments:
     collection_name -- the name used for the created collection.
