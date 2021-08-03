@@ -458,6 +458,31 @@ class Metabase_API():
   
 
   
+  def create_collection(self, collection_name, parent_collection_id=None, parent_collection_name=None, return_results=False):
+    """
+    Create a collection using the given arguments utilizing the endpoint 'POST /api/collection/'. 
+    
+    Keyword arguments:
+    collection_name -- the name used for the created collection.
+    parent_collection_id -- id of the collection where the created collection resides in.
+    parent_collection_name -- name of the collection where the created collection resides in (use 'Root' for the root collection).
+    return_results -- whether to return the resuls or not.
+    """
+    # making sure we have the data we need
+    if not parent_collection_id:
+      if not parent_collection_name:
+        print('Either the name of id of the parent collection must be provided.')
+      if parent_collection_name == 'Root':
+        parent_collection_id = None
+      else:
+        parent_collection_id = self.get_collection_id(parent_collection_name)
+    
+    res = self.post('/api/collection', json={'name':collection_name, 'parent_id':parent_collection_id, 'color':'#509EE3'})
+    if return_results:
+      return res
+
+
+
   def create_segment(self, segment_name, column_name, column_values, segment_description='', 
                      db_name=None, db_id=None, table_name=None, table_id=None, return_segment=False):
     """
@@ -718,17 +743,14 @@ class Metabase_API():
     Keyword arguments:
     source_collection_name -- name of the collection to copy (default None) 
     source_collection_id -- id of the collection to copy (default None) 
-    destination_collection_name -- the name to use for the collection in the destination (default None).
+    destination_collection_name -- the name to be used for the collection in the destination (default None).
                                    If None, it will use the name of the source collection + postfix.
-    destination_parent_collection_name -- name of the destination parent collection (default None) 
-    destination_parent_collection_id -- id of the destination parent collection (default None) 
-    postfix -- if destination_collection_name is None, adds this string to the end of source_collection_name 
-               to make destination_collection_name.
-    child_items_postfix -- this string is added to the end of the child items names, 
-                           when saving them in the destination (default '').
-    deepcopy_dashboards -- whether to duplicate the cards inside dashboards (default False).
-                           savinge, putin the duplicated cards in a collection called 
+    destination_parent_collection_name -- name of the destination parent collection (default None). This is the collection that would have the copied collection as a child.
+    destination_parent_collection_id -- id of the destination parent collection (default None). This is the collection that would have the copied collection as a child.
+    deepcopy_dashboards -- whether to duplicate the cards inside the dashboards (default False). If True, puts the duplicated cards in a collection called 
                            "[dashboard_name]'s duplicated cards" in the same path as the duplicated dashboard.
+    postfix -- if destination_collection_name is None, adds this string to the end of source_collection_name to make destination_collection_name.
+    child_items_postfix -- this string is added to the end of the child items' names, when saving them in the destination (default '').
     verbose -- prints extra information (default False) 
     """
     ### Making sure we have the data that we need 
@@ -749,62 +771,63 @@ class Metabase_API():
         source_collection_name = self.get_item_name(item_type='collection', item_id=source_collection_id)
       destination_collection_name = source_collection_name + postfix
       
-    # getting the info of the source collection
-    source_collection = self.get('/api/collection/{}'.format(source_collection_id))
-    
-    ### copying the items of the source collection to the new collection
+    ### Creating a collection in the destination to hold the contents of the source collection
+    res = self.create_collection(destination_collection_name, 
+                                 parent_collection_id=destination_parent_collection_id, 
+                                 parent_collection_name=destination_parent_collection_name,
+                                 return_results=True
+                                )
+    destination_collection_id = res['id']  
+
+    ### Getting the items to copy
     items = self.get('/api/collection/{}/items'.format(source_collection_id))
-    
+    if type(items) == dict:  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
+      items = items['data']
+
+    ### copying the items of the source collection to the new collection
     for item in items:
       
-      ### copying a collection
+      ## copying a collection
       if item['model'] == 'collection':
         collection_id = item['id']
         collection_name = item['name'] 
-        destination_dashboard_name = collection_name + child_items_postfix
-        self.verbose_print(verbose, 'Copying the collection {} ...'.format(collection_name))
-        
-        # creating an empty collection in the destination
-        res = self.post('/api/collection/', json={'name':collection_name, 
-                                                'color':'#509EE3', 
-                                                'parent_id':destination_parent_collection_id})
-        created_collection_id = res['id']
-        
+        destination_collection_name = collection_name + child_items_postfix
+        self.verbose_print(verbose, 'Copying the collection "{}" ...'.format(collection_name))
         self.copy_collection(source_collection_id=collection_id,
-                             destination_parent_collection_id=created_collection_id,
+                             destination_parent_collection_id=destination_collection_id,
                              child_items_postfix=child_items_postfix,
                              deepcopy_dashboards=deepcopy_dashboards,
                              verbose=verbose)
       
-      ### copying a dashboard
+      ## copying a dashboard
       if item['model'] == 'dashboard':
         dashboard_id = item['id']
         dashboard_name = item['name']
         destination_dashboard_name = dashboard_name + child_items_postfix
-        self.verbose_print(verbose, 'Copying the dashboard {} ...'.format(dashboard_name))
+        self.verbose_print(verbose, 'Copying the dashboard "{}" ...'.format(dashboard_name))
         self.copy_dashboard(source_dashboard_id=dashboard_id,
-                            destination_collection_id=destination_parent_collection_id,
+                            destination_collection_id=destination_collection_id,
                             destination_dashboard_name=destination_dashboard_name,
                             deepcopy=deepcopy_dashboards)
       
-      ### copying a card
+      ## copying a card
       if item['model'] == 'card':
         card_id = item['id']
         card_name = item['name']
         destination_card_name = card_name + child_items_postfix
-        self.verbose_print(verbose, 'Copying the card {} ...'.format(card_name))
+        self.verbose_print(verbose, 'Copying the card "{}" ...'.format(card_name))
         self.copy_card(source_card_id=card_id,
-                       destination_collection_id=destination_parent_collection_id,
+                       destination_collection_id=destination_collection_id,
                        destination_card_name=destination_card_name)
         
-      ### copying a pulse
+      ## copying a pulse
       if item['model'] == 'pulse':
         pulse_id = item['id']
         pulse_name = item['name']
         destination_pulse_name = pulse_name + child_items_postfix
-        self.verbose_print(verbose, 'Copying the pulse {} ...'.format(pulse_name))
+        self.verbose_print(verbose, 'Copying the pulse "{}" ...'.format(pulse_name))
         self.copy_pulse(source_pulse_id=pulse_id,
-                        destination_collection_id=destination_parent_collection_id,
+                        destination_collection_id=destination_collection_id,
                         destination_pulse_name=destination_pulse_name)
   
   
@@ -823,7 +846,7 @@ class Metabase_API():
     assert archived in [True, False]
 
     res = self.get(endpoint='/api/search/', params={'q':q, 'archived':archived})
-    if type(res) == dict:  # because in version *.40.0 the behaviour of this endpoint changed
+    if type(res) == dict:  # bin Metabase version *.40.0 the format of the returned result for this endpoint changed
       res = res['data']
     if item_type is not None:
       res = [ item for item in res if item['model'] == item_type ]
@@ -852,7 +875,8 @@ class Metabase_API():
     res = self.post("/api/card/{}/query/{}".format(card_id, data_format), 'raw')
 
     if data_format == 'json':
-      return eval(res.text.replace('null', 'None'))
+      import json
+      return json.loads(res.text)
     if data_format == 'csv':
       return res.text.replace('null', '')
 
@@ -990,12 +1014,10 @@ class Metabase_API():
   @staticmethod
   def make_json(raw_json, prettyprint=False):
     """Turn the string copied from the Inspect->Network window into a Dict."""
-    json = eval(raw_json.replace('null', 'None') \
-                        .replace('false', 'False') \
-                        .replace('true', 'True')
-               )
+    import json
+    ret_dict = json.loads(raw_json)
     if prettyprint:
       import pprint
-      pprint.pprint(json)
+      pprint.pprint(ret_dict)
       
-    return json
+    return ret_dict
