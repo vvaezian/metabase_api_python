@@ -89,7 +89,7 @@ mb.copy_dashboard(source_dashboard_id=123, destination_collection_id=456, deepco
 ```
 
 #### `copy_collection`
-Copies all the items in the given collection (name/id) into the given `destination_parent_collection` (name/id). You can determine whether to deepcopy the dashboards.
+Copies the given collection and its contents to the given `destination_parent_collection` (name/id). You can determine whether to deepcopy the dashboards.
 ```python
 mb.copy_collection(source_collection_id=123, destination_parent_collection_id=456, deepcopy_dashboards=True, verbose=True)
 ```
