@@ -99,7 +99,7 @@ You can also specify a postfix to be added to the names of the child items that 
 Similar to `copy_card` but a different table is used as the source for filters of the card.  
 This comes in handy when you want to create similar cards with the same filters that differ only on the source of the filters (e.g. cards for 50 US states).
 ```python
-mb.clone_card(card_id=123, source_table_id=456, destination_table_id=789, new_card_name='test clone', new_card_collection_id=1)
+mb.clone_card(card_id=123, source_table_id=456, target_table_id=789, new_card_name='test clone', new_card_collection_id=1)
 ```
 
 #### `update_column`
