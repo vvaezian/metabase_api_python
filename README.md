@@ -24,20 +24,21 @@ You usually don't need to deal with these functions directly (e.g. [get_item_id]
 
 ### Custom Functions
 
-- [create_card](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L238)
-- [create_collection](https://github.com/vvaezian/metabase_api_python/blob/bebfb75e7344732a75cc8b5c4ff1b61fc16bafe8/metabase_api/metabase_api.py#L461)
-- [create_segment](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L403)
-- [copy_card](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L450)
-- [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L511)
-- [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L563)
-- [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L656)
-- [clone_card](https://github.com/vvaezian/metabase_api_python/blob/1032bb9df026da5f31acfbc9421cfbb8363fc385/metabase_api/metabase_api.py#L861)
-- [update_column](https://github.com/vvaezian/metabase_api_python/blob/35e4ab921d9a0dcb6dafb0fc3b6d72a002d6acf7/metabase_api/metabase_api.py#L830)
-- [search](https://github.com/vvaezian/metabase_api_python/blob/640fe70feb360e13aeff96c82ee1b51ce7e404a0/metabase_api/metabase_api.py#L797)
-- [get_card_data](https://github.com/vvaezian/metabase_api_python/blob/640fe70feb360e13aeff96c82ee1b51ce7e404a0/metabase_api/metabase_api.py#L818)
-- [make_json](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L827)
-- [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L757)
-- [delete_item](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L786)  
+- [create_card](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L289)
+- [create_collection](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L461)
+- [create_segment](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L486)
+- [copy_card](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L530)
+- [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L591)
+- [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L643)
+- [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L736)
+- [clone_card](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L885)
+- [update_column](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L979)
+- [search](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L835)
+- [get_card_data](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L858)
+- [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L933)
+- [delete_item](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L963)  
+- [make_json](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L1015)
+
 *For a complete list of functions parameters see the functions definitions using the above links. Here we provide a short description:*
 
 #### `create_card`
