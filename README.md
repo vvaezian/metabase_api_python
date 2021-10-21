@@ -52,7 +52,29 @@ mb.create_card(card_name='test_card', table_name='mySourceTable', column_order=[
 ```
 All or part of the function parameters and many more information (e.g. visualisation settings) can be provided to the function in a dictionary, using the *custom_json* parameter. (also see the `make_json` function below)
 ```python
-mb.create_card(custom_json=myCustomJson)
+q = '''
+  select *
+  from my_table 
+  where city = '{}'
+'''
+
+for city in city_list:
+
+  query = q.format(city)
+  
+  # here I included the minimum keys required. You can add more.
+  my_custom_json = {
+    'name': 'test_card',
+    'display': 'table',
+    'dataset_query': {
+      'database': db_id,
+      'native': { 'query': query },
+      'type': 'native' 
+    }
+  }
+       
+  # See the function definition for other parameters of the function (e.g. in which collection to save the card)
+  mb.create_card(custom_json=my_custom_json)
 ```
 
 #### `create_collection`
