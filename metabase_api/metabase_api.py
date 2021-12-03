@@ -1009,6 +1009,13 @@ class Metabase_API():
 
     return res_status_code
       
+  
+
+  def add_card_to_dashboard(self, card_id, dashboard_id):
+    params = {
+      'cardId': card_id
+    }
+    self.post(f'/api/dashboard/{dashboard_id}/cards',json=params)
 
 
   @staticmethod
