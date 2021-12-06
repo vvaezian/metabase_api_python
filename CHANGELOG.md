@@ -1,4 +1,9 @@
 ## Unreleased
+### Added
+- Allow passing filter values to `get_card_data` function 
+- Function for adding cards to dashboards (PR #26)
+### Changed
+- Copy collection to root collection does not work (#25)
 
 ## 0.2.13
 ### Added
