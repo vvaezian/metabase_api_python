@@ -764,7 +764,11 @@ class Metabase_API():
       if not destination_parent_collection_name:
         raise ValueError('Either the name or id of the destination parent collection must be provided.')
       else:
-        destination_parent_collection_id = self.get_collection_id(destination_parent_collection_name)
+        destination_parent_collection_id = (
+          self.get_collection_id(destination_parent_collection_name)
+          if destination_parent_collection_name != 'Root'
+          else None
+        )
     
     if not destination_collection_name:
       if not source_collection_name:
