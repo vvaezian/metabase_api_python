@@ -327,10 +327,10 @@ class Metabase_API():
 
       # setting the collection
       if collection_id:
-        custom_json['collecion_id'] = collection_id
+        custom_json['collection_id'] = collection_id
       elif collection_name:
         collection_id = self.get_collection_id(collection_name)
-        custom_json['collecion_id'] = collection_id
+        custom_json['collection_id'] = collection_id
 
       if complete_json:
         # Adding visualization_settings if it is not present in the custom_json
