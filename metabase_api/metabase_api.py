@@ -392,7 +392,7 @@ class Metabase_API():
 
       # Set the collection
       if collection_id:
-        custom_json['collecion_id'] = collection_id
+        custom_json['collection_id'] = collection_id
       elif collection_name:
         collection_id = self.get_item_id('collection', collection_name)
         custom_json['collecion_id'] = collection_id
