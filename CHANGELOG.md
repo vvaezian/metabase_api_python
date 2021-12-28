@@ -3,11 +3,14 @@
 
 ## 0.2.14
 ### Added
-- Allow passing filter values to `get_card_data` function ([#25](https://github.com/vvaezian/metabase_api_python/issues/25))
-- Add `add_card_to_dashboard` custom function (PR [#26](https://github.com/vvaezian/metabase_api_python/pull/26))
+- "Allow passing filter values to `get_card_data` function" ([#25](https://github.com/vvaezian/metabase_api_python/issues/25)).
+- "Add `add_card_to_dashboard` custom function" (PR [#26](https://github.com/vvaezian/metabase_api_python/pull/26)).
+- `get_item_info` function
 ### Changed
-- Copy collection to root collection does not work ([#23](https://github.com/vvaezian/metabase_api_python/issues/23))
-- Expanded the `get_item_id` and `get_item_name` functions to cover all item types.
+- "Copy collection to root collection does not work" ([#23](https://github.com/vvaezian/metabase_api_python/issues/23)).
+- Expanded the `get_item_id` and `get_item_name` functions to cover all item types ([#28](https://github.com/vvaezian/metabase_api_python/issues/28)).
+- `clone_card` function now also works for simple/custom questions ([#27](https://github.com/vvaezian/metabase_api_python/issues/27)).
+- `clone_card` function now replaces table name in the query text for native questions.
 
 ## 0.2.13
 ### Added
