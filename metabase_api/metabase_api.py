@@ -974,7 +974,9 @@ class Metabase_API():
       See the network tab when exporting the results using the web interface to get the proper format pattern.
     '''
     assert data_format in [ 'json', 'csv' ]
-    
+    if parameters:
+      assert type(parameters) == list
+      
     if card_id is None:
       if card_name is None:
         raise ValueError('Either card_id or card_name must be provided.')
