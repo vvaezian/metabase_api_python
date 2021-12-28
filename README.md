@@ -141,7 +141,7 @@ mb.search(q='test', item_type='card')
 
 #### `get_card_data`
 Returns the rows.  
-Provide the card name/id and the data format of the output (csv or json)
+Provide the card name/id and the data format of the output (csv or json). You can also provide filter values.
 ```python
 results = mb.get_card_data(card_id=123, data_format='csv')
 ```
