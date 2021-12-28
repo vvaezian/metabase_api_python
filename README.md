@@ -20,7 +20,7 @@ Calling Metabase API endpoints (documented [here](https://github.com/metabase/me
 E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#get-apidatabase) `GET /api/database/`, use `mb.get('/api/database/')`.
 
 ### Helper Functions
-You usually don't need to deal with these functions directly (e.g. [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L88), [get_item_name](https://github.com/vvaezian/metabase_api_python/blob/b2ef09cf81647cdfc9a3e461fa2eb955b529f50b/metabase_api/metabase_api.py#L76))
+You usually don't need to deal with these functions directly (e.g. [get_item_info](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L89), [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L128), [get_item_name](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L116))
 
 ### Custom Functions
 
@@ -31,10 +31,10 @@ You usually don't need to deal with these functions directly (e.g. [get_item_id]
 - [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L591)
 - [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L643)
 - [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L736)
-- [clone_card](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L885)
-- [update_column](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L979)
+- [clone_card](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L1003)
+- [update_column](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L1146)
 - [search](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L835)
-- [get_card_data](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L858)
+- [get_card_data](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L966)
 - [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L933)
 - [delete_item](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L963)  
 - [make_json](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L1015)
