@@ -41,7 +41,7 @@ You usually don't need to deal with these functions directly (e.g. [get_item_inf
 
 *For a complete list of functions parameters see the functions definitions using the above links. Here we provide a short description:*
 
-#### `create_card`
+- #### `create_card`
 Specify the name to be used for the card, which table (name/id) to use as the source of data and where (i.e. which collection (name/id)) to save the card (default is the root collection).  
 ```python
 mb.create_card(card_name='test_card', table_name='mySourceTable')  # Setting `verbose=True` will print extra information while creating the card.
@@ -77,31 +77,31 @@ for city in city_list:
   mb.create_card(custom_json=my_custom_json)
 ```
 
-#### `create_collection`
+- #### `create_collection`
 Create an empty collection. Provide the name of the collection, and the name or id of the parent collection (i.e. where you want the created collection to reside). If you want to create the collection in the root, you need to provide `parent_collection_name='Root'`.
 ```python
 mb.create_collection(collection_name='test_collection', parent_collection_id=123)
 ```
 
-#### `create_segment`
+- #### `create_segment`
 Provide the name to be used for creating the segment, the name or id of the table you want to create the segment on, the column of that table to filter on and the filter values.
 ```python
 mb.create_segment(segment_name='test_segment', table_name='user_table', column_name='user_id', column_values=[123, 456, 789])
 ```
 
-#### `copy_card`
+- #### `copy_card`
 At the minimum you need to provide the name/id of the card to copy and the name/id of the collection to copy the card to.
 ```python
 mb.copy_card(source_card_name='test_card', destination_collection_id=123)
 ```
 
-#### `copy_pulse`
+- #### `copy_pulse`
 Similar to `copy_card` but for pulses.
 ```python
 mb.copy_pulse(source_pulse_name='test_pulse', destination_collection_id=123)
 ```
 
-#### `copy_dashboard`
+- #### `copy_dashboard`
 You can determine whether you want to *deepcopy* the dashboard or not (default False).  
 If you don't deepcopy, the duplicated dashboard will use the same cards as the original dashboard.  
 When you deepcopy a dashboard, the cards of the original dashboard are duplicated and these cards are used in the duplicate dashboard.  
@@ -111,42 +111,42 @@ The duplicated cards (in case of deepcopying) are saved in a collection called `
 mb.copy_dashboard(source_dashboard_id=123, destination_collection_id=456, deepcopy=True)
 ```
 
-#### `copy_collection`
+- #### `copy_collection`
 Copies the given collection and its contents to the given `destination_parent_collection` (name/id). You can determine whether to deepcopy the dashboards.
 ```python
 mb.copy_collection(source_collection_id=123, destination_parent_collection_id=456, deepcopy_dashboards=True, verbose=True)
 ```
 You can also specify a postfix to be added to the names of the child items that get copied.
 
-#### `clone_card`
+- #### `clone_card`
 Similar to `copy_card` but a different table is used as the source for filters of the card.  
 This comes in handy when you want to create similar cards with the same filters that differ only on the source of the filters (e.g. cards for 50 US states).
 ```python
 mb.clone_card(card_id=123, source_table_id=456, target_table_id=789, new_card_name='test clone', new_card_collection_id=1)
 ```
 
-#### `update_column`
+- #### `update_column`
 Update the column in Data Model by providing the relevant parameter (list of all parameters can be found [here](https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid)).  
 For example to change the column type to 'Category', we can use:
 ```python
 mb.update_column(column_name='myCol', table_name='myTable', params={'semantic_type':'type/Category'}  # (For Metabase versions before v.39, use: params={'special_type':'type/Category'}))
 ```
 
-#### `search`
+- #### `search`
 Searches for Metabase objects and returns basic info.  
 Provide the search term and optionally `item_type` to limit the results.
 ```Python
 mb.search(q='test', item_type='card')
 ```
 
-#### `get_card_data`
+- #### `get_card_data`
 Returns the rows.  
 Provide the card name/id and the data format of the output (csv or json). You can also provide filter values.
 ```python
 results = mb.get_card_data(card_id=123, data_format='csv')
 ```
 
-#### `make_json`
+- #### `make_json`
 It's very helpful to use the Inspect tool of the browser (network tab) to see what Metabase is doing. You can then use the generated json code to build your automation. To turn the generated json in the browser into a Python dictionary, you can copy the code, paste it into triple quotes (`'''  '''`) and apply the function `make_json`:
 ```python
 raw_json = ''' {"name":"test","dataset_query":{"database":165,"query":{"fields":[["field-id",35839],["field-id",35813],["field-id",35829],["field-id",35858],["field-id",35835],["field-id",35803],["field-id",35843],["field-id",35810],["field-id",35826],["field-id",35815],["field-id",35831],["field-id",35827],["field-id",35852],["field-id",35832],["field-id",35863],["field-id",35851],["field-id",35850],["field-id",35864],["field-id",35854],["field-id",35846],["field-id",35811],["field-id",35933],["field-id",35862],["field-id",35833],["field-id",35816]],"source-table":2154},"type":"query"},"display":"table","description":null,"visualization_settings":{"table.column_formatting":[{"columns":["Diff"],"type":"range","colors":["#ED6E6E","white","#84BB4C"],"min_type":"custom","max_type":"custom","min_value":-30,"max_value":30,"operator":"=","value":"","color":"#509EE3","highlight_row":false}],"table.pivot_column":"Sale_Date","table.cell_column":"SKUID"},"archived":false,"enable_embedding":false,"embedding_params":null,"collection_id":183,"collection_position":null,"result_metadata":[{"name":"Sale_Date","display_name":"Sale_Date","base_type":"type/DateTime","fingerprint":{"global":{"distinct-count":1,"nil%":0},"type":{"type/DateTime":{"earliest":"2019-12-28T00:00:00","latest":"2019-12-28T00:00:00"}}},"special_type":null},{"name":"Account_ID","display_name":"Account_ID","base_type":"type/Text","fingerprint":{"global":{"distinct-count":411,"nil%":0},"type":{"type/Text":{"percent-json":0,"percent-url":0,"percent-email":0,"average-length":9}}},"special_type":null},{"name":"Account_Name","display_name":"Account_Name","base_type":"type/Text","fingerprint":{"global":{"distinct-count":410,"nil%":0.0015},"type":{"type/Text":{"percent-json":0,"percent-url":0,"percent-email":0,"average-length":21.2916}}},"special_type":null},{"name":"Account_Type","display_name":"Account_Type","base_type":"type/Text","special_type":"type/Category","fingerprint":{"global":{"distinct-count":5,"nil%":0.0015},"type":{"type/Text":{"percent-json":0,"percent-url":0,"percent-email":0,"average-length":3.7594}}}}],"metadata_checksum":"7XP8bmR1h5f662CFE87tjQ=="} '''
@@ -154,12 +154,12 @@ myJson = mb.make_json(raw_json)  # setting 'prettyprint=True' will print the out
 mb.create_card('test_card2', table_name='mySourceTable', custom_json={'visualization_settings':myJson['visualization_settings']})
 ```
 
-#### `move_to_archive`
+- #### `move_to_archive`
 Moves the item (Card, Dashboard, Collection, Pulse, Segment) to the Archive section.
 ```python
 mb.move_to_archive('card', item_id=123)
 ```
-#### `delete_item`
+- #### `delete_item`
 Deletes the item (Card, Dashboard, Pulse). Currently Collections and Segments cannot be deleted using the Metabase API.
 ```python
 mb.delete_item('card', item_id=123)
