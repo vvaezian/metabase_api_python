@@ -86,6 +86,33 @@ class Metabase_API():
   ##################### Helper Functions ########################
   ###############################################################
   
+  def get_item_info(self, item_type
+                        , item_id=None, item_name=None
+                        , collection_id=None, collection_name=None
+                        , params=None):
+    '''
+    Return the info for the given item.
+    Use 'params' for providing arguments. E.g. to include tables in the result for databases, use: params={'include':'tables'}
+    '''  
+    
+    assert item_type in ['database', 'table', 'card', 'collection', 'dashboard', 'pulse', 'segment']
+    
+    if params:
+      assert type(params) == dict
+    
+    if not item_id:
+      if not item_name:
+        raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
+      item_id = self.get_item_id(item_type, item_name, collection_id=collection_id, collection_name=collection_name)
+
+    res = self.get("/api/{}/{}".format(item_type, item_id), params=params)
+    if res:
+      return res
+    else:
+      raise ValueError('There is no {} with the id "{}"'.format(item_type, item_id))
+
+
+
   def get_item_name(self, item_type, item_id):
     
     assert item_type in ['database', 'table', 'card', 'collection', 'dashboard', 'pulse', 'segment']
@@ -274,6 +301,9 @@ class Metabase_API():
     Return Database info. Use 'params' for providing arguments.
     For example to include tables in the result, use: params={'include':'tables'}
     '''
+    import warnings
+    warnings.warn("The function get_db_info will be removed in the next version. Use get_item_info function instead.", DeprecationWarning)
+
     if params:
       assert type(params) == dict
 
@@ -728,7 +758,7 @@ class Metabase_API():
     destination_collection_name -- name of the collection to copy the dashboard to (default None) 
     destination_collection_id -- id of the collection to copy the dashboard to (default None) 
     deepcopy -- whether to duplicate the cards inside the dashboard (default False).
-                If True, puts the duplicated cards in a collection called "[dashboard_name]'s duplicated cards" 
+                If True, puts the duplicated cards in a collection called "[dashboard_name]'s cards" 
                 in the same path as the duplicated dashboard.
     postfix -- if destination_dashboard_name is None, adds this string to the end of source_dashboard_name 
                to make destination_dashboard_name
@@ -912,7 +942,7 @@ class Metabase_API():
 
   def search(self, q, item_type=None, archived=False):
     """
-    Search for Metabase objects (except DBs) and return their basic info. 
+    Search for Metabase objects and return their basic info. 
     We can limit the search to a certain item type by providing a value for item_type keyword. 
 
     Keyword arguments:
@@ -924,7 +954,7 @@ class Metabase_API():
     assert archived in [True, False]
 
     res = self.get(endpoint='/api/search/', params={'q':q, 'archived':archived})
-    if type(res) == dict:  # bin Metabase version *.40.0 the format of the returned result for this endpoint changed
+    if type(res) == dict:  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
       res = res['data']
     if item_type is not None:
       res = [ item for item in res if item['model'] == item_type ]
@@ -968,7 +998,12 @@ class Metabase_API():
 
 
 
-  def clone_card(self, card_id, source_table_id, target_table_id, new_card_name=None, new_card_collection_id=None, ignore_these_filters=None):
+  def clone_card(self, card_id
+                     , source_table_id=None, target_table_id=None
+                     , source_table_name=None, target_table_name=None
+                     , new_card_name=None, new_card_collection_id=None
+                     , ignore_these_filters=None
+                     , return_card=False):
     """ 
     *** work in progress ***
     Create a new card where the source of the old card is changed from 'source_table_id' to 'target_table_id'. 
@@ -982,21 +1017,62 @@ class Metabase_API():
     source_table_id -- The table that the filters of the card are based on
     target_table_id -- The table that the filters of the cloned card would be based on
     new_card_name -- Name of the cloned card. If not provided, the name of the source card is used.
-    new_card_collection_id -- The collection that the cloned card should be saved in
+    new_card_collection_id -- The id of the collection that the cloned card should be saved in
     ignore_these_filters -- A list of variable names of filters. The source of these filters would not change in the cloning process.
+    return_card -- Whether to return the info of the created card (default False)
     """
-    card_info = self.get('/api/card/{}'.format(card_id))
+    # Make sure we have the data we need
+    if not source_table_id:
+      if not source_table_name:
+        raise ValueError('Either the name or id of the source table needs to be provided.')
+      else:
+        source_table_id = self.get_item_id('table', source_table_name)
+    
+    if not target_table_id:
+      if not target_table_name:
+        raise ValueError('Either the name or id of the target table needs to be provided.')
+      else:
+        source_table_id = self.get_item_id('table', source_table_name)
+    
+    if ignore_these_filters:
+      assert type(ignore_these_filters) == list 
+
+    # get the card info
+    card_info = self.get_item_info('card', card_id)
+    # get the mappings, both name -> id and id -> name
     target_table_col_name_id_mapping = self.get_columns_name_id(table_id=target_table_id)
     source_table_col_id_name_mapping = self.get_columns_name_id(table_id=source_table_id, column_id_name=True)
-    filters_data = card_info['dataset_query']['native']['template-tags']
 
-    for filter_variable_name, data in filters_data.items():
-      if type(ignore_these_filters) == list and filter_variable_name in ignore_these_filters:
-        continue
-      column_id = data['dimension'][1]
-      column_name = source_table_col_id_name_mapping[column_id]
-      target_col_id = target_table_col_name_id_mapping[column_name]
-      card_info['dataset_query']['native']['template-tags'][filter_variable_name]['dimension'] = ['field', target_col_id, None]
+    # native questions
+    if card_info['dataset_query']['type'] == 'native':
+      filters_data = card_info['dataset_query']['native']['template-tags']
+      # change the underlying table for the card
+      if not source_table_name:
+        source_table_name = self.get_item_name('table', source_table_id)
+      if not target_table_name:
+        target_table_name = self.get_item_name('table', target_table_id)
+      card_info['dataset_query']['native']['query'] = card_info['dataset_query']['native']['query'].replace(source_table_name, target_table_name)
+      # change filters source 
+      for filter_variable_name, data in filters_data.items():
+        if ignore_these_filters is not None and filter_variable_name in ignore_these_filters:
+          continue
+        column_id = data['dimension'][1]
+        column_name = source_table_col_id_name_mapping[column_id]
+        target_col_id = target_table_col_name_id_mapping[column_name]
+        card_info['dataset_query']['native']['template-tags'][filter_variable_name]['dimension'][1] = target_col_id
+
+    # simple/custom questions
+    elif card_info['dataset_query']['type'] == 'query':
+      filters_data = card_info['dataset_query']['query']
+      # change the underlying table for the card
+      filters_data['source-table'] = target_table_id
+      # change filters source 
+      for index, item in enumerate(filters_data['filter']):
+        if type(item) == list:
+          column_id = item[1][1]
+          column_name = source_table_col_id_name_mapping[column_id]
+          target_col_id = target_table_col_name_id_mapping[column_name]
+          card_info['dataset_query']['query']['filter'][index][1][1] = target_col_id
 
     new_card_json = {}
     for key in ['dataset_query', 'display', 'visualization_settings']:
@@ -1012,7 +1088,10 @@ class Metabase_API():
     else:
       new_card_json['collection_id'] = card_info['collection_id']
 
-    self.create_card(custom_json=new_card_json, verbose=True)
+    if return_card:
+      return self.create_card(custom_json=new_card_json, verbose=True, return_card=return_card)
+    else:
+      self.create_card(custom_json=new_card_json, verbose=True)
 
 
 
@@ -1102,6 +1181,7 @@ class Metabase_API():
       'cardId': card_id
     }
     self.post(f'/api/dashboard/{dashboard_id}/cards',json=params)
+
 
 
   @staticmethod
