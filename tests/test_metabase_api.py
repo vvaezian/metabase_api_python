@@ -130,3 +130,9 @@ class Metabase_API_Test(unittest.TestCase):
     # segment
     segment_name = mb.get_item_id('segment', 'test_segment')
     self.assertEqual(segment_name, 18)
+
+    
+    
+
+if __name__ == '__main__':
+  unittest.main()
