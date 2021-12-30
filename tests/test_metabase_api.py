@@ -216,7 +216,7 @@ class Metabase_API_Test(unittest.TestCase):
 
   def test_create_collection(self):
     t = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    res = mb.create_collection(f'test_collection {t}', parent_collection_id=28, return_results=True)
+    res = mb.create_collection(f'test_create_collection {t}', parent_collection_id=28, return_results=True)
 
     # check to make sure the collection was created in the right place
     res2 = mb.get('/api/collection/{}'.format(res['id']))
