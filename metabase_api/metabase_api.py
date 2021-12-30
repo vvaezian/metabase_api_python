@@ -2,9 +2,9 @@ import requests
 import getpass
 
 class Metabase_API():
-    
+
     def __init__(self, domain, email, password=None, basic_auth=False):
-        
+
         self.domain = domain.rstrip('/')
         self.email = email
         self.password = getpass.getpass(prompt='Please enter your password: ') if password is None else password
@@ -12,8 +12,8 @@ class Metabase_API():
         self.header = None
         self.auth = (self.email, self.password) if basic_auth else None
         self.authenticate()
-    
-    
+
+
     def authenticate(self):
         """Get a Session ID"""
         conn_header = {
@@ -24,28 +24,28 @@ class Metabase_API():
         res = requests.post(self.domain + '/api/session', json=conn_header, auth=self.auth)
         if not res.ok:
             raise Exception(res)
-        
+
         self.session_id = res.json()['id']
         self.header = {'X-Metabase-Session':self.session_id}
-    
-    
+
+
     def validate_session(self):
         """Get a new session ID if the previous one has expired"""
         res = requests.get(self.domain + '/api/user/current', headers=self.header, auth=self.auth)
-        
+
         if res.ok:  # 200
             return True
         elif res.status_code == 401:  # unauthorized
             return self.authenticate()
         else:
             raise Exception(res)
-    
-    
-    
+
+
+
     ##################################################################
     ######################### REST Methods ###########################
     ##################################################################
-    
+
     def get(self, endpoint, *args, **kwargs):
         self.validate_session()
         res = requests.get(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
@@ -53,8 +53,8 @@ class Metabase_API():
             return res
         else:
             return res.json() if res.ok else False
-    
-    
+
+
     def post(self, endpoint, *args, **kwargs):
         self.validate_session()
         res = requests.post(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
@@ -62,8 +62,8 @@ class Metabase_API():
             return res
         else:
             return res.json() if res.ok else False
-    
-    
+
+
     def put(self, endpoint, *args, **kwargs):
         """Used for updating objects (cards, dashboards, ...)"""
         self.validate_session()
@@ -72,8 +72,8 @@ class Metabase_API():
             return res
         else:
             return res.status_code
-    
-    
+
+
     def delete(self, endpoint, *args, **kwargs):
         self.validate_session()
         res = requests.delete(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
@@ -81,13 +81,13 @@ class Metabase_API():
             return res
         else:
             return res.status_code
-    
-    
-    
+
+
+
     ###############################################################
     ##################### Helper Functions ########################
     ###############################################################
-    
+
     def get_item_info(self, item_type
                     , item_id=None, item_name=None
                     , collection_id=None, collection_name=None
@@ -96,12 +96,12 @@ class Metabase_API():
         Return the info for the given item.
         Use 'params' for providing arguments. E.g. to include tables in the result for databases, use: params={'include':'tables'}
         '''    
-        
+
         assert item_type in ['database', 'table', 'card', 'collection', 'dashboard', 'pulse', 'segment']
-        
+
         if params:
             assert type(params) == dict
-        
+
         if not item_id:
             if not item_name:
                 raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
@@ -116,7 +116,7 @@ class Metabase_API():
 
 
     def get_item_name(self, item_type, item_id):
-        
+
         assert item_type in ['database', 'table', 'card', 'collection', 'dashboard', 'pulse', 'segment']
 
         res = self.get("/api/{}/{}".format(item_type, item_id))
@@ -124,13 +124,13 @@ class Metabase_API():
             return res['name']
         else:
             raise ValueError('There is no {} with the id "{}"'.format(item_type, item_id))
-    
 
-    
+
+
     def get_item_id(self, item_type, item_name, collection_id=None, collection_name=None, db_id=None, db_name=None, table_id=None):
-        
+
         assert item_type in ['database', 'table', 'card', 'collection', 'dashboard', 'pulse', 'segment']
-        
+
         if item_type in ['card', 'dashboard', 'pulse']:
             if not collection_id:
                 if not collection_name:
@@ -147,7 +147,7 @@ class Metabase_API():
                 item_IDs = [ i['id'] for i in self.get("/api/{}/".format(item_type)) if i['name'] == item_name 
                                                                                     and i['collection_id'] == collection_id 
                                                                                     and i['archived'] == False ]
-            
+
             if len(item_IDs) > 1:
                 if not collection_name:
                     raise ValueError('There is more than one {} with the name "{}".\n\
@@ -159,18 +159,18 @@ class Metabase_API():
                         raise ValueError('There is no {} with the name "{}"'.format(item_type, item_name))
                 raise ValueError('There is no item with the name "{}" in the collection "{}"'
                                 .format(item_name, collection_name))
-            
+
             return item_IDs[0] 
-    
+
 
         if item_type == 'collection':
             collection_IDs = [ i['id'] for i in self.get("/api/collection/") if i['name'] == item_name ]
-        
+
             if len(collection_IDs) > 1:
                 raise ValueError('There is more than one collection with the name "{}"'.format(item_name))
             if len(collection_IDs) == 0:
                 raise ValueError('There is no collection with the name "{}"'.format(item_name))
-            
+
             return collection_IDs[0] 
 
 
@@ -179,30 +179,30 @@ class Metabase_API():
             if type(res) == dict:  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
                 res = res['data']
             db_IDs = [ i['id'] for i in res if i['name'] == item_name ]
-            
+
             if len(db_IDs) > 1:
                 raise ValueError('There is more than one DB with the name "{}"'.format(item_name))
             if len(db_IDs) == 0:
                 raise ValueError('There is no DB with the name "{}"'.format(item_name))
-            
+
             return db_IDs[0]
 
 
         if item_type == 'table':
             tables = self.get("/api/table/")
-            
+
             if db_id:
                 table_IDs = [ i['id'] for i in tables if i['name'] == item_name and i['db']['id'] == db_id ]
             elif db_name:
                 table_IDs = [ i['id'] for i in tables if i['name'] == item_name and i['db']['name'] == db_name ]
             else:
                 table_IDs = [ i['id'] for i in tables if i['name'] == item_name ]
-                
+
             if len(table_IDs) > 1:
                 raise ValueError('There is more than one table with the name {}. Provide db id/name.'.format(item_name))
             if len(table_IDs) == 0:
                 raise ValueError('There is no table with the name "{}" (in the provided db, if any)'.format(item_name))
-            
+
             return table_IDs[0]
 
 
@@ -213,7 +213,7 @@ class Metabase_API():
                 raise ValueError('There is more than one segment with the name "{}"'.format(item_name))
             if len(segment_IDs) == 0:
                 raise ValueError('There is no segment with the name "{}"'.format(item_name))
-            
+
             return segment_IDs[0]
 
 
@@ -223,12 +223,12 @@ class Metabase_API():
         warnings.warn("The function get_collection_id will be removed in the next version. Use get_item_id function instead.", DeprecationWarning)
 
         collection_IDs = [ i['id'] for i in self.get("/api/collection/") if i['name'] == collection_name ]
-        
+
         if len(collection_IDs) > 1:
             raise ValueError('There is more than one collection with the name "{}"'.format(collection_name))
         if len(collection_IDs) == 0:
             raise ValueError('There is no collection with the name "{}"'.format(collection_name))
-        
+
         return collection_IDs[0] 
 
 
@@ -241,34 +241,34 @@ class Metabase_API():
         if type(res) == dict:  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
             res = res['data']
         db_IDs = [ i['id'] for i in res if i['name'] == db_name ]
-        
+
         if len(db_IDs) > 1:
             raise ValueError('There is more than one DB with the name "{}"'.format(db_name))
         if len(db_IDs) == 0:
             raise ValueError('There is no DB with the name "{}"'.format(db_name))
-        
-        return db_IDs[0]
-    
 
-    
+        return db_IDs[0]
+
+
+
     def get_table_id(self, table_name, db_name=None, db_id=None):
         import warnings
         warnings.warn("The function get_table_id will be removed in the next version. Use get_item_id function instead.", DeprecationWarning)
 
         tables = self.get("/api/table/")
-        
+
         if db_id:
             table_IDs = [ i['id'] for i in tables if i['name'] == table_name and i['db']['id'] == db_id ]
         elif db_name:
             table_IDs = [ i['id'] for i in tables if i['name'] == table_name and i['db']['name'] == db_name ]
         else:
             table_IDs = [ i['id'] for i in tables if i['name'] == table_name ]
-            
+
         if len(table_IDs) > 1:
             raise ValueError('There is more than one table with the name {}. Provide db id/name.'.format(table_name))
         if len(table_IDs) == 0:
             raise ValueError('There is no table with the name "{}" (in the provided db, if any)'.format(table_name))
-        
+
         return table_IDs[0]
 
 
@@ -283,17 +283,17 @@ class Metabase_API():
             raise ValueError('There is more than one segment with the name "{}"'.format(segment_name))
         if len(segment_IDs) == 0:
             raise ValueError('There is no segment with the name "{}"'.format(segment_name))
-        
+
         return segment_IDs[0]
 
 
 
     def get_db_id_from_table_id(self, table_id):
         tables = [ i['db_id'] for i in self.get("/api/table/") if i['id'] == table_id ]
-        
+
         if len(tables) == 0:
             raise ValueError('There is no DB containing the table with the ID "{}"'.format(table_id))
-        
+
         return tables[0]
 
 
@@ -313,25 +313,25 @@ class Metabase_API():
             if not db_name:
                 raise ValueError('Either the name or id of the DB needs to be provided.')
             db_id = self.get_item_id('database', db_name)
-            
+
         return self.get("/api/database/{}".format(db_id), params=params)
 
 
 
     def get_table_metadata(self, table_name=None, table_id=None, db_name=None, db_id=None, params=None):
-        
+
         if params:
             assert type(params) == dict
-        
+
         if not table_id:
             if not table_name:
                 raise ValueError('Either the name or id of the table needs to be provided.')
             table_id = self.get_item_id('table', table_name, db_name=db_name, db_id=db_id)
-            
+
         return self.get("/api/table/{}/query_metadata".format(table_id), params=params)
 
 
-    
+
     def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False, column_id_name=False):
         '''Return a dictionary with col_name key and col_id value, for the given table_id/table_name in the given db_id/db_name.
              If column_id_name is True, return a dictionary with col_id key and col_name value.
@@ -352,7 +352,7 @@ class Metabase_API():
                 if not table_id:
                     table_id = self.get_item_id('table', table_name)
                 db_id = self.get_db_id_from_table_id(table_id)
-                
+
         # Get column names and IDs 
         if column_id_name:
             return {i['id']: i['name'] for i in self.get("/api/database/{}/fields".format(db_id)) 
@@ -378,20 +378,20 @@ class Metabase_API():
     def verbose_print(verbose, msg):
         if verbose:
             print(msg)
-    
-    
-    
+
+
+
     ##################################################################
     ###################### Custom Functions ##########################
     ##################################################################
-    
+
     def create_card(self, card_name=None, collection_name=None, collection_id=None, 
                                     db_name=None, db_id=None, table_name=None,    table_id=None, 
                                     column_order='db_table_order', custom_json=None, verbose=False, return_card=False):
         """
         Create a card using the given arguments utilizing the endpoint 'POST /api/card/'. 
         If collection is not given, the root collection is used.
-        
+
         Keyword arguments:
         card_name -- the name used to create the card (default None) 
         collection_name -- name of the collection to place the card (default None).
@@ -417,7 +417,7 @@ class Metabase_API():
                     complete_json = False
                     self.verbose_print(verbose, 'The provided json is detected as partial.')
                     break
-            
+
             # Fix for the issue #10
             if custom_json.get('description') == '': 
                 custom_json['description'] = None
@@ -443,7 +443,7 @@ class Metabase_API():
                     custom_json['collection_id'] = collection_id
                 if not custom_json.get('collection_id'):
                     self.verbose_print(verbose, 'No collection name or id is provided. Will create the card at the root ...')
-                    
+
                 # Create the card using only the provided custom_json 
                 res = self.post("/api/card/", json=custom_json)
                 if res and not res.get('error'):
@@ -452,7 +452,7 @@ class Metabase_API():
                 else:
                     print('Card Creation Failed.\n', res)
                     return res
-        
+
         # Making sure we have the required data
         if not card_name and (not custom_json or not custom_json.get('name')):
             raise ValueError("A name must be provided for the card (either as card_name argument or as part of the custom_json ('name' key)).")
@@ -471,7 +471,7 @@ class Metabase_API():
                 self.verbose_print(verbose, 'No collection name or id is provided. Will create the card at the root ...')
             else:
                 collection_id = self.get_item_id('collection', collection_name)
-        
+
         if type(column_order) == list:
 
             column_name_id_dict = self.get_columns_name_id( db_id=db_id, 
@@ -496,7 +496,7 @@ class Metabase_API():
                             'display': 'table',
                             'name': '{0}',
                             'visualization_settings': {{}} }}""".format(card_name, db_id, table_name)
-            
+
             res = self.post("/api/card/", json=eval(json_str))    
             if not res:
                 print('Card Creation Failed!')
@@ -513,14 +513,14 @@ class Metabase_API():
                                                             verbose=verbose)
             column_id_list = [ column_name_id_dict[i] for i in ordered_columns ]
             column_id_list_str = [ ['field-id', i] for i in column_id_list ]
-        
+
         elif column_order == 'alphabetical':
             column_id_list_str = None
-        
+
         else:
             raise ValueError("Wrong value for 'column_order'. \
                              Accepted values: 'alphabetical', 'db_table_order' or a list of column names.")
-        
+
         # default json
         json_str = """{{'dataset_query': {{'database': {1},
                                             'query': {{'fields': {4},
@@ -532,7 +532,7 @@ class Metabase_API():
                         'visualization_settings': {{}}
                         }}""".format(card_name, db_id, table_id, collection_id, column_id_list_str)
         json = eval(json_str)
-        
+
         # Add/Rewrite data to the default json from custom_json
         if custom_json:
             for key, value in custom_json.items():
@@ -540,16 +540,16 @@ class Metabase_API():
                     self.verbose_print(verbose, "Ignored '{}' key in the provided custom_json.".format(key))
                     continue
                 json[key] = value
-        
+
         res = self.post("/api/card/", json=json)
-        
+
         # Get collection_name to be used in the final message
         if not collection_name:
             if not collection_id:
                 collection_name = 'root'
             else:
                 collection_name = self.get_item_name(item_type='collection', item_id=collection_id)
-        
+
         if res and not res.get('error'):
             self.verbose_print(verbose, "The card '{}' was created successfully in the collection '{}'."
                                                  .format(card_name, collection_name))
@@ -557,13 +557,13 @@ class Metabase_API():
         else:
             print('Card Creation Failed.\n', res)
             return res
-    
 
-    
+
+
     def create_collection(self, collection_name, parent_collection_id=None, parent_collection_name=None, return_results=False):
         """
         Create an empty collection, in the given location, utilizing the endpoint 'POST /api/collection/'. 
-        
+
         Keyword arguments:
         collection_name -- the name used for the created collection.
         parent_collection_id -- id of the collection where the created collection resides in.
@@ -578,7 +578,7 @@ class Metabase_API():
                 parent_collection_id = None
             else:
                 parent_collection_id = self.get_item_id('collection', parent_collection_name)
-        
+
         res = self.post('/api/collection', json={'name':collection_name, 'parent_id':parent_collection_id, 'color':'#509EE3'})
         if return_results:
             return res
@@ -589,7 +589,7 @@ class Metabase_API():
                                          db_name=None, db_id=None, table_name=None, table_id=None, return_segment=False):
         """
         Create a segment using the given arguments utilizing the endpoint 'POST /api/segment/'. 
-        
+
         Keyword arguments:
         segment_name -- the name used for the created segment.
         column_name -- name of the column used for filtering.
@@ -612,16 +612,16 @@ class Metabase_API():
 
         colmuns_name_id_mapping = self.get_columns_name_id(table_name=table_name, db_id=db_id)
         column_id = colmuns_name_id_mapping[column_name]
-        
+
         # Create a segment blueprint
         segment_blueprint = {'name': segment_name,
                             'description': segment_description,
                             'table_id': table_id,
                             'definition': {'source-table': table_id, 'filter': ['=', ['field-id', column_id]]}}
-        
+
         # Add filtering values
         segment_blueprint['definition']['filter'].extend(column_values)
-        
+
         # Create the segment
         res = self.post('/api/segment/', json=segment_blueprint)
         if return_segment:
@@ -636,7 +636,7 @@ class Metabase_API():
                         postfix='', verbose=False):
         """
         Copy the card with the given name/id to the given destination collection. 
-        
+
         Keyword arguments:
         source_card_name -- name of the card to copy (default None) 
         source_card_id -- id of the card to copy (default None) 
@@ -658,33 +658,33 @@ class Metabase_API():
                                                 item_name=source_card_name, 
                                                 collection_id=source_collection_id, 
                                                 collection_name=source_collection_name)
-        
+
         if not destination_collection_id:
             if not destination_collection_name:
                 raise ValueError('Either the name or id of the destination collection must be provided.')
             else:
                 destination_collection_id = self.get_item_id('collection', destination_collection_name)
-        
+
         if not destination_card_name:
             if not source_card_name:
                 source_card_name = self.get_item_name(item_type='card', item_id=source_card_id)
             destination_card_name = source_card_name + postfix
-            
+
         # Get the source card info
         source_card = self.get('/api/card/{}'.format(source_card_id))
-        
+
         # Update the name and collection_id
         card_json = source_card
         card_json['collection_id'] = destination_collection_id
         card_json['name'] = destination_card_name
-        
+
         # Fix the issue #10
         if card_json.get('description') == '': 
             card_json['description'] = None
 
         # Save as a new card
         res = self.create_card(custom_json=card_json, verbose=verbose, return_card=True)
-        
+
         # Return the id of the created card
         return res['id']
 
@@ -696,7 +696,7 @@ class Metabase_API():
                         destination_collection_id=None, destination_collection_name=None, postfix=''):
         """
         Copy the pulse with the given name/id to the given destination collection. 
-        
+
         Keyword arguments:
         source_pulse_name -- name of the pulse to copy (default None) 
         source_pulse_id -- id of the pulse to copy (default None) 
@@ -717,30 +717,30 @@ class Metabase_API():
                 source_pulse_id = self.get_item_id(item_type='pulse',item_name=source_pulse_name, 
                                                     collection_id=source_collection_id, 
                                                     collection_name=source_collection_name)
-        
+
         if not destination_collection_id:
             if not destination_collection_name:
                 raise ValueError('Either the name or id of the destination collection must be provided.')
             else:
                 destination_collection_id = self.get_item_id('collection', destination_collection_name)
-        
+
         if not destination_pulse_name:
             if not source_pulse_name:
                 source_pulse_name = self.get_item_name(item_type='pulse', item_id=source_pulse_id)
             destination_pulse_name = source_pulse_name + postfix
-    
+
         # Get the source pulse info
         source_pulse = self.get('/api/pulse/{}'.format(source_pulse_id))
-        
+
         # Updat the name and collection_id
         pulse_json = source_pulse
         pulse_json['collection_id'] = destination_collection_id
         pulse_json['name'] = destination_pulse_name
-        
+
         # Save as a new pulse
         self.post('/api/pulse', json=pulse_json)
-        
-    
+
+
 
     def copy_dashboard(self, source_dashboard_name=None, source_dashboard_id=None, 
                             source_collection_name=None, source_collection_id=None,
@@ -749,7 +749,7 @@ class Metabase_API():
                             deepcopy=False, postfix=''):
         """
         Copy the dashboard with the given name/id to the given destination collection. 
-        
+
         Keyword arguments:
         source_dashboard_name -- name of the dashboard to copy (default None) 
         source_dashboard_id -- id of the dashboard to copy (default None) 
@@ -773,13 +773,13 @@ class Metabase_API():
                 source_dashboard_id = self.get_item_id(item_type='dashboard',item_name=source_dashboard_name, 
                                                         collection_id=source_collection_id, 
                                                         collection_name=source_collection_name)
-        
+
         if not destination_collection_id:
             if not destination_collection_name:
                 raise ValueError('Either the name or id of the destination collection must be provided.')
             else:
                 destination_collection_id = self.get_item_id('collection', destination_collection_name)
-        
+
         if not destination_dashboard_name:
             if not source_dashboard_name:
                 source_dashboard_name = self.get_item_name(item_type='dashboard', item_id=source_dashboard_id)
@@ -789,12 +789,12 @@ class Metabase_API():
         shallow_copy_json = {'collection_id':destination_collection_id, 'name':destination_dashboard_name}
         res = self.post('/api/dashboard/{}/copy'.format(source_dashboard_id), json=shallow_copy_json)
         dup_dashboard_id = res['id']
-        
+
         ### deepcopy
         if deepcopy:
             # get the source dashboard info
             source_dashboard = self.get('/api/dashboard/{}'.format(source_dashboard_id))
-            
+
             # create an empty collection to copy the cards into it
             res = self.post('/api/collection/', 
                             json={'name':destination_dashboard_name + "'s cards", 
@@ -812,11 +812,11 @@ class Metabase_API():
             # replace cards in the duplicated dashboard with duplicated cards
             dup_dashboard = self.get('/api/dashboard/{}'.format(dup_dashboard_id))
             for card in dup_dashboard['ordered_cards']:
-                
+
                 # ignore text boxes. These get copied in the shallow-copy stage.
                 if card['card_id'] is None:
                     continue
-                    
+
                 # prepare a json to be used for replacing the cards in the duplicated dashboard
                 new_card_id = card_id_mapping[card['card_id']]
                 card_json = {}
@@ -830,10 +830,10 @@ class Metabase_API():
                 self.delete('/api/dashboard/{}/cards'.format(dup_dashboard_id), params={'dashcardId':dash_card_id})
                 # add the new card to the duplicated dashboard
                 self.post('/api/dashboard/{}/cards'.format(dup_dashboard_id), json=card_json)
-            
+
         return dup_dashboard_id
-    
-    
+
+
 
     def copy_collection(self, source_collection_name=None, source_collection_id=None, 
                                             destination_collection_name=None,
@@ -841,7 +841,7 @@ class Metabase_API():
                                             deepcopy_dashboards=False, postfix='', child_items_postfix='', verbose=False):
         """
         Copy the collection with the given name/id into the given destination parent collection. 
-        
+
         Keyword arguments:
         source_collection_name -- name of the collection to copy (default None) 
         source_collection_id -- id of the collection to copy (default None) 
@@ -865,7 +865,7 @@ class Metabase_API():
                 raise ValueError('Either the name or id of the source collection must be provided.')
             else:
                 source_collection_id = self.get_item_id('collection', source_collection_name)
-        
+
         if not destination_parent_collection_id:
             if not destination_parent_collection_name:
                 raise ValueError('Either the name or id of the destination parent collection must be provided.')
@@ -875,12 +875,12 @@ class Metabase_API():
                     if destination_parent_collection_name != 'Root'
                     else None
                 )
-        
+
         if not destination_collection_name:
             if not source_collection_name:
                 source_collection_name = self.get_item_name(item_type='collection', item_id=source_collection_id)
             destination_collection_name = source_collection_name + postfix
-            
+
         ### create a collection in the destination to hold the contents of the source collection
         res = self.create_collection(destination_collection_name, 
                                     parent_collection_id=destination_parent_collection_id, 
@@ -896,7 +896,7 @@ class Metabase_API():
 
         ### copy the items of the source collection to the new collection
         for item in items:
-            
+
             ## copy a collection
             if item['model'] == 'collection':
                 collection_id = item['id']
@@ -908,7 +908,7 @@ class Metabase_API():
                                     child_items_postfix=child_items_postfix,
                                     deepcopy_dashboards=deepcopy_dashboards,
                                     verbose=verbose)
-            
+
             ## copy a dashboard
             if item['model'] == 'dashboard':
                 dashboard_id = item['id']
@@ -919,7 +919,7 @@ class Metabase_API():
                                     destination_collection_id=destination_collection_id,
                                     destination_dashboard_name=destination_dashboard_name,
                                     deepcopy=deepcopy_dashboards)
-            
+
             ## copy a card
             if item['model'] == 'card':
                 card_id = item['id']
@@ -929,7 +929,7 @@ class Metabase_API():
                 self.copy_card(source_card_id=card_id,
                                 destination_collection_id=destination_collection_id,
                                 destination_card_name=destination_card_name)
-                
+
             ## copy a pulse
             if item['model'] == 'pulse':
                 pulse_id = item['id']
@@ -939,8 +939,8 @@ class Metabase_API():
                 self.copy_pulse(source_pulse_id=pulse_id,
                                 destination_collection_id=destination_collection_id,
                                 destination_pulse_name=destination_pulse_name)
-    
-    
+
+
 
     def search(self, q, item_type=None, archived=False):
         """
@@ -978,7 +978,7 @@ class Metabase_API():
         assert data_format in [ 'json', 'csv' ]
         if parameters:
             assert type(parameters) == list
-            
+
         if card_id is None:
             if card_name is None:
                 raise ValueError('Either card_id or card_name must be provided.')
@@ -1031,13 +1031,13 @@ class Metabase_API():
                 raise ValueError('Either the name or id of the source table needs to be provided.')
             else:
                 source_table_id = self.get_item_id('table', source_table_name)
-        
+
         if not target_table_id:
             if not target_table_name:
                 raise ValueError('Either the name or id of the target table needs to be provided.')
             else:
                 source_table_id = self.get_item_id('table', source_table_name)
-        
+
         if ignore_these_filters:
             assert type(ignore_these_filters) == list 
 
@@ -1103,7 +1103,7 @@ class Metabase_API():
                             , collection_name=None, collection_id=None, table_id=None, verbose=False):
         '''Archive the given item. For deleting the item use the 'delete_item' function.'''
         assert item_type in ['card', 'dashboard', 'collection', 'pulse', 'segment']
-        
+
         if not item_id:
             if not item_name:
                 raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
@@ -1113,21 +1113,21 @@ class Metabase_API():
                 item_id = self.get_item_id('segment', item_name, table_id=table_id)
             else:
                 item_id = self.get_item_id(item_type, item_name, collection_id, collection_name)
-        
+
         if item_type == 'segment':
             # 'revision_message' is mandatory for archiving segments
             res = self.put('/api/{}/{}'.format(item_type, item_id), json={'archived':True, 'revision_message':'archived!'})
         else:
             res = self.put('/api/{}/{}'.format(item_type, item_id), json={'archived':True})
-        
+
         if res in [200, 202]:  # for segments the success status code returned is 200 for others it is 202
             self.verbose_print(verbose, 'Successfully Archived.')    
         else: 
             print('Archiving Failed.')
-        
+
         return res
 
-            
+
 
     def delete_item(self, item_type, item_name=None, item_id=None
                         , collection_name=None, collection_id=None, verbose=False):
@@ -1140,7 +1140,7 @@ class Metabase_API():
             if not item_name:
                 raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
             item_id = self.get_item_id(item_type, item_name, collection_id, collection_name)
-            
+
         return self.delete('/api/{}/{}'.format(item_type, item_id))
 
 
@@ -1161,24 +1161,24 @@ class Metabase_API():
         if not column_id:
             if not column_name:
                 raise ValueError('Either the name or id of the column needs to be provided.')
-            
+
             if not table_id:
                 if not table_name:
                     raise ValueError('When column_id is not given, either the name or id of the table needs to be provided.')
                 table_id = self.get_item_id('table', table_name, db_id=db_id, db_name=db_name)
-            
+
             columns_name_id_mapping = self.get_columns_name_id(table_name=table_name, table_id=table_id, db_name=db_name, db_id=db_id)
             column_id = columns_name_id_mapping.get(column_name)
             if column_id is None:
                 raise ValueError('There is no column named {} in the provided table'.format(column_name))
-                
+
         res_status_code = self.put('/api/field/{}'.format(column_id), json=params)
         if res_status_code != 200:
             print('Column Update Failed.')
 
         return res_status_code
-            
-    
+
+
 
     def add_card_to_dashboard(self, card_id, dashboard_id):
         params = {
@@ -1196,5 +1196,5 @@ class Metabase_API():
         if prettyprint:
             import pprint
             pprint.pprint(ret_dict)
-            
+
         return ret_dict
