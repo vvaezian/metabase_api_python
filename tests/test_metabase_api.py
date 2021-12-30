@@ -1,7 +1,7 @@
-import unittest
 from metabase_api.metabase_api import Metabase_API
 import datetime
 import os
+import unittest
 
 LOGIN_DOMAIN = os.environ.get("LOGIN_DOMAIN")
 LOGIN_EMAIL = os.environ.get("LOGIN_USERNAME")
