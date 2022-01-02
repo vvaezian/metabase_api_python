@@ -44,6 +44,10 @@ jobs:
       run: |
         pytest
     - name: Generate Report
+      env: 
+        LOGIN_DOMAIN : ${{ secrets.LOGIN_DOMAIN }}
+        LOGIN_USERNAME : ${{ secrets.LOGIN_USERNAME }}
+        LOGIN_PASSWORD : ${{ secrets.LOGIN_PASSWORD }}
       run: |
         pip install coverage
         coverage run -m unittest
