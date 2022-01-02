@@ -1,6 +1,7 @@
 <!--[![HitCount](http://hits.dwyl.com/vvaezian/metabase_api_python.svg)](http://hits.dwyl.com/vvaezian/metabase_api_python)-->
 [![PyPI version](https://badge.fury.io/py/metabase-api.svg?)](https://badge.fury.io/py/metabase-api)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](https://github.com/vvaezian/metabase_api_python/issues)
+[![codecov](https://codecov.io/gh/vvaezian/metabase_api_python/branch/master/graph/badge.svg?token=FNH20CUC4F)](https://codecov.io/gh/vvaezian/metabase_api_python)
 [![GitHub license](https://img.shields.io/github/license/vvaezian/metabase_api_python.svg)](https://github.com/vvaezian/metabase_api_python/blob/master/LICENSE)
 
 ## Installation
