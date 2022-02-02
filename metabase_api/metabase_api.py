@@ -1,9 +1,15 @@
+import os
+
 import requests
 import getpass
 
+
+MB_PASSWORD = os.getenv("MB_PASSWORD")
+MB_USERNAME = os.getenv("MB_USERNAME")
+MB_DOMAIN = os.getenv("MB_DOMAIN")
 class Metabase_API():
 
-    def __init__(self, domain, email, password=None, basic_auth=False):
+    def __init__(self, domain=MB_DOMAIN, email=MB_USERNAME, password=MB_PASSWORD, basic_auth=False):
 
         self.domain = domain.rstrip('/')
         self.email = email
