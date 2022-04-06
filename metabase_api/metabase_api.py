@@ -3,7 +3,7 @@ import getpass
 
 class Metabase_API():
 
-    def __init__(self, domain, email, password=None, basic_auth=False):
+    def __init__(self, domain, email, password=None, basic_auth=False, is_admin=True):
 
         self.domain = domain.rstrip('/')
         self.email = email
@@ -12,6 +12,12 @@ class Metabase_API():
         self.header = None
         self.auth = (self.email, self.password) if basic_auth else None
         self.authenticate()
+        self.is_admin = is_admin
+        if not self.is_admin:
+            print('''
+                Ask your Metabase admin to disable "Friendly Table and Field Names" (in Admin Panel > Settings > General).
+                Without this some of the functions of the current package may not work as expected.
+            ''')
 
 
     def authenticate(self):
@@ -333,8 +339,9 @@ class Metabase_API():
 
 
     def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False, column_id_name=False):
-        '''Return a dictionary with col_name key and col_id value, for the given table_id/table_name in the given db_id/db_name.
-             If column_id_name is True, return a dictionary with col_id key and col_name value.
+        '''
+        Return a dictionary with col_name key and col_id value, for the given table_id/table_name in the given db_id/db_name.
+        If column_id_name is True, return a dictionary with col_id key and col_name value.
         '''
         if not self.friendly_names_is_disabled():
             raise ValueError('Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.')
@@ -365,10 +372,16 @@ class Metabase_API():
 
     def friendly_names_is_disabled(self):
         '''
-        The endpoint /api/database/:db-id/fields which is used in the function get_column_name_id relies on the display name of fields. 
+        The endpoint /api/database/:db-id/fields which is used in the function get_columns_name_id relies on the display name of fields. 
         If "Friendly Table and Field Names" (in Admin Panel > Settings > General) is not disabled, it changes the display name of fields.
-        So it is important to make sure this setting is disabled, before running the get_column_name_id function.
+        So it is important to make sure this setting is disabled, before running the get_columns_name_id function.
         '''
+        # checking whether friendly_name is disabled required admin access. 
+        # So to let non-admin users also use this package we skip this step for them.
+        # There is warning in the __init__ method for these users.
+        if not self.is_admin:  
+            return True
+
         friendly_name_setting = [ i['value'] for i in self.get('/api/setting') if i['key'] == 'humanization-strategy' ][0]
         return friendly_name_setting == 'none'  # 'none' means disabled
 
@@ -386,8 +399,8 @@ class Metabase_API():
     ##################################################################
 
     def create_card(self, card_name=None, collection_name=None, collection_id=None, 
-                                    db_name=None, db_id=None, table_name=None,    table_id=None, 
-                                    column_order='db_table_order', custom_json=None, verbose=False, return_card=False):
+                    db_name=None, db_id=None, table_name=None,    table_id=None, 
+                    column_order='db_table_order', custom_json=None, verbose=False, return_card=False):
         """
         Create a card using the given arguments utilizing the endpoint 'POST /api/card/'. 
         If collection is not given, the root collection is used.
@@ -508,9 +521,9 @@ class Metabase_API():
             self.delete("/api/card/{}".format(card_id))    
 
             column_name_id_dict = self.get_columns_name_id(db_id=db_id, 
-                                                            table_id=table_id, 
-                                                            table_name=table_name, 
-                                                            verbose=verbose)
+                                                           table_id=table_id, 
+                                                           table_name=table_name, 
+                                                           verbose=verbose)
             column_id_list = [ column_name_id_dict[i] for i in ordered_columns ]
             column_id_list_str = [ ['field-id', i] for i in column_id_list ]
 
@@ -586,7 +599,7 @@ class Metabase_API():
 
 
     def create_segment(self, segment_name, column_name, column_values, segment_description='', 
-                                         db_name=None, db_id=None, table_name=None, table_id=None, return_segment=False):
+                       db_name=None, db_id=None, table_name=None, table_id=None, return_segment=False):
         """
         Create a segment using the given arguments utilizing the endpoint 'POST /api/segment/'. 
 
@@ -630,10 +643,10 @@ class Metabase_API():
 
 
     def copy_card(self, source_card_name=None, source_card_id=None, 
-                        source_collection_name=None, source_collection_id=None,
-                        destination_card_name=None, 
-                        destination_collection_name=None, destination_collection_id=None,
-                        postfix='', verbose=False):
+                  source_collection_name=None, source_collection_id=None,
+                  destination_card_name=None, 
+                  destination_collection_name=None, destination_collection_id=None,
+                  postfix='', verbose=False):
         """
         Copy the card with the given name/id to the given destination collection. 
 
@@ -655,9 +668,9 @@ class Metabase_API():
                 raise ValueError('Either the name or id of the source card must be provided.')
             else:
                 source_card_id = self.get_item_id(item_type='card',
-                                                item_name=source_card_name, 
-                                                collection_id=source_collection_id, 
-                                                collection_name=source_collection_name)
+                                                  item_name=source_card_name, 
+                                                  collection_id=source_collection_id, 
+                                                  collection_name=source_collection_name)
 
         if not destination_collection_id:
             if not destination_collection_name:
@@ -691,9 +704,9 @@ class Metabase_API():
 
 
     def copy_pulse(self, source_pulse_name=None, source_pulse_id=None, 
-                        source_collection_name=None, source_collection_id=None,
-                        destination_pulse_name=None, 
-                        destination_collection_id=None, destination_collection_name=None, postfix=''):
+                   source_collection_name=None, source_collection_id=None,
+                   destination_pulse_name=None, 
+                   destination_collection_id=None, destination_collection_name=None, postfix=''):
         """
         Copy the pulse with the given name/id to the given destination collection. 
 
@@ -743,10 +756,10 @@ class Metabase_API():
 
 
     def copy_dashboard(self, source_dashboard_name=None, source_dashboard_id=None, 
-                            source_collection_name=None, source_collection_id=None,
-                            destination_dashboard_name=None, 
-                            destination_collection_name=None, destination_collection_id=None,
-                            deepcopy=False, postfix=''):
+                       source_collection_name=None, source_collection_id=None,
+                       destination_dashboard_name=None, 
+                       destination_collection_name=None, destination_collection_id=None,
+                       deepcopy=False, postfix=''):
         """
         Copy the dashboard with the given name/id to the given destination collection. 
 
@@ -771,8 +784,8 @@ class Metabase_API():
                 raise ValueError('Either the name or id of the source dashboard must be provided.')
             else:
                 source_dashboard_id = self.get_item_id(item_type='dashboard',item_name=source_dashboard_name, 
-                                                        collection_id=source_collection_id, 
-                                                        collection_name=source_collection_name)
+                                                       collection_id=source_collection_id, 
+                                                       collection_name=source_collection_name)
 
         if not destination_collection_id:
             if not destination_collection_name:
@@ -836,9 +849,9 @@ class Metabase_API():
 
 
     def copy_collection(self, source_collection_name=None, source_collection_id=None, 
-                                            destination_collection_name=None,
-                                            destination_parent_collection_name=None, destination_parent_collection_id=None, 
-                                            deepcopy_dashboards=False, postfix='', child_items_postfix='', verbose=False):
+                        destination_collection_name=None,
+                        destination_parent_collection_name=None, destination_parent_collection_id=None, 
+                        deepcopy_dashboards=False, postfix='', child_items_postfix='', verbose=False):
         """
         Copy the collection with the given name/id into the given destination parent collection. 
 
@@ -883,10 +896,10 @@ class Metabase_API():
 
         ### create a collection in the destination to hold the contents of the source collection
         res = self.create_collection(destination_collection_name, 
-                                    parent_collection_id=destination_parent_collection_id, 
-                                    parent_collection_name=destination_parent_collection_name,
-                                    return_results=True
-                                )
+                                     parent_collection_id=destination_parent_collection_id, 
+                                     parent_collection_name=destination_parent_collection_name,
+                                     return_results=True
+                                    )
         destination_collection_id = res['id']    
 
         ### get the items to copy
@@ -904,10 +917,10 @@ class Metabase_API():
                 destination_collection_name = collection_name + child_items_postfix
                 self.verbose_print(verbose, 'Copying the collection "{}" ...'.format(collection_name))
                 self.copy_collection(source_collection_id=collection_id,
-                                    destination_parent_collection_id=destination_collection_id,
-                                    child_items_postfix=child_items_postfix,
-                                    deepcopy_dashboards=deepcopy_dashboards,
-                                    verbose=verbose)
+                                     destination_parent_collection_id=destination_collection_id,
+                                     child_items_postfix=child_items_postfix,
+                                     deepcopy_dashboards=deepcopy_dashboards,
+                                     verbose=verbose)
 
             ## copy a dashboard
             if item['model'] == 'dashboard':
@@ -927,8 +940,8 @@ class Metabase_API():
                 destination_card_name = card_name + child_items_postfix
                 self.verbose_print(verbose, 'Copying the card "{}" ...'.format(card_name))
                 self.copy_card(source_card_id=card_id,
-                                destination_collection_id=destination_collection_id,
-                                destination_card_name=destination_card_name)
+                               destination_collection_id=destination_collection_id,
+                               destination_card_name=destination_card_name)
 
             ## copy a pulse
             if item['model'] == 'pulse':
@@ -965,7 +978,8 @@ class Metabase_API():
 
 
 
-    def get_card_data(self, card_name=None, card_id=None, collection_name=None, collection_id=None, data_format='json', parameters=None):
+    def get_card_data(self, card_name=None, card_id=None, collection_name=None, 
+                      collection_id=None, data_format='json', parameters=None):
         '''
         Run the query associated with a card and get the results.
         The data_format keyword specifies the format of the returned data:
@@ -983,9 +997,9 @@ class Metabase_API():
             if card_name is None:
                 raise ValueError('Either card_id or card_name must be provided.')
             card_id = self.get_item_id(item_name=card_name,
-                                        collection_name=collection_name,
-                                        collection_id=collection_id,
-                                        item_type='card')
+                                       collection_name=collection_name,
+                                       collection_id=collection_id,
+                                       item_type='card')
 
         # add the filter values (if any)
         import json
@@ -1002,12 +1016,11 @@ class Metabase_API():
 
 
 
-    def clone_card(self, card_id
-                        , source_table_id=None, target_table_id=None
-                        , source_table_name=None, target_table_name=None
-                        , new_card_name=None, new_card_collection_id=None
-                        , ignore_these_filters=None
-                        , return_card=False):
+    def clone_card(self, card_id, 
+                   source_table_id=None, target_table_id=None, 
+                   source_table_name=None, target_table_name=None, 
+                   new_card_name=None, new_card_collection_id=None, 
+                   ignore_these_filters=None, return_card=False):
         """ 
         *** work in progress ***
         Create a new card where the source of the old card is changed from 'source_table_id' to 'target_table_id'. 
@@ -1099,8 +1112,8 @@ class Metabase_API():
 
 
 
-    def move_to_archive(self, item_type, item_name=None, item_id=None
-                            , collection_name=None, collection_id=None, table_id=None, verbose=False):
+    def move_to_archive(self, item_type, item_name=None, item_id=None, 
+                        collection_name=None, collection_id=None, table_id=None, verbose=False):
         '''Archive the given item. For deleting the item use the 'delete_item' function.'''
         assert item_type in ['card', 'dashboard', 'collection', 'pulse', 'segment']
 
@@ -1129,8 +1142,8 @@ class Metabase_API():
 
 
 
-    def delete_item(self, item_type, item_name=None, item_id=None
-                        , collection_name=None, collection_id=None, verbose=False):
+    def delete_item(self, item_type, item_name=None, item_id=None, 
+                    collection_name=None, collection_id=None, verbose=False):
         '''
         Delete the given item. Use carefully (this is different from archiving).
         Currently Collections and Segments cannot be deleted using the Metabase API.
@@ -1145,10 +1158,8 @@ class Metabase_API():
 
 
 
-    def update_column(self, params,
-                    column_id=None, column_name=None, 
-                    table_id=None, table_name=None, 
-                    db_id=None, db_name=None):
+    def update_column(self, params, column_id=None, column_name=None, 
+                      table_id=None, table_name=None, db_id=None, db_name=None):
         '''
         Update the column in data model by providing values for 'params'.
         E.g. for changing the column type to 'Category' in data model, use: params={'semantic_type':'type/Category'} 
