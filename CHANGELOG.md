@@ -1,6 +1,6 @@
 ## Unreleased
 
-## 0.2.14.1
+## 0.2.14.2
 ### Changed
 - Fixed the issue #31 ([Unable to use get_columns_name_id as a non-superuser](https://github.com/vvaezian/metabase_api_python/issues/31))
 
