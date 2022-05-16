@@ -1080,16 +1080,27 @@ class Metabase_API():
 
         # simple/custom questions
         elif card_info['dataset_query']['type'] == 'query':
-            filters_data = card_info['dataset_query']['query']
+            
+            query_data = card_info['dataset_query']['query']
+            
             # change the underlying table for the card
-            filters_data['source-table'] = target_table_id
-            # change filters source 
-            for index, item in enumerate(filters_data['filter']):
-                if type(item) == list:
-                    column_id = item[1][1]
-                    column_name = source_table_col_id_name_mapping[column_id]
-                    target_col_id = target_table_col_name_id_mapping[column_name]
-                    card_info['dataset_query']['query']['filter'][index][1][1] = target_col_id
+            query_data['source-table'] = target_table_id
+            
+            # transform to string so it is easier to replace the column IDs
+            query_data_str = str(query_data)
+            
+            # find column IDs
+            import re
+            res = re.findall("\['field', .*?\]", query_data_str)
+            source_column_IDs = [ eval(i)[1] for i in res ]
+            
+            # replace column IDs from old table with the column IDs from new table
+            for source_col_id in source_column_IDs:
+                source_col_name = source_table_col_id_name_mapping[source_col_id]
+                target_col_id = target_table_col_name_id_mapping[source_col_name]
+                query_data_str = query_data_str.replace("['field', {}, ".format(source_col_id), "['field', {}, ".format(target_col_id))
+            
+            card_info['dataset_query']['query'] = eval(query_data_str)
 
         new_card_json = {}
         for key in ['dataset_query', 'display', 'visualization_settings']:
