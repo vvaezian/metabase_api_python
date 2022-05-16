@@ -146,12 +146,14 @@ class Metabase_API_Test(unittest.TestCase):
     self.assertEqual(table_info['fields'][0]['name'], 'col1')
 
 
+
   def test_get_columns_name_id(self):
     name_id_mapping = mb.get_columns_name_id(table_id=101)
     self.assertEqual(name_id_mapping['col1'], 490)
 
     id_name_mapping = mb.get_columns_name_id(table_id=101, column_id_name=True)
     self.assertEqual(id_name_mapping[490], 'col1')
+
 
 
   def test_friendly_names_is_disabled(self):
@@ -215,6 +217,7 @@ class Metabase_API_Test(unittest.TestCase):
     Metabase_API_Test.cleanup_objects['card'].extend([ res1['id'], res3['id'], res3['id'] ])
 
 
+
   def test_create_collection(self):
     t = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     res = mb.create_collection(f'test_create_collection {t}', parent_collection_id=28, return_results=True)
@@ -227,12 +230,14 @@ class Metabase_API_Test(unittest.TestCase):
     Metabase_API_Test.cleanup_objects['collection'].append(res['id'])
 
 
+
   def test_create_segment(self):
     t = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     res = mb.create_segment(segment_name='test_create_segment_{}'.format(t), table_name='test_table', column_name='col2', column_values=[1, 2], return_segment=True)
 
     # add to cleanup list
     Metabase_API_Test.cleanup_objects['segment'].append(res['id'])
+
 
 
   def test_copy_card(self):
@@ -284,11 +289,13 @@ class Metabase_API_Test(unittest.TestCase):
   def test_get_card_data(self):
     # json
     res = mb.get_card_data(card_id=166)
-    json_data = [{'col1': 'row1 cell1', 'col2': 1},
-            {'col1': None, 'col2': 2},
-            {'col1': 'row3 cell1', 'col2': None},
-            {'col1': None, 'col2': None},
-            {'col1': 'row5 cell1', 'col2': 5}]
+    json_data = [
+      {'col1': 'row1 cell1', 'col2': 1},
+      {'col1': None, 'col2': 2},
+      {'col1': 'row3 cell1', 'col2': None},
+      {'col1': None, 'col2': None},
+      {'col1': 'row5 cell1', 'col2': 5}
+    ]
     self.assertEqual(res, json_data)
 
     # csv
@@ -302,14 +309,25 @@ class Metabase_API_Test(unittest.TestCase):
     self.assertEqual(res, filtered_data)
 
 
+
   def test_clone_card(self):
     # native question
     res = mb.clone_card(273, 101, 103, new_card_name='test_clone_native', new_card_collection_id=29, return_card=True)
     # simple/custom question
-    res2 = mb.clone_card(274, 101, 103, new_card_name='test_clone_simple', new_card_collection_id=29, return_card=True)
+    res2 = mb.clone_card(274, 101, 103, new_card_name='test_clone_simple1', new_card_collection_id=29, return_card=True)
+    res3 = mb.clone_card(491, 101, 103, new_card_name='test_clone_simple2', new_card_collection_id=29, return_card=True)
+    expected_res3_query = { 'database': 5,
+                            'query': {'source-table': 103,
+                                      'aggregation': [['avg', ['field', 493, None]]],
+                                      'breakout': [['field', 494, None]],
+                                      'order-by': [['desc', ['aggregation', 0, None]]]
+                                    },
+                            'type': 'query'
+                          }
+    self.assertEqual(res3['dataset_query'], expected_res3_query)
 
     # add to cleanup list
-    Metabase_API_Test.cleanup_objects['card'].extend([res['id'], res2['id']])
+    Metabase_API_Test.cleanup_objects['card'].extend([res['id'], res2['id'], res3['id']])
 
 
 
