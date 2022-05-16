@@ -32,7 +32,8 @@ class Metabase_API_Test(unittest.TestCase):
 
 
 
-  ### Helper Functions
+  ### Testing the Helper Functions
+  
   def test_get_item_info(self):
     # database
     res = mb.get_item_info('database', 5)
@@ -159,7 +160,7 @@ class Metabase_API_Test(unittest.TestCase):
 
 
 
-  ### Custom Functions
+  ### Testing the Custom Functions
 
   def test_create_card(self):
     t = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
