@@ -383,7 +383,8 @@ class Metabase_API():
             return True
 
         friendly_name_setting = [ i['value'] for i in self.get('/api/setting') if i['key'] == 'humanization-strategy' ][0]
-        return friendly_name_setting == 'none'  # 'none' means disabled
+        return friendly_name_setting == 'none' or friendly_name_setting is None  # 'none' means disabled
+
 
 
 
