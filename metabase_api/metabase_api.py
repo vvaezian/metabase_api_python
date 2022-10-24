@@ -642,6 +642,26 @@ class Metabase_API():
 
 
 
+    def create_dashboard(self, name, description=None, parameters=None, cache_ttl=None, collection_id=None, collection_position=None):
+        assert name
+        
+        json = {}
+        if description:
+            json['description'] = description
+        if collection_id:
+            assert isinstance(collection_ie, int)
+            assert collection_id != 0
+            
+            json['collection_id'] = collection_id
+
+        if collection_position:
+            assert isinstance(collection_position, int)
+            assert collection_position != 0
+            
+            json['collection_position'] = collection_position
+        
+        res = self.post("/api/dashboard", params=parameters)
+        
     def copy_card(self, source_card_name=None, source_card_id=None, 
                   source_collection_name=None, source_collection_id=None,
                   destination_card_name=None, 
