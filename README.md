@@ -30,6 +30,7 @@ You usually don't need to deal with these functions directly (e.g. [get_item_inf
 - [create_segment](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L486)
 - [copy_card](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L530)
 - [copy_pulse](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L591)
+- [create_dashboard]
 - [copy_dashboard](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L643)
 - [copy_collection](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L736)
 - [clone_card](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L1003)
