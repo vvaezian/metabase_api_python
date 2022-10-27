@@ -663,7 +663,7 @@ class Metabase_API():
         custom_json={}
         
         if not(name and isinstance(name, str)):
-            raise ValueError("Dashboard name incorrect. Please provide a string for dashboard name")
+            raise ValueError("Dashboard name incorrect. Please provide a valid string for dashboard name")
             custom_json['name'] = name
             
         if description:
