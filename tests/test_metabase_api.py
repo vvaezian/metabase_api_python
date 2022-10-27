@@ -281,7 +281,7 @@ class Metabase_API_Test(unittest.TestCase):
 
 
   def test_search(self):
-    res = mb.search('test_db')
+    res = mb.search('test_db2')
     self.assertEqual(len(res), 1)
     self.assertEqual(res[0]['model'], 'database')
 
