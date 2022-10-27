@@ -240,6 +240,11 @@ class Metabase_API_Test(unittest.TestCase):
 
 
 
+  def test_create_dashboard(self):
+    pass
+
+
+
   def test_copy_card(self):
     t = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     newCard_id = mb.copy_card(source_card_id=166, destination_collection_id=29, destination_card_name='test_copy_card_{}'.format(t))
