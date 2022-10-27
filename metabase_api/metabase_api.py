@@ -644,7 +644,8 @@ class Metabase_API():
 
     def create_dashboard(
                     self, name, description=None, parameters=[], cache_ttl=None,
-                     collection_id=None, collection_position=None, collection_name=None):
+                     collection_id=None, collection_position=None, collection_name=None,
+                     return_dashboard=False):
         custom_json={}
         
         if not(name and isinstance(name, str)):
@@ -679,6 +680,8 @@ class Metabase_API():
             custom_json['collection_position'] =  collection_position                      
     
         res = self.post("/api/dashboard", json=custom_json)
+        if return_dashboard:
+            return res
 
 
 
