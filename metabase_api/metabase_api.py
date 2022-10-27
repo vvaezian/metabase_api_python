@@ -642,32 +642,43 @@ class Metabase_API():
 
 
 
-    def create_dashboard(self, name, description=None, parameters=None, cache_ttl=None, collection_id=None, collection_position=None, collection_name=None):
-        assert name
+    def create_dashboard(
+                    self, name, description=None, parameters=[], cache_ttl=None,
+                     collection_id=None, collection_position=None, collection_name=None):
+        custom_json={}
         
-        json = {'name': name}
+        if not(name and isinstance(name, str)):
+            raise ValueError("Dashboard name incorrect. Please provide a string for dashboard name")
+            custom_json['name'] = name
+            
         if description:
-            json['description'] = description
+            custom_json['description'] =  description
         
-        if collection_name:
-            collection_id = self.get_item_id('collection', collection_name)
-        
-        if collection_id:
-            assert isinstance(collection_id, int)
-            assert collection_id != 0
+        if parameters:
+            if not isinstance(parameters, list):
+                raise ValueError("Parameter 'parameters' incorrect. Please provide an array")
+            for element in parameters:
+                if set(element.keys()) != {'id', 'type'}:
+                    raise ValueError("Parameter 'parameters' incorrect. Please provide an array of maps of keys 'id' and 'type'")
+            custom_json['parameters'] = parameters
             
-            json['collection_id'] = collection_id
+        if cache_ttl:
+            if not(isinstance(cache_ttl, int) and cache_ttl > 0):
+                raise ValueError("Parameter `cache_ttl` must be a scrictly positive integer. Please provide a correct value")
+            custom_json['cache_ttl']: cache_ttl
 
+        collection_id = self.get_item_id('collection', collection_name) if collection_name else collection_id
+        if collection_id:
+            if not isinstance(collection_id, int):
+                raise ValueError("Parameter `collection_id` must be an integer. Please provide a correct value")
+            custom_json['collection_id'] = collection_id
+            
         if collection_position:
-            assert isinstance(collection_position, int)
-            assert collection_position != 0
-            
-            json['collection_position'] = collection_position
-            
-            
-        
-        
-        res = self.post("/api/dashboard", json=json)
+            if not(isinstance(collection_position, int) and collection_position > 0):
+                raise ValueError("Parameter `collection_position` must be a stricly positive integer. Please provide a correct value")
+            custom_json['collection_position'] =  collection_position                      
+    
+        res = self.post("/api/dashboard", json=custom_json)
 
 
 
