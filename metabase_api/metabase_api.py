@@ -62,7 +62,6 @@ class Metabase_API():
 
 
     def post(self, endpoint, *args, **kwargs):
-        import pdb; pdb.set_trace()
         self.validate_session()
         res = requests.post(self.domain + endpoint, headers=self.header, **kwargs, auth=self.auth)
         if 'raw' in args:
