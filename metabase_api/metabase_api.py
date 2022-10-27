@@ -646,6 +646,20 @@ class Metabase_API():
                     self, name, description=None, parameters=[], cache_ttl=None,
                      collection_id=None, collection_position=None, collection_name=None,
                      return_dashboard=False):
+        """
+        Create a dashboard using the given arguments utilizing the endpoint 'POST /api/dashboard/'. 
+        If collection is not given, the root collection is used.
+
+        Keyword arguments:
+        name -- name used to create the dashboard (mandatory)
+        description -- description of the dashboard (default Non)
+        collection_name -- name of the collection to place the dashboard (default None)
+        collection_id -- id of the collection to place the dashboard (default None) 
+        collection_position -- position of the dashboard in the collection(default None)
+        cache_ttl -- Cache Time-to-Live, multiplier for caching management (see https://www.metabase.com/docs/latest/configuring-metabase/caching#cache-time-to-live-ttl)
+        parameters -- Array of maps for fine-tuning your dashboard. Each map must be of the form {'id': ..., 'type': ...}
+        return_dashboard --    whather to return the created dashboard info (default False)
+        """
         custom_json={}
         
         if not(name and isinstance(name, str)):
@@ -670,9 +684,12 @@ class Metabase_API():
 
         collection_id = self.get_item_id('collection', collection_name) if collection_name else collection_id
         if collection_id:
-            if not isinstance(collection_id, int):
+            if isinstance(collection_id, None):
+                pass
+            elif isinstance(collection_id, int):
+                custom_json['collection_id'] = collection_id
+            else:
                 raise ValueError("Parameter `collection_id` must be an integer. Please provide a correct value")
-            custom_json['collection_id'] = collection_id
             
         if collection_position:
             if not(isinstance(collection_position, int) and collection_position > 0):
