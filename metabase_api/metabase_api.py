@@ -808,7 +808,7 @@ class Metabase_API():
         except TypeError: 
             # This error happens when res returns false, with a 503 error, when using an Heroku instance.
             # However the dashboard was created. We just need to pick the new dashboard id.
-            sleep(10)
+            sleep(20)
             dashboards = self.get("/api/dashboard/")
             dup_dashboard_id = sorted([x for x in dashboards if x['name'] == destination_dashboard_name], key=lambda k: k['created_at'], reverse=True)[0]['id']
 
