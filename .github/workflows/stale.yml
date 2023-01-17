@@ -1,4 +1,4 @@
-name: Close inactive PRs
+name: Close inactive Issues and PRs
 on:
   schedule:
     - cron: "30 1 * * *"
