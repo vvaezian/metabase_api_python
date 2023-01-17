@@ -834,7 +834,7 @@ class Metabase_API():
                 new_card_id = card_id_mapping[card['card_id']]
                 card_json = {}
                 card_json['cardId'] = new_card_id
-                for prop in ['visualization_settings', 'col', 'row', 'sizeX', 'sizeY', 'series', 'parameter_mappings']:
+                for prop in ['visualization_settings', 'col', 'row', 'size_x', 'size_y', 'series', 'parameter_mappings']:
                     card_json[prop] = card[prop]
                 for item in card_json['parameter_mappings']:
                     item['card_id'] = new_card_id
