@@ -1,5 +1,6 @@
 import requests
 import getpass
+from time import sleep
 
 class Metabase_API():
 
@@ -801,7 +802,15 @@ class Metabase_API():
         ### shallow-copy
         shallow_copy_json = {'collection_id':destination_collection_id, 'name':destination_dashboard_name}
         res = self.post('/api/dashboard/{}/copy'.format(source_dashboard_id), json=shallow_copy_json)
-        dup_dashboard_id = res['id']
+        
+        try:
+            dup_dashboard_id = res['id']
+        except TypeError: 
+            # This error happens when res returns false, with a 503 error, when using an Heroku instance.
+            # However the dashboard was created. We just need to pick the new dashboard id.
+            sleep(20)
+            dashboards = self.get("/api/dashboard/")
+            dup_dashboard_id = sorted([x for x in dashboards if x['name'] == destination_dashboard_name], key=lambda k: k['created_at'], reverse=True)[0]['id']
 
         ### deepcopy
         if deepcopy:
