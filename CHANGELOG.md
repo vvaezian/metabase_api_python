@@ -1,4 +1,6 @@
-## Unreleased
+## 0.2.16
+### Changed
+- Fixed the issue #41 ([KeyError: 'sizeX'](https://github.com/vvaezian/metabase_api_python/issues/41))
 
 ## 0.2.15
 ### Changed
