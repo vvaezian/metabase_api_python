@@ -6,6 +6,7 @@ on:
     paths:
       - 'metabase_api/**'
       - 'tests/**'
+      - 'metabase_api_python/.github/workflows/test.yml' 
   pull_request:
     branches: [ master ]
     paths:
