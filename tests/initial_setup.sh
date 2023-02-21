@@ -1,6 +1,6 @@
 # This file does some initial setup so we can run tests on a local Metabase:
 # - Downloads the Metabase jar file
-# - Runs it
+# - Runs it and waits for initialization to complete
 # - Creates an admin user (email: abc.xyz@gmail.com, password: xzy12345) and does the initial setup of Metabase
 # - Creates some collections/cards/dashboards which will be used when running the tests
 
@@ -18,41 +18,41 @@ then
     exit 1
 fi
 
-echo https://downloads.metabase.com/v$MB_VERSION/metabase.jar
-pwd
+echo "downloading metabase jar ..."
+wget https://downloads.metabase.com/v$MB_VERSION/metabase.jar
+echo "starting metabase jar locally ..."
+java -jar metabase.jar > logs 2>&1 &
+
+echo "waiting 60 seconds for the initialization to complete ..."
+sleep 60
+
+# checking whether the metabase initialization has completed. If not, wait another 60 seconds
+success='False'
+grep -q "Metabase Initialization COMPLETE" logs
+if [[ $? -eq 0 ]] 
+then 
+    echo 'success!'
+    success='True'
+else
+    echo "Waiting an extra 60 seconds for the initialization to complete"
+    sleep 60
+    grep -q "Metabase Initialization COMPLETE" logs
+    if [[ $? -eq 0 ]] 
+    then 
+        echo 'success!'
+        success='True'
+    else
+        echo 'failure!'
+    fi      
+fi
+
+if [[ $success = 'False' ]]
+then
+    exit 1
+fi
+
 ls -l
-#cp tests/data/test_db.sqlite plugins
-
-# wget https://downloads.metabase.com/v$MB_VERSION/metabase.jar
-# echo "starting metabase jar locally ..."
-# java -jar metabase.jar > logs 2>&1 &
-
-# echo "waiting 60 seconds for the initialization to complete ..."
-# sleep 60
-
-# success='False'
-# grep -q "Metabase Initialization COMPLETE" logs
-# if [[ $? -eq 0 ]] 
-# then 
-#     echo 'success!'
-#     success='True'
-# else
-#     echo "Waiting an extra 60 seconds for the initialization to complete"
-#     sleep 60
-#     grep -q "Metabase Initialization COMPLETE" logs
-#     if [[ $? -eq 0 ]] 
-#     then 
-#         echo 'success!'
-#         success='True'
-#     else
-#         echo 'failure!'
-#     fi      
-# fi
-
-# if [[ $success = 'False' ]]
-# then
-#     exit 1
-# fi
+cp tests/data/test_db.sqlite plugins
 
 # echo "getting the seup token ..."
 # setup_token=$(curl -X GET http://localhost:3000/api/session/properties | perl -pe 's/.*"setup-token":"(.*?)".*/\1/')

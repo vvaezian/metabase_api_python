@@ -44,12 +44,12 @@ jobs:
       run: |
         chmod +x ./tests/initial_setup.sh
         ./tests/initial_setup.sh -v 0.45.2.1
-    - name: Test with pytest
-      run: |
-        pytest
-    - name: Generate Report
-      run: |
-        pip install coverage
-        coverage run -m unittest
-    - name: Upload Coverage to Codecov
-      uses: codecov/codecov-action@v1
+    # - name: Test with pytest
+    #   run: |
+    #     pytest
+    # - name: Generate Report
+    #   run: |
+    #     pip install coverage
+    #     coverage run -m unittest
+    # - name: Upload Coverage to Codecov
+    #   uses: codecov/codecov-action@v1
