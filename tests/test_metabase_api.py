@@ -241,6 +241,23 @@ class Metabase_API_Test(unittest.TestCase):
 
 
 
+  def test_create_dashboard(self):
+    t = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    dummy_name = 'dummy dashboard'
+    
+    with self.assertRaises(ValueError) as error:
+      res = mb.create_dashboard(name='')
+    self.assertEqual(
+      str(error.exception),
+      'Dashboard name incorrect. Please provide a valid string for dashboard name'
+    )
+    res = mb.create_dashboard(dummy_name)
+    
+    Metabase_API_Test.cleanup_objects['dashboard'].append(res['id'])
+    pass
+
+
+
   def test_copy_card(self):
     t = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     newCard_id = mb.copy_card(source_card_id=166, destination_collection_id=29, destination_card_name='test_copy_card_{}'.format(t))

@@ -642,6 +642,66 @@ class Metabase_API():
 
 
 
+    def create_dashboard(
+                    self, name, description=None, parameters=[], cache_ttl=None,
+                     collection_id=None, collection_position=None, collection_name=None,
+                     return_dashboard=False):
+        """
+        Create a dashboard using the given arguments utilizing the endpoint 'POST /api/dashboard/'. 
+        If collection is not given, the root collection is used.
+
+        Keyword arguments:
+        name -- name used to create the dashboard (mandatory)
+        description -- description of the dashboard (default Non)
+        collection_name -- name of the collection to place the dashboard (default None)
+        collection_id -- id of the collection to place the dashboard (default None) 
+        collection_position -- position of the dashboard in the collection(default None)
+        cache_ttl -- Cache Time-to-Live, multiplier for caching management (see https://www.metabase.com/docs/latest/configuring-metabase/caching#cache-time-to-live-ttl)
+        parameters -- Array of maps for fine-tuning your dashboard. Each map must be of the form {'id': ..., 'type': ...}
+        return_dashboard --    whather to return the created dashboard info (default False)
+        """
+        custom_json={}
+        
+        if not(name and isinstance(name, str)):
+            raise ValueError("Dashboard name incorrect. Please provide a valid string for dashboard name")
+            custom_json['name'] = name
+            
+        if description:
+            custom_json['description'] =  description
+        
+        if parameters:
+            if not isinstance(parameters, list):
+                raise ValueError("Parameter 'parameters' incorrect. Please provide an array")
+            for element in parameters:
+                if set(element.keys()) != {'id', 'type'}:
+                    raise ValueError("Parameter 'parameters' incorrect. Please provide an array of maps of keys 'id' and 'type'")
+            custom_json['parameters'] = parameters
+            
+        if cache_ttl:
+            if not(isinstance(cache_ttl, int) and cache_ttl > 0):
+                raise ValueError("Parameter `cache_ttl` must be a scrictly positive integer. Please provide a correct value")
+            custom_json['cache_ttl']: cache_ttl
+
+        collection_id = self.get_item_id('collection', collection_name) if collection_name else collection_id
+        if collection_id:
+            if isinstance(collection_id, None):
+                pass
+            elif isinstance(collection_id, int):
+                custom_json['collection_id'] = collection_id
+            else:
+                raise ValueError("Parameter `collection_id` must be an integer. Please provide a correct value")
+            
+        if collection_position:
+            if not(isinstance(collection_position, int) and collection_position > 0):
+                raise ValueError("Parameter `collection_position` must be a stricly positive integer. Please provide a correct value")
+            custom_json['collection_position'] =  collection_position                      
+    
+        res = self.post("/api/dashboard", json=custom_json)
+        if return_dashboard:
+            return res
+
+
+
     def copy_card(self, source_card_name=None, source_card_id=None, 
                   source_collection_name=None, source_collection_id=None,
                   destination_card_name=None, 
