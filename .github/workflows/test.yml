@@ -42,6 +42,8 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Initial Setup before running tests
       run: |
+        ls -l
+        pwd
         sh "bash ./tests/initial_setup.sh -v 0.45.2.1"
     - name: Test with pytest
       run: |
