@@ -39,18 +39,13 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    - name: Initial Setup before running tests
+      run: |
+        ./tests/initial_setup.sh -v 0.45.2.1
     - name: Test with pytest
-      env: 
-        LOGIN_DOMAIN : ${{ secrets.LOGIN_DOMAIN }}
-        LOGIN_USERNAME : ${{ secrets.LOGIN_USERNAME }}
-        LOGIN_PASSWORD : ${{ secrets.LOGIN_PASSWORD }}
       run: |
         pytest
     - name: Generate Report
-      env: 
-        LOGIN_DOMAIN : ${{ secrets.LOGIN_DOMAIN }}
-        LOGIN_USERNAME : ${{ secrets.LOGIN_USERNAME }}
-        LOGIN_PASSWORD : ${{ secrets.LOGIN_PASSWORD }}
       run: |
         pip install coverage
         coverage run -m unittest
