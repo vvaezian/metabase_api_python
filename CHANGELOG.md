@@ -1,3 +1,8 @@
+## 0.3.0
+### Changed
+- Option for local unittest is added. Also GitHub Actions Workflow is modified to use local testing.
+- Fixed the issue #37 ([Make wrapper more maintenance-proof with non-breaking refactor](https://github.com/vvaezian/metabase_api_python/issues/37))
+
 ## 0.2.16
 ### Changed
 - Fixed the issue #41 ([KeyError: 'sizeX'](https://github.com/vvaezian/metabase_api_python/issues/41))
