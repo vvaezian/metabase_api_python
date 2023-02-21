@@ -4,7 +4,6 @@
 # - Creates an admin user (email: abc.xyz@gmail.com, password: xzy12345) and does the initial setup of Metabase
 # - Creates some collections/cards/dashboards which will be used when running the tests
 
-
 while getopts 'v:' flag; do
   case "${flag}" in
     v) MB_VERSION="${OPTARG}" ;;
