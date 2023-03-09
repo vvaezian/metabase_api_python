@@ -86,7 +86,7 @@ class Metabase_API():
 
 
     def get_card_data(self, card_name=None, card_id=None, collection_name=None, 
-                      collection_id=None, data_format='json', parameters=None):
+                      collection_id=None, data_format='json', parameters=None, is_visual=False):
         '''
         Run the query associated with a card and get the results.
         The data_format keyword specifies the format of the returned data:
@@ -95,10 +95,12 @@ class Metabase_API():
         To pass the filter values use 'parameters' param:
             The format is like [{"type":"category","value":["val1","val2"],"target":["dimension",["template-tag","filter_variable_name"]]}]
             See the network tab when exporting the results using the web interface to get the proper format pattern.
+        To enable visulization settings, set 'is_visual' as True.
+            Note that there might be some encoding difference between versions with and without visualization settings.
         '''
-        assert data_format in [ 'json', 'csv' ]
+        assert data_format in ['json', 'csv', 'xlsx']
         if parameters:
-            assert type(parameters) == list
+            assert isinstance(parameters, list)
 
         if card_id is None:
             if card_name is None:
@@ -110,16 +112,52 @@ class Metabase_API():
 
         # add the filter values (if any)
         import json
-        params_json = {'parameters':json.dumps(parameters)}
+        params_json = {'parameters': json.dumps(parameters)}
 
-        # get the results
-        res = self.post("/api/card/{}/query/{}".format(card_id, data_format), 'raw', data=params_json)
+        if data_format == 'xlsx':
+            res = self.post("/api/card/{}/query/{}".format(card_id, data_format), 'raw', data=params_json)
+            return res.content
 
-        # return the results in the requested format
-        if data_format == 'json':
-            return json.loads(res.text)
-        if data_format == 'csv':
-            return res.text.replace('null', '')
+        if is_visual:
+            from _helper_methods import get_visual_table
+
+            # get the results
+            card_query = self.post('/api/card/{}/query'.format(card_id), json={'parameters': parameters})
+
+            raw_table = card_query['data']
+
+            query_metadata = self.get(f"/api/card/{card_id}")
+            column_settings = query_metadata['visualization_settings'].get('column_settings')
+            if column_settings:
+                visual_table = get_visual_table(raw_table, column_settings)
+                visual_rows = visual_table['rows']
+                visual_cols = visual_table['cols']
+            else:
+                visual_rows = raw_table['rows']
+                visual_cols = [r_col['display_name'] for r_col in raw_table['cols']]
+
+            if data_format == 'json':
+                res = [
+                    {column: cell for cell, column in zip(vis_row, visual_cols)} for vis_row in visual_rows
+                ]
+                return res
+            if data_format == 'csv':
+                import csv
+                from io import StringIO
+                res_str = StringIO()
+                csv_writer = csv.writer(res_str)
+                csv_writer.writerow(visual_cols)
+                csv_writer.writerows(visual_rows)
+                return res_str.getvalue()
+        else:
+            # get the results
+            res = self.post("/api/card/{}/query/{}".format(card_id, data_format), 'raw', data=params_json)
+
+            # return the results in the requested format
+            if data_format == 'json':
+                return json.loads(res.text)
+            if data_format == 'csv':
+                return res.text.replace('null', '')
 
 
 

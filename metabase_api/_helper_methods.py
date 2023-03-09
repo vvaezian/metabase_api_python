@@ -292,6 +292,126 @@ def friendly_names_is_disabled(self):
 
 
 
+def get_field_ref_id(field):
+    """
+    :return:
+    """
+    field_ref = field['field_ref']
+    if isinstance(field_ref, list) and (len(field_ref) >= 2):
+        field_type = field_ref[0]
+        if field_type == 'field':
+            field_name = field_ref[1]
+            return f'["ref",["field",{field_name},null]]'
+        elif field_type == 'aggregation':
+            # It seems that Metabase server could guarantee unique name when using aggregation.
+            # Experiment shows that when 2 aggregation calc is same type e.g. sum,
+            # the 1st is 'sum', the 2nd is 'sum_2'
+            field_name = field['name']
+            return f'["name","{field_name}"]'
+    else:
+        raise Exception('Get field ref id failed, check data structure please.')
+
+
+def get_visual_title(field, column_settings, is_weak=False):
+    """
+    :param field: dict, key named 'field' is requisite for all conditions, key named 'name' is requisite when aggregation
+    :param column_settings:
+    :param is_weak: when visual setting not found: return None if is_weak, else raise exception
+    :return:
+    """
+    column_key = get_field_ref_id(field)
+    column_visual_setting = column_settings.get(column_key)
+    if not column_visual_setting:
+        if is_weak:
+            return None
+        else:
+            raise ValueError(f'request weak mode in column_settings, while got None for field: {field}')
+    return column_visual_setting['column_title']
+
+
+def get_visual_table(raw_table, column_settings):
+    """
+    Rename columns and adjust value positions according to column_settings in visualization_settings of query_metadata
+    Currently, possible adjustments include:
+    - remapping: each 1 mapping results in 2 fields in raw_table['rows'], in which one is original,
+      the other is target value. The former will be dropped and the latter will be picked.
+
+    :param raw_table: dict, with keys: 'rows', 'cols '
+    :param column_settings: list of dict, query_metadata['visualization_settings']['column_settings']
+    :return: visual_table, dict, with keys: 'rows', 'cols'
+    """
+    visual_columns = []  # collect visual column names returned
+    valid_indexes = []  # collect actual data positions returned
+
+    # Possible field_ref:
+    #
+    #    ['field', 712, {'join-alias': 'some-table-name'}]
+    #    ['aggregation', 'sum']
+    #    ['aggregation', 'sum_2']
+    #
+    # Not every column dict has key 'field_ref'.
+    # Those who has do NOT necessarily has corresponding value in column_settings.
+    # column_settings is a dict, mapping from :field_ref string, to a setting dict.
+    #
+    # If :field_ref string ...
+    # DO found in column_settings => 'column_title' in dict is what we want
+    # NOT found in column_settings => remapping may exist => use 'display_name' instead
+    #
+    # To check remapping info, use data -> cols info in response from /api/card/:card_id/query
+    # If 'remapped_from' or 'remapped_to' in the field, then that must be a field with remapping info
+
+    ### visual_columns ### # noqa
+    # remapping: str -> dict
+    # [key] index of remapped_from
+    # [value] {'from_name', 'from_raw', 'to_index', 'to_name', 'to_raw'}
+    remapping = dict()
+    raw_cols = raw_table['cols']
+    for col_index, r_col in enumerate(raw_cols):
+        field_ref = r_col.get('field_ref')
+        col_name = r_col['name']
+        if field_ref is None:
+            may_from_name = r_col.get('remapped_from')
+            if (may_from_name in remapping) and (col_name == remapping[may_from_name]['to_name']):
+                remapping[may_from_name].update({
+                    'to_index': col_index,
+                    'to_raw': dict(r_col),
+                })
+            else:
+                from warnings import warn
+                warn('Visualization enabled in Metabase card query,'
+                     'while field with name [{}] does NOT have field_ref, which may cause problems.'.format(col_name),
+                     Warning)
+        else:
+            may_to_name = r_col.get('remapped_to')
+            if may_to_name:
+                remapping[col_name] = {
+                    'from_index': col_index,
+                    'to_name': may_to_name,
+                    'from_raw': dict(r_col),
+                }
+                visual_columns.append(None)
+                valid_indexes.append(None)
+            else:
+                visual = get_visual_title(r_col, column_settings, is_weak=True) or r_col['display_name']
+                visual_columns.append(visual)
+                valid_indexes.append(col_index)
+
+    ### valid_indexs ###  # noqa
+    for null_visual_name, info in remapping.items():
+        null_visual_index = info['from_index']
+        visual_sub = info['to_raw']['display_name']
+        visual_columns[null_visual_index] = visual_sub
+        valid_indexes[null_visual_index] = info['to_index']
+
+    raw_rows = raw_table['rows']
+    valid_rows = [
+        [r_row[index] for index in valid_indexes] for r_row in raw_rows
+    ]
+    visual_table = {'rows': valid_rows, 'cols': visual_columns}
+    return visual_table
+
+
+
 @staticmethod
 def verbose_print(verbose, msg):
     if verbose:
