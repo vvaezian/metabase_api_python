@@ -314,7 +314,7 @@ def get_field_ref_id(field):
 
 def get_visual_title(field, column_settings, is_weak=False):
     """
-    :param field: dict, key named 'field' is requisite for all conditions, key named 'name' is requisite when aggregation
+    :param field: dict, key named 'field_ref' is requisite for all conditions, key named 'name' is requisite when aggregation
     :param column_settings:
     :param is_weak: when visual setting not found: return None if is_weak, else raise exception
     :return:
