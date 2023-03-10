@@ -248,6 +248,29 @@ class Metabase_API_Test(unittest.TestCase):
 
 
 
+  def test_get_field_ref_id(self):
+    from metabase_api._helper_methods import get_field_ref_id
+
+    field = {'field_ref': ['field', 72, None]}
+    res = get_field_ref_id(field)
+    self.assertEqual(res, '["ref",["field",72,null]]')
+
+    field2 = {'field_ref': ['aggregation', 0], 'name': 'avg'}
+    res2 = get_field_ref_id(field2)
+    self.assertEqual(res2, '["name","avg"]')
+
+    with self.assertRaises(Exception) as error1:
+      field3 = {'field_ref': {'bad': 'field'}}
+      res3 = get_field_ref_id(field3)
+    self.assertEqual(str(error1.exception), 'Get field ref id failed, check data structure please.')
+
+    with self.assertRaises(Exception) as error2:
+      field4 = {'field_ref': ['field']}
+      res4 = get_field_ref_id(field4)
+    self.assertEqual(str(error2.exception), 'Get field ref id failed, check data structure please.')
+
+
+
   def test_get_card_data(self):
     # json
     res = mb.get_card_data(card_id=1)
