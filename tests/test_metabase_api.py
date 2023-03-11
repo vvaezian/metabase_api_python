@@ -361,7 +361,7 @@ class Metabase_API_Test(unittest.TestCase):
 
     # csv withOUT visual
     res = mb.get_card_data(card_id=1, data_format='csv')
-    csv_data = 'col1,col2\nrow1 cell1,1\n,2\nrow3 cell1,\n,\nrow5 cell1,5\n'
+    csv_data = '"col1","col2"\n"row1 cell1","1"\n"","2"\n"row3 cell1",""\n"",""\n"row5 cell1","5"\n'
     self.assertEqual(res, csv_data)
 
     # csv WITH visual - no column settings

@@ -96,7 +96,9 @@ class Metabase_API():
             The format is like [{"type":"category","value":["val1","val2"],"target":["dimension",["template-tag","filter_variable_name"]]}]
             See the network tab when exporting the results using the web interface to get the proper format pattern.
         To enable visulization settings, set 'is_visual' as True.
-            Note that quote difference exists between versions with and without visualization settings.
+            Note that CSV exported through csv module in Python stdlib. It uses double quote to mark each cell value,
+            while the offical API to export CSV is just plain text. See function test_get_card_data in
+            /tests/test_metabase_api.py for more details.
         '''
         assert data_format in ['json', 'csv', 'xlsx']
         if parameters:
@@ -110,21 +112,40 @@ class Metabase_API():
                                        collection_id=collection_id,
                                        item_type='card')
 
-        # add the filter values (if any)
-        import json
-        params_json = {'parameters': json.dumps(parameters)}
-
+        # xlsx exported with visualization settings naturally
         if data_format == 'xlsx':
+            # add the filter values (if any)
+            import json
+            params_json = {'parameters': json.dumps(parameters)}
             res = self.post("/api/card/{}/query/{}".format(card_id, data_format), 'raw', data=params_json)
             return res.content
 
-        if is_visual:
+        def _write_csv(content_rows, header):
+            import csv
+            from io import StringIO
+            res_str = StringIO(newline='\n')
+            csv_writer = csv.writer(res_str, dialect='unix')
+            csv_writer.writerow(header)
+            csv_writer.writerows(content_rows)
+            return res_str.getvalue()
+
+        def _get_table():
+            """
+            return rows and columns according to visualization flag and raw data
+
+            :return:
+            """
             from metabase_api._helper_methods import get_visual_table
 
             # get the results
             card_query = self.post('/api/card/{}/query'.format(card_id), json={'parameters': parameters})
 
             raw_table = card_query['data']
+
+            if not is_visual:
+                _rows = raw_table['rows']
+                _cols = [r_col['display_name'] for r_col in raw_table['cols']]
+                return _rows, _cols
 
             query_metadata = self.get(f"/api/card/{card_id}")
             column_settings = query_metadata['visualization_settings'].get('column_settings')
@@ -136,32 +157,22 @@ class Metabase_API():
                 visual_rows = raw_table['rows']
                 visual_cols = [r_col['display_name'] for r_col in raw_table['cols']]
 
-            if data_format == 'json':
-                res = [
-                    {column: cell for cell, column in zip(vis_row, visual_cols)} for vis_row in visual_rows
-                ]
-                return res
-            if data_format == 'csv':
-                import csv
-                from io import StringIO
-                res_str = StringIO(newline='\n')
-                csv_writer = csv.writer(res_str, dialect='unix')
-                csv_writer.writerow(visual_cols)
-                csv_writer.writerows(visual_rows)
-                return res_str.getvalue()
-        else:
-            # get the results
-            res = self.post("/api/card/{}/query/{}".format(card_id, data_format), 'raw', data=params_json)
+            return visual_rows, visual_cols
 
-            # return the results in the requested format
-            if data_format == 'json':
-                return json.loads(res.text)
-            if data_format == 'csv':
-                return res.text.replace('null', '')
+        rows, cols = _get_table()
+
+        if data_format == 'json':
+            res = [
+                {column: cell for cell, column in zip(vis_row, cols)} for vis_row in rows
+            ]
+            return res
+
+        if data_format == 'csv':
+            return _write_csv(rows, cols)
 
 
 
-    def clone_card(self, card_id, 
+    def clone_card(self, card_id,
                    source_table_id=None, target_table_id=None, 
                    source_table_name=None, target_table_name=None, 
                    new_card_name=None, new_card_collection_id=None, 
