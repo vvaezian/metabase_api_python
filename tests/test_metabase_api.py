@@ -290,6 +290,48 @@ class Metabase_API_Test(unittest.TestCase):
 
 
 
+  def test_get_visual_table(self):
+    from metabase_api._helper_methods import get_visual_table
+
+    raw_table = {
+      'rows': [
+        ['row1 cell1', 1, 'meaningful_value_1'],
+        ['row2 cell1', 2, 'meaningful_value_2'],
+      ],
+      'cols': [
+        {
+          'field_ref': ['field', 72, None],
+          'name': 'col1',
+        },
+        {
+          'field_ref': ['field', 7200, None],
+          'remapped_to': 'readable_column_name',
+          'name': 'col100_imagine_for_test'
+        },
+        {
+          'remapped_from': 'col100_imagine_for_test',
+          'name': 'readable_column_name',
+          'display_name': 'readable_column_name',
+        }
+      ]
+    }
+    column_settings = {
+      '["ref",["field",72,null]]': {'column_title': 'custom_col1_title'}
+    }
+    res = get_visual_table(raw_table, column_settings)
+    expected = {
+      'rows': [
+        ['row1 cell1', 'meaningful_value_1'],
+        ['row2 cell1', 'meaningful_value_2'],
+      ],
+      'cols': [
+        'custom_col1_title', 'readable_column_name'
+      ]
+    }
+    self.assertEqual(res, expected)
+
+
+
   def test_get_card_data(self):
     # json
     res = mb.get_card_data(card_id=1)
