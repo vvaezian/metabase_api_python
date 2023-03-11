@@ -340,8 +340,8 @@ def get_visual_table(raw_table, column_settings):
     :param column_settings: list of dict, query_metadata['visualization_settings']['column_settings']
     :return: visual_table, dict, with keys: 'rows', 'cols'
     """
-    visual_columns = []  # collect visual column names returned
-    valid_indexes = []  # collect actual data positions returned
+    visual_columns = []  # collect visual column names returned, e.g. ['col1_vis', 'col2_vis']
+    valid_indexes = []  # collect actual data positions returned, e.g. [['ab', 1], ['cd', 2]]
 
     # Possible field_ref:
     #
