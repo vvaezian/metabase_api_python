@@ -96,7 +96,7 @@ class Metabase_API():
             The format is like [{"type":"category","value":["val1","val2"],"target":["dimension",["template-tag","filter_variable_name"]]}]
             See the network tab when exporting the results using the web interface to get the proper format pattern.
         To enable visulization settings, set 'is_visual' as True.
-            Note that there might be some encoding difference between versions with and without visualization settings.
+            Note that quote difference exists between versions with and without visualization settings.
         '''
         assert data_format in ['json', 'csv', 'xlsx']
         if parameters:
