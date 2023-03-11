@@ -151,6 +151,23 @@ json='{
 }'
 echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- 
 
+json='{
+    "name": "test_card_5",
+    "display": "table",
+    "dataset_query": {
+        "database": 2,
+        "query": { "source-table": 9 },
+        "type": "query"
+    },
+    "visualization_settings": {
+        "column_settings": {
+            "[\"ref\",[\"field\",72,null]]": {"column_title": "custom_col1_title"}
+        }
+    },
+    "collection_id": 2
+}'
+echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- 
+
 # create a test dashboard
 curl -X POST http://localhost:3000/api/dashboard -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d '{"collection_id":2,"name":"test_dashboard"}'
 # add the test_card to the dashboard

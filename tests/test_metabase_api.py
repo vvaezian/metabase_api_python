@@ -333,7 +333,7 @@ class Metabase_API_Test(unittest.TestCase):
 
 
   def test_get_card_data(self):
-    # json
+    # json withOUT visual
     res = mb.get_card_data(card_id=1)
     json_data = [
       {'col1': 'row1 cell1', 'col2': 1},
@@ -344,9 +344,34 @@ class Metabase_API_Test(unittest.TestCase):
     ]
     self.assertEqual(res, json_data)
 
-    # csv
+    # json WITH visual - no column settings
+    res = mb.get_card_data(card_id=1, is_visual=True)
+    self.assertEqual(res, json_data)
+
+    # json WITH visual - column settings
+    res = mb.get_card_data(card_id=5, is_visual=True)
+    json_data = [
+      {'custom_col1_title': 'row1 cell1', 'col2': 1},
+      {'custom_col1_title': None, 'col2': 2},
+      {'custom_col1_title': 'row3 cell1', 'col2': None},
+      {'custom_col1_title': None, 'col2': None},
+      {'custom_col1_title': 'row5 cell1', 'col2': 5}
+    ]
+    self.assertEqual(res, json_data)
+
+    # csv withOUT visual
     res = mb.get_card_data(card_id=1, data_format='csv')
     csv_data = 'col1,col2\nrow1 cell1,1\n,2\nrow3 cell1,\n,\nrow5 cell1,5\n'
+    self.assertEqual(res, csv_data)
+
+    # csv WITH visual - no column settings
+    res = mb.get_card_data(card_id=1, data_format='csv', is_visual=True)
+    csv_data = '"col1","col2"\n"row1 cell1","1"\n"","2"\n"row3 cell1",""\n"",""\n"row5 cell1","5"\n'
+    self.assertEqual(res, csv_data)
+
+    # csv WITH visual - column settings
+    res = mb.get_card_data(card_id=5, data_format='csv', is_visual=True)
+    csv_data = '"custom_col1_title","col2"\n"row1 cell1","1"\n"","2"\n"row3 cell1",""\n"",""\n"row5 cell1","5"\n'
     self.assertEqual(res, csv_data)
 
     # filtered data
