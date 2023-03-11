@@ -119,7 +119,7 @@ class Metabase_API():
             return res.content
 
         if is_visual:
-            from _helper_methods import get_visual_table
+            from metabase_api._helper_methods import get_visual_table
 
             # get the results
             card_query = self.post('/api/card/{}/query'.format(card_id), json={'parameters': parameters})
@@ -144,8 +144,8 @@ class Metabase_API():
             if data_format == 'csv':
                 import csv
                 from io import StringIO
-                res_str = StringIO()
-                csv_writer = csv.writer(res_str)
+                res_str = StringIO(newline='\n')
+                csv_writer = csv.writer(res_str, dialect='unix')
                 csv_writer.writerow(visual_cols)
                 csv_writer.writerows(visual_rows)
                 return res_str.getvalue()
