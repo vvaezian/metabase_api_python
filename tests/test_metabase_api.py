@@ -261,13 +261,32 @@ class Metabase_API_Test(unittest.TestCase):
 
     with self.assertRaises(Exception) as error1:
       field3 = {'field_ref': {'bad': 'field'}}
-      res3 = get_field_ref_id(field3)
+      _ = get_field_ref_id(field3)
     self.assertEqual(str(error1.exception), 'Get field ref id failed, check data structure please.')
 
     with self.assertRaises(Exception) as error2:
       field4 = {'field_ref': ['field']}
-      res4 = get_field_ref_id(field4)
+      _ = get_field_ref_id(field4)
     self.assertEqual(str(error2.exception), 'Get field ref id failed, check data structure please.')
+
+
+
+  def test_get_visual_title(self):
+    from metabase_api._helper_methods import get_visual_title
+
+    field = {'field_ref': ['field', 72, None]}
+
+    column_settings_1 = dict()
+    res1 = get_visual_title(field, column_settings_1, True)
+    self.assertEqual(res1, None)
+
+    with self.assertRaises(ValueError) as error:
+      _ = get_visual_title(field, column_settings_1, False)
+    self.assertEqual(str(error.exception), f'request weak mode in column_settings, while got None for field: {field}')
+
+    column_settings_2 = {'["ref",["field",72,null]]': {'column_title': 'custom_col1_title'}}
+    res2 = get_visual_title(field, column_settings_2)
+    self.assertEqual(res2, 'custom_col1_title')
 
 
 
