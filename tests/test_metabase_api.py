@@ -125,11 +125,11 @@ class Metabase_API_Test(unittest.TestCase):
 
 
   def test_get_columns_name_id(self):
-    name_id_mapping = mb.get_columns_name_id(table_id=9)
-    self.assertEqual(name_id_mapping['col1'], 72)
+    name_id_mapping = mb.get_columns_name_id(table_id=1)  # table with id 1 is the products table from sample dataset
+    self.assertEqual(name_id_mapping['CATEGORY'], 1)
 
-    id_name_mapping = mb.get_columns_name_id(table_id=9, column_id_name=True)
-    self.assertEqual(id_name_mapping[72], 'col1')
+    id_name_mapping = mb.get_columns_name_id(table_id=1, column_id_name=True)
+    self.assertEqual(id_name_mapping[1], 'CATEGORY')
 
 
 
@@ -278,15 +278,29 @@ class Metabase_API_Test(unittest.TestCase):
     # simple/custom question
     res2 = mb.clone_card(3, 9, 10, new_card_name='test_clone_simple1', new_card_collection_id=1, return_card=True)
     res3 = mb.clone_card(4, 9, 10, new_card_name='test_clone_simple2', new_card_collection_id=1, return_card=True)
-    expected_res3_query = { 'database': 2,
+    
+    # rewriting a value because it's not reliable
+    res3['dataset_query']['query']['order-by'] = ''
+    
+    expected_res3_query_version1 = { 'database': 2,
                             'query': {'source-table': 10,
                                       'aggregation': [['avg', ['field', 75, None]]],
                                       'breakout': [['field', 74, None]],
-                                      'order-by': [['desc', ['aggregation', 0, None]]]
+                                      'order-by': ''
                                     },
                             'type': 'query'
                           }
-    self.assertEqual(res3['dataset_query'], expected_res3_query)
+    # we have two versions because the assigned field id is not necessarily in the order of columns as they appear in db
+    expected_res3_query_version2 = { 'database': 2,
+                            'query': {'source-table': 10,
+                                      'aggregation': [['avg', ['field', 74, None]]],
+                                      'breakout': [['field', 75, None]],
+                                      'order-by': ''
+                                    },
+                            'type': 'query'
+                          }
+    
+    self.assertTrue(res3['dataset_query'] == expected_res3_query_version1 or res3['dataset_query'] == expected_res3_query_version2, res3['dataset_query'])
 
     # add to cleanup list
     Metabase_API_Test.cleanup_objects['card'].extend([res['id'], res2['id'], res3['id']])

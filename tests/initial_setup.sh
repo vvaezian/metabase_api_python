@@ -18,8 +18,12 @@ then
     exit 1
 fi
 
-# downloading metabase jar
-wget -q https://downloads.metabase.com/v$MB_VERSION/metabase.jar
+# cleaup (in case the script is not running for the first time)
+rm -f metabase.db.mv.db
+rm -f metabase.db.trace.db
+
+# downloading metabase jar file
+wget -O metabase.jar -q https://downloads.metabase.com/v$MB_VERSION/metabase.jar
 
 # starting metabase jar locally
 java -jar metabase.jar > logs 2>&1 &
@@ -81,7 +85,17 @@ json='{
     "visualization_settings": {},
     "collection_id": 2
 }'
-echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- 
+echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- > output
+
+# the order of the IDs assigned to columns is not based on the db column order
+grep -q ',73.*,72' output
+if [[ $? -eq 0 ]]; then 
+    col1_id=73;
+    col2_id=72; 
+else 
+    col1_id=72;
+    col2_id=73; 
+fi
 
 json='{
     "name":"test_card_2",
@@ -94,7 +108,7 @@ json='{
                     "name":"test_filter",
                     "display-name":"Test filter",
                     "type":"dimension",
-                    "dimension":["field",72,null],
+                    "dimension":["field",COL1_ID,null],
                     "widget-type":"string/=",
                     "default":null,
                     "id":"810912da-ead5-c87e-de32-6dc5723b9067"
@@ -115,6 +129,9 @@ json='{
     }],
     "collection_id":2
 }'
+# add the value of $col1_id (because of presense of single and double quotes in the json string, I decided to add the variable value in this way)
+json=$(echo "$json" | sed "s/COL1_ID/$col1_id/g")
+
 echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- 
 
 json='{
@@ -123,13 +140,16 @@ json='{
         "type":"query",
         "query":{
             "source-table":9,
-            "filter":["=",["field",72,null],"row1 cell1","row3 cell1"]},
+            "filter":["=",["field",COL1_ID,null],"row1 cell1","row3 cell1"]},
             "database":2
         },
         "display":"table",
         "visualization_settings":{},
         "collection_id":2
 }'
+# add the value of $col1_id 
+json=$(echo "$json" | sed "s/COL1_ID/$col1_id/g")
+
 echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- 
 
 json='{
@@ -139,8 +159,8 @@ json='{
         "database":2,
         "query":{
             "source-table":9,
-            "aggregation":[["avg",["field",73,null]]],
-            "breakout":[["field",72,null]],
+            "aggregation":[["avg",["field",COL2_ID,null]]],
+            "breakout":[["field",COL1_ID,null]],
             "order-by":[["desc",["aggregation",0,null]]]
             },
         "type":"query"
@@ -149,6 +169,9 @@ json='{
     "visualization_settings":{"table.pivot":false,"graph.dimensions":["col1"],"graph.metrics":["avg"]},
     "collection_id":2
 }'
+# add the value of $col1_id and $col2_id
+json=$(echo "$json" | sed "s/COL1_ID/$col1_id/g" | sed "s/COL2_ID/$col2_id/g")
+
 echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- 
 
 # create a test dashboard
