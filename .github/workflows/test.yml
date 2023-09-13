@@ -43,7 +43,7 @@ jobs:
     - name: Initial Setup before running tests
       run: |
         chmod +x ./tests/initial_setup.sh
-        ./tests/initial_setup.sh -v 0.45.2.1
+        ./tests/initial_setup.sh -v 0.47.1
     - name: Test with pytest
       run: |
         pytest
