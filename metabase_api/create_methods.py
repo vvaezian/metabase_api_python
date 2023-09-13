@@ -41,7 +41,7 @@ def create_card(self, card_name=None, collection_name=None, collection_id=None,
             custom_json['collection_id'] = collection_id
         elif collection_name:
             collection_id = self.get_item_id('collection', collection_name)
-            custom_json['collecion_id'] = collection_id
+            custom_json['collection_id'] = collection_id
 
         if complete_json:
             # Add visualization_settings if it is not present in the custom_json
