@@ -12,16 +12,16 @@ jobs:
     steps:
       - uses: actions/stale@v5
         with:
-          days-before-issue-stale: 30
-          days-before-issue-close: 30
+          days-before-issue-stale: 15
+          days-before-issue-close: 15
           stale-issue-label: "stale"
-          stale-issue-message: "This issue is stale because it has been open for 30 days with no activity."
-          close-issue-message: "This issue was closed because it has been inactive for 14 days since being marked as stale."
+          stale-issue-message: "This issue is stale because it has been open for 15 days with no activity."
+          close-issue-message: "This issue was closed because it has been inactive for 15 days since being marked as stale."
           stale-pr-label: "stale"
-          days-before-pr-stale: 30
-          days-before-pr-close: 30
-          stale-pr-message: "This PR is stale because it has been open for 30 days with no activity."
-          close-pr-message: "This PR was closed because it has been inactive for 14 days since being marked as stale."
+          days-before-pr-stale: 15
+          days-before-pr-close: 15
+          stale-pr-message: "This PR is stale because it has been open for 15 days with no activity."
+          close-pr-message: "This PR was closed because it has been inactive for 15 days since being marked as stale."
           exempt-all-assignees: true
           exempt-draft-pr: true
           repo-token: ${{ secrets.GITHUB_TOKEN }}
