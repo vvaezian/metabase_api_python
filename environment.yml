@@ -7,3 +7,4 @@ dependencies:
   - python=3.9.12
   - pandas=1.4.4
   - numpy=1.22.3
+  - requests=2.31.0
