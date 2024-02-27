@@ -17,7 +17,7 @@ mb = Metabase_API('https://...', 'username', 'password')  # if password is not g
 ```
 ## Functions
 ### REST functions (get, post, put, delete)
-Calling Metabase API endpoints (documented [here](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md)) can be done using the corresponding REST function in the wrapper.  
+Calling Metabase API endpoints (documented [here](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md)) can be done using the corresponding REST function in the wrapper.
 E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#get-apidatabase) `GET /api/database/`, use `mb.get('/api/database/')`.
 
 ### Helper Functions
@@ -37,13 +37,13 @@ You usually don't need to deal with these functions directly (e.g. [get_item_inf
 - [search](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L835)
 - [get_card_data](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L966)
 - [move_to_archive](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L933)
-- [delete_item](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L963)  
+- [delete_item](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L963)
 - [make_json](https://github.com/vvaezian/metabase_api_python/blob/150c8143bf3ec964568d54bddd80bf9c1b2ca214/metabase_api/metabase_api.py#L1015)
 
 *For a complete list of functions parameters see the functions definitions using the above links. Here we provide a short description:*
 
 - #### `create_card`
-Specify the name to be used for the card, which table (name/id) to use as the source of data and where (i.e. which collection (name/id)) to save the card (default is the root collection).  
+Specify the name to be used for the card, which table (name/id) to use as the source of data and where (i.e. which collection (name/id)) to save the card (default is the root collection).
 ```python
 mb.create_card(card_name='test_card', table_name='mySourceTable')  # Setting `verbose=True` will print extra information while creating the card.
 ```
@@ -55,14 +55,14 @@ All or part of the function parameters and many more information (e.g. visualisa
 ```python
 q = '''
   select *
-  from my_table 
+  from my_table
   where city = '{}'
 '''
 
 for city in city_list:
 
   query = q.format(city)
-  
+
   # here I included the minimum keys required. You can add more.
   my_custom_json = {
     'name': 'test_card',
@@ -70,10 +70,10 @@ for city in city_list:
     'dataset_query': {
       'database': db_id,
       'native': { 'query': query },
-      'type': 'native' 
+      'type': 'native'
     }
   }
-       
+
   # See the function definition for other parameters of the function (e.g. in which collection to save the card)
   mb.create_card(custom_json=my_custom_json)
 ```
@@ -103,10 +103,10 @@ mb.copy_pulse(source_pulse_name='test_pulse', destination_collection_id=123)
 ```
 
 - #### `copy_dashboard`
-You can determine whether you want to *deepcopy* the dashboard or not (default False).  
-If you don't deepcopy, the duplicated dashboard will use the same cards as the original dashboard.  
-When you deepcopy a dashboard, the cards of the original dashboard are duplicated and these cards are used in the duplicate dashboard.  
-If the `destination_dashboard_name` parameter is not provided, the destination dashboard name will be the same as the source dashboard name (plus any `postfix` if provided).  
+You can determine whether you want to *deepcopy* the dashboard or not (default False).
+If you don't deepcopy, the duplicated dashboard will use the same cards as the original dashboard.
+When you deepcopy a dashboard, the cards of the original dashboard are duplicated and these cards are used in the duplicate dashboard.
+If the `destination_dashboard_name` parameter is not provided, the destination dashboard name will be the same as the source dashboard name (plus any `postfix` if provided).
 The duplicated cards (in case of deepcopying) are saved in a collection called `[destination_dashboard_name]'s cards` and placed in the same collection as the duplicated dashboard.
 ```python
 mb.copy_dashboard(source_dashboard_id=123, destination_collection_id=456, deepcopy=True)
@@ -120,28 +120,28 @@ mb.copy_collection(source_collection_id=123, destination_parent_collection_id=45
 You can also specify a postfix to be added to the names of the child items that get copied.
 
 - #### `clone_card`
-Similar to `copy_card` but a different table is used as the source for filters of the card.  
+Similar to `copy_card` but a different table is used as the source for filters of the card.
 This comes in handy when you want to create similar cards with the same filters that differ only on the source of the filters (e.g. cards for 50 US states).
 ```python
 mb.clone_card(card_id=123, source_table_id=456, target_table_id=789, new_card_name='test clone', new_card_collection_id=1)
 ```
 
 - #### `update_column`
-Update the column in Data Model by providing the relevant parameter (list of all parameters can be found [here](https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid)).  
+Update the column in Data Model by providing the relevant parameter (list of all parameters can be found [here](https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid)).
 For example to change the column type to 'Category', we can use:
 ```python
 mb.update_column(column_name='myCol', table_name='myTable', params={'semantic_type':'type/Category'}  # (For Metabase versions before v.39, use: params={'special_type':'type/Category'}))
 ```
 
 - #### `search`
-Searches for Metabase objects and returns basic info.  
+Searches for Metabase objects and returns basic info.
 Provide the search term and optionally `item_type` to limit the results.
 ```Python
 mb.search(q='test', item_type='card')
 ```
 
 - #### `get_card_data`
-Returns the rows.  
+Returns the rows.
 Provide the card name/id and the data format of the output (csv or json). You can also provide filter values.
 ```python
 results = mb.get_card_data(card_id=123, data_format='csv')

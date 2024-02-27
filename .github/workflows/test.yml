@@ -6,7 +6,7 @@ on:
     paths:
       - 'metabase_api/**'
       - 'tests/**'
-      - '.github/workflows/test*' 
+      - '.github/workflows/test*'
   pull_request:
     branches: [ master ]
     paths:
