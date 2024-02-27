@@ -1,3 +1,6 @@
+from typing import Optional
+
+
 def copy_card(
     self,
     source_card_name=None,
@@ -153,8 +156,8 @@ def copy_dashboard(
     destination_dashboard_name=None,
     destination_collection_name=None,
     destination_collection_id=None,
-    deepcopy=False,
     postfix="",
+    card_id_mapping: Optional[dict[int, int]] = None,
 ):
     """
     Copy the dashboard with the given name/id to the given destination collection.
@@ -173,6 +176,7 @@ def copy_dashboard(
                             in the same path as the duplicated dashboard.
     postfix -- if destination_dashboard_name is None, adds this string to the end of source_dashboard_name
                             to make destination_dashboard_name
+    card_id_mapping -- Optionally, a mapping for cards: old_id -> new_id for the dashboard to update itself.
     """
     ### making sure we have the data that we need
     if not source_dashboard_id:
@@ -205,81 +209,32 @@ def copy_dashboard(
             )
         destination_dashboard_name = source_dashboard_name + postfix
 
-    ### shallow-copy
+    # shallow-copy
     shallow_copy_json = {
         "collection_id": destination_collection_id,
         "name": destination_dashboard_name,
     }
-    res = self.post(
+    shallow_dashboard = self.post(
         "/api/dashboard/{}/copy".format(source_dashboard_id), json=shallow_copy_json
     )
-    dup_dashboard_id = res["id"]
+    dup_dashboard_id = shallow_dashboard["id"]
 
-    ### deepcopy
-    if deepcopy:
-        # get the source dashboard info
-        source_dashboard = self.get("/api/dashboard/{}".format(source_dashboard_id))
-
-        # create an empty collection to copy the cards into it
-        res = self.post(
-            "/api/collection/",
-            json={
-                "name": destination_dashboard_name + "'s cards",
-                "color": "#509EE3",
-                "parent_id": destination_collection_id,
-            },
-        )
-        cards_collection_id = res["id"]
-
-        # duplicate cards and put them in the created collection and make a card_id mapping
-        source_dashboard_card_IDs = [
-            i["card_id"]
-            for i in source_dashboard["ordered_cards"]
-            if i["card_id"] is not None
-        ]
-        card_id_mapping = {}
-        for card_id in source_dashboard_card_IDs:
-            dup_card_id = self.copy_card(
-                source_card_id=card_id, destination_collection_id=cards_collection_id
-            )
-            card_id_mapping[card_id] = dup_card_id
-
-        # replace cards in the duplicated dashboard with duplicated cards
+    # do we need to re-map?
+    if card_id_mapping is not None:
         dup_dashboard = self.get("/api/dashboard/{}".format(dup_dashboard_id))
-        for card in dup_dashboard["ordered_cards"]:
-
+        for card in dup_dashboard["dashcards"]:
             # ignore text boxes. These get copied in the shallow-copy stage.
             if card["card_id"] is None:
                 continue
-
-            # prepare a json to be used for replacing the cards in the duplicated dashboard
+            # replace values
+            # todo: should we change update date/creation date too...?
             new_card_id = card_id_mapping[card["card_id"]]
-            card_json = {}
-            card_json["cardId"] = new_card_id
-            for prop in [
-                "visualization_settings",
-                "col",
-                "row",
-                "size_x",
-                "size_y",
-                "series",
-                "parameter_mappings",
-            ]:
-                card_json[prop] = card[prop]
-            for item in card_json["parameter_mappings"]:
-                item["card_id"] = new_card_id
-            # remove the card from the duplicated dashboard
-            dash_card_id = card[
-                "id"
-            ]  # This is id of the card in the dashboard (different from id of the card itself)
-            self.delete(
-                "/api/dashboard/{}/cards".format(dup_dashboard_id),
-                params={"dashcardId": dash_card_id},
-            )
-            # add the new card to the duplicated dashboard
-            self.post(
-                "/api/dashboard/{}/cards".format(dup_dashboard_id), json=card_json
-            )
+            card["card_id"] = new_card_id
+            card["card"]["id"] = new_card_id
+            # we need not to hit any existing id... that's why '100 *'.
+            # todo: Can we do anything better?
+            card["id"] = 100 * card["id"] + 1
+        assert self.put(f"/api/dashboard/{dup_dashboard_id}", json=dup_dashboard) == 200
 
     return dup_dashboard_id
 
@@ -315,6 +270,18 @@ def copy_collection(
     postfix -- if destination_collection_name is None, adds this string to the end of source_collection_name to make destination_collection_name.
     child_items_postfix -- this string is added to the end of the child items' names, when saving them in the destination (default '').
     verbose -- prints extra information (default False)
+
+    :return (eg)
+        transf: dict[str, dict[int, int]] = {
+        'cards': {
+            764: 876,
+            22: 33
+        },
+        'dashboard': {
+            1: 11
+        }
+    }
+
     """
     ### making sure we have the data that we need
     if not source_collection_id:
@@ -346,7 +313,10 @@ def copy_collection(
             )
         destination_collection_name = source_collection_name + postfix
 
-    ### create a collection in the destination to hold the contents of the source collection
+    # we'll return a trace of all transformations, in format 'src:dst'
+    transf: dict[str, dict[int, int]] = dict()
+
+    # create a collection in the destination to hold the contents of the source collection
     res = self.create_collection(
         destination_collection_name,
         parent_collection_id=destination_parent_collection_id,
@@ -355,18 +325,33 @@ def copy_collection(
     )
     destination_collection_id = res["id"]
 
-    ### get the items to copy
+    # get the items to copy
     items = self.get("/api/collection/{}/items".format(source_collection_id))
     if (
         type(items) == dict
     ):  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
         items = items["data"]
 
-    ### copy the items of the source collection to the new collection
+    # copy the items of the source collection to the new collection
+    # first thing we want to do is copy the cards:
+    card_id_mapping = {}
+    if deepcopy_dashboards:
+        card_items = [c for c in items if c["model"] == "card"]
+        for card in card_items:
+            card_id = card["id"]
+            card_name = card["name"]
+            destination_card_name = card_name + child_items_postfix
+            self.verbose_print(verbose, 'Copying the card "{}" ...'.format(card_name))
+            dup_card_id = self.copy_card(
+                source_card_id=card_id,
+                destination_collection_id=destination_collection_id,
+                destination_card_name=destination_card_name,
+            )
+            card_id_mapping[card_id] = dup_card_id
+        transf["cards"] = card_id_mapping
+    # let's now create all other items
     for item in items:
-
-        ## copy a collection
-        if item["model"] == "collection":
+        if item["model"] == "collection":  # copy a collection
             collection_id = item["id"]
             collection_name = item["name"]
             destination_collection_name = collection_name + child_items_postfix
@@ -380,9 +365,7 @@ def copy_collection(
                 deepcopy_dashboards=deepcopy_dashboards,
                 verbose=verbose,
             )
-
-        ## copy a dashboard
-        if item["model"] == "dashboard":
+        elif item["model"] == "dashboard":  # copy a dashboard
             dashboard_id = item["id"]
             dashboard_name = item["name"]
             destination_dashboard_name = dashboard_name + child_items_postfix
@@ -393,23 +376,10 @@ def copy_collection(
                 source_dashboard_id=dashboard_id,
                 destination_collection_id=destination_collection_id,
                 destination_dashboard_name=destination_dashboard_name,
-                deepcopy=deepcopy_dashboards,
+                card_id_mapping=card_id_mapping if deepcopy_dashboards else None,
             )
-
-        ## copy a card
-        if item["model"] == "card":
-            card_id = item["id"]
-            card_name = item["name"]
-            destination_card_name = card_name + child_items_postfix
-            self.verbose_print(verbose, 'Copying the card "{}" ...'.format(card_name))
-            self.copy_card(
-                source_card_id=card_id,
-                destination_collection_id=destination_collection_id,
-                destination_card_name=destination_card_name,
-            )
-
-        ## copy a pulse
-        if item["model"] == "pulse":
+        # copy a pulse
+        elif item["model"] == "pulse":
             pulse_id = item["id"]
             pulse_name = item["name"]
             destination_pulse_name = pulse_name + child_items_postfix
@@ -419,3 +389,9 @@ def copy_collection(
                 destination_collection_id=destination_collection_id,
                 destination_pulse_name=destination_pulse_name,
             )
+        elif item["model"] == "card":
+            # all good, we already copied it! (see just before this loop)
+            continue
+        else:
+            raise ValueError(f"We are not copying model '{item['model']}'!!!")
+    return transf
