@@ -1,0 +1,9 @@
+name: metabase_api
+channels:
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.9.12
+  - pandas=1.4.4
+  - numpy=1.22.3

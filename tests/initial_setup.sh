@@ -34,21 +34,21 @@ sleep 45
 # checking whether the metabase initialization has completed. If not, wait another 45 seconds
 success='False'
 grep -q "Metabase Initialization COMPLETE" logs
-if [[ $? -eq 0 ]] 
-then 
+if [[ $? -eq 0 ]]
+then
     echo 'success!'
     success='True'
 else
     echo "Waiting an extra 45 seconds for the initialization to complete"
     sleep 45
     grep -q "Metabase Initialization COMPLETE" logs
-    if [[ $? -eq 0 ]] 
-    then 
+    if [[ $? -eq 0 ]]
+    then
         echo 'success!'
         success='True'
     else
         echo 'failure!'
-    fi      
+    fi
 fi
 
 if [[ $success = 'False' ]]
@@ -89,12 +89,12 @@ echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: app
 
 # the order of the IDs assigned to columns is not based on the db column order
 grep -q ',73.*,72' output
-if [[ $? -eq 0 ]]; then 
+if [[ $? -eq 0 ]]; then
     col1_id=73;
-    col2_id=72; 
-else 
+    col2_id=72;
+else
     col1_id=72;
-    col2_id=73; 
+    col2_id=73;
 fi
 
 json='{
@@ -132,7 +132,7 @@ json='{
 # add the value of $col1_id (because of presense of single and double quotes in the json string, I decided to add the variable value in this way)
 json=$(echo "$json" | sed "s/COL1_ID/$col1_id/g")
 
-echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- 
+echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @-
 
 json='{
     "name":"test_card_3",
@@ -147,10 +147,10 @@ json='{
         "visualization_settings":{},
         "collection_id":2
 }'
-# add the value of $col1_id 
+# add the value of $col1_id
 json=$(echo "$json" | sed "s/COL1_ID/$col1_id/g")
 
-echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- 
+echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @-
 
 json='{
     "name":"test_card_4",
@@ -172,7 +172,7 @@ json='{
 # add the value of $col1_id and $col2_id
 json=$(echo "$json" | sed "s/COL1_ID/$col1_id/g" | sed "s/COL2_ID/$col2_id/g")
 
-echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @- 
+echo "$json" | curl -X POST http://localhost:3000/api/card -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d @-
 
 # create a test dashboard
 curl -X POST http://localhost:3000/api/dashboard -H "Content-Type: application/json" -H "X-Metabase-Session:$session_id" -d '{"collection_id":2,"name":"test_dashboard"}'

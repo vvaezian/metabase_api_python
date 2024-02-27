@@ -31,7 +31,7 @@
 - `create_collection` function
 ### Changed
 - Fixed the issues #20 and #22.
-- Changed the behavior of the `copy_collection` function. Previously it would copy only the content of the source collection, but now copies the contents together with source collection itself.  
+- Changed the behavior of the `copy_collection` function. Previously it would copy only the content of the source collection, but now copies the contents together with source collection itself.
 In other words, now a new collection with the same name as the source collection is created in the destination and the content of the source collection is copied into it.
 - Improved the function `make_json`.
 
