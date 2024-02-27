@@ -1,0 +1,21 @@
+name: metabase_api
+channels:
+  - anaconda
+  - conda-forge
+  - defaults
+dependencies:
+  - pre-commit=2.20.0
+  - pytest=7.1.2
+  - pandas-stubs=2.0.0.230412
+  - pyyaml=6.0.0
+  - types-pyyaml=6.0.12.11
+  - yaml=0.2.5
+  - importlib_metadata=6.0.0
+  - importlib-metadata=6.0.0
+  - requests=2.31.0
+  - pip=21.2.4
+  - pip:
+      - types-tqdm==4.65.0.1
+      - coverage==7.3.2
+      - json-schema-for-humans==0.46
+      - types-requests==2.31.0.20231231
