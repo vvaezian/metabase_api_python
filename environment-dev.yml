@@ -17,5 +17,4 @@ dependencies:
   - pip:
       - types-tqdm==4.65.0.1
       - coverage==7.3.2
-      - json-schema-for-humans==0.46
       - types-requests==2.31.0.20231231
