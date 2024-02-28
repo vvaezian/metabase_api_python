@@ -1,43 +1,41 @@
 """
-On a besoin:
-* du (source) collection_id
-* du db_target
-* Mapping table_src -> table_target, pour toutes les tables referencees a la source (dans les cartes)
+Migrates a collection.
 """
+import argparse
+import ast
 
 from metabase_api.metabase_api import Metabase_API
 from metabase_api.migration import migrate_collection
 
-# test
-source_collection_id = 266
-db_target = 3
-table_src2dst = {
-    61: 61,
-}
-PARENT_COLLECTION_ID = 69
-destination_collection_name = f"test2_test"
-#
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Collection migration",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "-f", "--from", required=True, type=int, help="id for session to migrate"
+    )
+    parser.add_argument(
+        "--db_target", required=True, type=int, help="id for database target"
+    )
+    parser.add_argument("--tables", type=ast.literal_eval, help="table mapping")
+    parser.add_argument(
+        "--to_parent", required=True, type=int, help="target parent collection id"
+    )
+    parser.add_argument(
+        "-t", "--to", required=True, type=str, help="target collection name"
+    )
 
-# # CHUM from MUHC --------------------
-# source_collection_id = 64
-# db_target = 3
-# table_src2dst = {
-#     77: 77,
-# }
-# PARENT_COLLECTION_ID = 244
-# destination_collection_name=f"chum"
-# # END CHUM from MUHC --------------------
+    args = parser.parse_args()
+    config = vars(args)
 
-print(f"destination_collection_name = '{destination_collection_name}'")
-
-
-migrate_collection(
-    metabase_api=Metabase_API(
-        "https://assistiq.metabaseapp.com", "wafa@assistiq.ai", "AssistIQ2023."
-    ),
-    source_collection_id=source_collection_id,
-    db_target=db_target,
-    PARENT_COLLECTION_ID=PARENT_COLLECTION_ID,
-    destination_collection_name=destination_collection_name,
-    table_src2dst=table_src2dst,
-)
+    migrate_collection(
+        metabase_api=Metabase_API(
+            "https://assistiq.metabaseapp.com", "wafa@assistiq.ai", "AssistIQ2023."
+        ),
+        source_collection_id=config["from"],
+        db_target=config["db_target"],
+        PARENT_COLLECTION_ID=config["to_parent"],
+        destination_collection_name=config["to"],
+        table_src2dst=config["tables"],
+    )
