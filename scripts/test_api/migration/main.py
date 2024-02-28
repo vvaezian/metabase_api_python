@@ -35,7 +35,7 @@ if __name__ == "__main__":
         ),
         source_collection_id=config["from"],
         db_target=config["db_target"],
-        PARENT_COLLECTION_ID=config["to_parent"],
+        parent_collection_id=config["to_parent"],
         destination_collection_name=config["to"],
         table_src2dst=config["tables"],
     )
