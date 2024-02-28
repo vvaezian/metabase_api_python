@@ -76,31 +76,35 @@ def migrate_collection(
                 card_json["dataset_query"]["database"] = db_target
                 # table
                 if table_src2dst is not None:
-                    card_json["table_id"] = table_src2dst[card_json["table_id"]]
-                if isinstance(card_json["dataset_query"]["query"]["source-table"], int):
+                    table_id = card_json["table_id"]
+                    try:
+                        card_json["table_id"] = table_src2dst[table_id]
+                    except KeyError as ke:
+                        msg = f"[re-writing references on card '{card_id}']"
+                        msg += f"Table '{table_id}' is referenced at source, but no replacement is specified."
+                        raise ValueError(msg)
+                src_table_in_query = card_json["dataset_query"]["query"]["source-table"]
+                if isinstance(src_table_in_query, int):
                     if table_src2dst is not None:
                         # if the source is an int => it MUST be the id of a table
                         # (and so its correspondence must be found in the input)
-                        card_json["dataset_query"]["query"][
-                            "source-table"
-                        ] = table_src2dst[
-                            card_json["dataset_query"]["query"]["source-table"]
-                        ]
-                elif str(
-                    card_json["dataset_query"]["query"]["source-table"]
-                ).startswith("card"):
+                        try:
+                            card_json["dataset_query"]["query"][
+                                "source-table"
+                            ] = table_src2dst[src_table_in_query]
+                        except KeyError as ke:
+                            msg = f"[re-writing references on card '{card_id}']"
+                            msg += f"Table '{src_table_in_query}' is referenced at source, but no replacement is specified."
+                            raise ValueError(msg)
+                elif str(src_table_in_query).startswith("card"):
                     # it's reference a card. Which one?
-                    ref_card_id = int(
-                        card_json["dataset_query"]["query"]["source-table"].split("__")[
-                            1
-                        ]
-                    )
+                    ref_card_id = int(src_table_in_query.split("__")[1])
                     card_json["dataset_query"]["query"][
                         "source-table"
                     ] = f"card__{transformations['cards'][ref_card_id]}"
                 else:
                     raise ValueError(
-                        f"I don't know what this reference is: {card_json['dataset_query']['query']['source-table']}"
+                        f"I don't know what this reference is: {src_table_in_query}"
                     )
                 # and go!
                 assert (
