@@ -404,10 +404,19 @@ def get_columns_name_id(
             'Please disable "Friendly Table and Field Names" from Admin Panel > Settings > General, and try again.'
         )
 
-    if not table_name:
-        if not table_id:
-            raise ValueError("Either the name or id of the table must be provided.")
-        table_name = self.get_item_name(item_type="table", item_id=table_id)
+    if table_id:
+        md = self.get_table_metadata(table_id=table_id)
+        table_name = md["name"]
+        table_schema = md["schema"]
+    else:
+        raise NotImplementedError(
+            f"Can't respond without a table_id; implementation to come."
+        )
+
+    # if not table_name:
+    #     if not table_id:
+    #         raise ValueError("Either the name or id of the table must be provided.")
+    #     table_name = self.get_item_name(item_type="table", item_id=table_id)
 
     # Get db_id
     if not db_id:
@@ -419,18 +428,12 @@ def get_columns_name_id(
             db_id = self.get_db_id_from_table_id(table_id)
 
     # Get column names and IDs
-    if column_id_name:
-        return {
-            i["id"]: i["name"]
-            for i in self.get("/api/database/{}/fields".format(db_id))
-            if i["table_name"] == table_name
-        }
-    else:
-        return {
-            i["name"]: i["id"]
-            for i in self.get("/api/database/{}/fields".format(db_id))
-            if i["table_name"] == table_name
-        }
+    key, value = ("id", "name") if column_id_name else ("name", "id")
+    return {
+        i[key]: i[value]
+        for i in self.get(f"/api/database/{db_id}/fields")
+        if (i["table_name"] == table_name) and (i["schema"] == table_schema)
+    }
 
 
 def friendly_names_is_disabled(self):
