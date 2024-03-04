@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Optional
 
 from metabase_api import Metabase_API
@@ -10,7 +11,7 @@ class ColumnReferences:
         """mapping keeps id:name."""
         self.table_id = table_id
         self.mapping = mapping
-        self.inv_mapping: dict[str, int] = {
+        self.inv_mapping: dict[int, str] = {
             column_name: column_id for (column_id, column_name) in self.mapping.items()
         }
 
@@ -22,10 +23,20 @@ class ColumnReferences:
         return ColumnReferences(table_id=table_id, mapping=dst_table_fields)
 
     def get_column_name(self, column_id: int) -> str:
-        return self.inv_mapping[column_id]
+        try:
+            return self.inv_mapping[column_id]
+        except KeyError as ke:
+            raise ValueError(
+                f"column with id {column_id} does not exist in table {self.table_id}"
+            ) from ke
 
     def get_column_id(self, column_name: str) -> int:
-        return self.mapping[column_name]
+        try:
+            return self.mapping[column_name]
+        except KeyError as ke:
+            raise ValueError(
+                f"column with name '{column_name}' does not exist in table {self.table_id}"
+            ) from ke
 
 
 def migrate_collection(
@@ -144,27 +155,154 @@ def migrate_collection(
             dashboard_id = item["id"]
             dash = metabase_api.get(f"/api/dashboard/{dashboard_id}")
             print(dashboard_id)
+            # param values
+            param_values = dash["param_values"]
+            for field_id_as_str, field_info in deepcopy(dash["param_values"]).items():
+                field_id = int(field_id_as_str)
+                new_field_id = find_field_destination(
+                    old_field_id=field_id,
+                    column_references=column_references,
+                    table_src2dst=table_src2dst,
+                )
+                new_field_id_as_str = str(new_field_id)
+                param_values[new_field_id_as_str] = param_values.pop(field_id_as_str)
+                param_values[new_field_id_as_str]["field_id"] = new_field_id
+            # param fields
+            old_param_fields = deepcopy(dash["param_fields"])
+            for field_id_as_str, field_info in old_param_fields.items():
+                try:
+                    field_id = int(field_id_as_str)
+                    src_table = field_info["table_id"]
+                    field_name = column_references["src"][src_table].get_column_name(
+                        field_id
+                    )
+                    new_field_id = column_references["dst"][
+                        table_src2dst[src_table]
+                    ].get_column_id(field_name)
+                    # ok. Let's now change:
+                    new_field_id_as_str = str(new_field_id)
+                    dash["param_fields"][new_field_id_as_str] = dash[
+                        "param_fields"
+                    ].pop(field_id_as_str)
+                    dash["param_fields"][new_field_id_as_str][
+                        "id"
+                    ] = new_field_id_as_str
+                    dash["param_fields"][new_field_id_as_str][
+                        "table_id"
+                    ] = table_src2dst[src_table]
+                except ValueError as ve:
+                    # apparently one of the param fields is not an int...?
+                    pass
+            # new_dashcards: list[dict] = []
             for card_json in dash["dashcards"]:
                 # mappings to filters
                 for mapping in card_json["parameter_mappings"]:
                     mapping["card_id"] = transformations["cards"][mapping["card_id"]]
-                # click behavior
-                viz_settings = card_json["visualization_settings"]
-                if "click_behavior" in viz_settings:
-                    click_behavior = viz_settings["click_behavior"]
-                    if "targetId" in click_behavior:
-                        old_targetid = click_behavior["targetId"]
-                        try:
-                            new_targetid = transformations["cards"][old_targetid]
-                        except KeyError:
-                            msg = f"Target '{old_targetid}' is referenced at source, but no replacement is specified."
-                            raise RuntimeError(msg)
-                        click_behavior["targetId"] = new_targetid
-                    else:
-                        raise ValueError(f"no target id")
+                    if "target" in mapping:
+                        t = mapping["target"]
+                        if (t[0] == "dimension") and (t[1][0] == "field"):
+                            t[1][1] = find_field_destination(
+                                old_field_id=t[1][1],
+                                column_references=column_references,
+                                table_src2dst=table_src2dst,
+                            )
+                if "visualization_settings" in card_json:
+                    update_viz_settings(
+                        viz_settings=card_json["visualization_settings"],
+                        column_references=column_references,
+                        table_src2dst=table_src2dst,
+                        transformations=transformations,
+                    )
+                # card itself
+                if "visualization_settings" in card_json["card"]:
+                    update_viz_settings(
+                        viz_settings=card_json["card"]["visualization_settings"],
+                        column_references=column_references,
+                        table_src2dst=table_src2dst,
+                        transformations=transformations,
+                    )
+                # new_dashcards.append(card_json)
+            # dash["dashcards"] = new_dashcards
             # and go!
             r = metabase_api.put("/api/dashboard/{}".format(dashboard_id), json=dash)
             assert r == 200  # sanity check
+
+
+def update_viz_settings(
+    viz_settings: dict,
+    column_references: dict[str, dict[int, ColumnReferences]],
+    table_src2dst: dict[int, int],
+    transformations,
+):
+    if "table.columns" in viz_settings:
+        for table_column in viz_settings["table.columns"]:
+            table_column = update_table_cols_info(
+                table_column,
+                column_references=column_references,
+                table_src2dst=table_src2dst,
+            )
+    if "column_settings" in viz_settings:
+        for _, d in viz_settings["column_settings"].items():
+            if "click_behavior" in d:
+                for mapping_name, mapping in (
+                    d["click_behavior"].get("parameterMapping", []).items()
+                ):
+                    t = mapping["target"]  # todo: do I also need 'source'?
+                    if t["type"] == "dimension":
+                        field_info = t["dimension"]
+                        if (field_info[0] == "dimension") and (
+                            field_info[1][0] == "field"
+                        ):
+                            field_info[1][1] = find_field_destination(
+                                field_info[1][1],
+                                column_references=column_references,
+                                table_src2dst=table_src2dst,
+                            )
+                            # let's then update the id accordingly
+                            t["id"] = str(field_info)
+    if "click_behavior" in viz_settings:
+        click_behavior = viz_settings["click_behavior"]
+        if "targetId" in click_behavior:
+            old_targetid = click_behavior["targetId"]
+            try:
+                new_targetid = transformations["cards"][old_targetid]
+            except KeyError:
+                msg = f"Target '{old_targetid}' is referenced at source, but no replacement is specified."
+                raise RuntimeError(msg)
+            click_behavior["targetId"] = new_targetid
+        else:
+            raise ValueError(f"no target id")
+        if "parameterMapping" in click_behavior:
+            for mapping_name, mapping in click_behavior["parameterMapping"].items():
+                # I can see fields in 'target'. # todo: are there some in 'source' too...?
+                if "target" in mapping:
+                    map_target = mapping["target"]
+                    if map_target["type"] == "dimension":
+                        map_target_dim = map_target["dimension"]
+                        field_info = map_target_dim[1]
+                        if field_info[0] == "field":
+                            field_info[1] = find_field_destination(
+                                old_field_id=field_info[1],
+                                column_references=column_references,
+                                table_src2dst=table_src2dst,
+                            )
+
+
+def update_table_cols_info(
+    table_column: dict,
+    column_references: dict[str, dict[int, ColumnReferences]],
+    table_src2dst: dict[int, int],
+) -> dict:
+    field_ref = table_column["fieldRef"]
+    if field_ref[0] == "field":
+        old_field_id = field_ref[1]
+        new_field_id = find_field_destination(
+            old_field_id=old_field_id,
+            column_references=column_references,
+            table_src2dst=table_src2dst,
+        )
+        table_column["fieldRef"][1] = new_field_id
+    return table_column
 
 
 def update_query_part(
