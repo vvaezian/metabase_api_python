@@ -38,4 +38,5 @@ if __name__ == "__main__":
         parent_collection_id=config["to_parent"],
         destination_collection_name=config["to"],
         table_src2dst=config["tables"],
+        new_dashboard_name=config["to"],
     )

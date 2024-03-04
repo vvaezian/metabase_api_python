@@ -46,6 +46,7 @@ def migrate_collection(
     parent_collection_id: int,
     destination_collection_name: str,
     table_src2dst: Optional[dict[int, int]] = None,
+    new_dashboard_name: Optional[str] = None,
 ):
     # references to columns are organized as follows:
     # * key 'src' contains all source table
@@ -221,9 +222,13 @@ def migrate_collection(
                         table_src2dst=table_src2dst,
                         transformations=transformations,
                     )
-                # new_dashcards.append(card_json)
-            # dash["dashcards"] = new_dashcards
-            # and go!
+            # change name, tag it, and go!
+            if dash["description"] is None:
+                dash["description"] = ""
+            dash["description"] = dash["description"] + " (migrated by API)"
+            dash["name"] = (
+                new_dashboard_name if new_dashboard_name is not None else dash["name"]
+            )
             r = metabase_api.put("/api/dashboard/{}".format(dashboard_id), json=dash)
             assert r == 200  # sanity check
 
