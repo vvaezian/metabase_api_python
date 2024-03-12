@@ -228,7 +228,12 @@ def copy_dashboard(
                 continue
             # replace values
             # todo: should we change update date/creation date too...?
-            new_card_id = card_id_mapping[card["card_id"]]
+            try:
+                new_card_id = card_id_mapping[card["card_id"]]
+            except KeyError as ke:
+                raise KeyError(
+                    f"Card {card['card_id']} is referenced in dashboard but we can't find the card itself."
+                ) from ke
             card["card_id"] = new_card_id
             card["card"]["id"] = new_card_id
             # we need not to hit any existing id... that's why '100 *'.

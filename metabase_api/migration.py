@@ -3,6 +3,10 @@ from typing import Optional
 
 from metabase_api import Metabase_API
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 class ColumnReferences:
     """Keeps mapping between column id and name for a specified table."""
@@ -93,14 +97,12 @@ def migrate_collection(
         destination_collection_name=destination_collection_name,
         deepcopy_dashboards=True,
     )
-    print(f"'{source_collection_id}' duplicated!")
-    #
+    _logger.info(f"'{source_collection_id}' duplicated - now starts the migration")
     dst_collection_id = metabase_api.get_item_id(
         item_type="collection",
         item_name=destination_collection_name,
         collection_name=destination_collection_name,
     )
-
     # visit all cards
     items = metabase_api.get("/api/collection/{}/items".format(dst_collection_id))
     # in Metabase version *.40.0 the format of the returned result for this endpoint changed
@@ -110,6 +112,7 @@ def migrate_collection(
     for item in items:
         if item["model"] == "card":
             card_id = item["id"]
+            _logger.info(f"Visiting card id '{card_id}'")
             source_card = metabase_api.get(f"/api/card/{card_id}")
             # update db and table id
             card_json = source_card
@@ -129,15 +132,24 @@ def migrate_collection(
                 src_table_fields = column_references["src"][table_id]
                 dst_table_fields = column_references["dst"][table_src2dst[table_id]]
                 # change result metadata
-                for md in card_json["result_metadata"]:
-                    if ("field_ref" in md) and (md["field_ref"][0] == "field"):
-                        old_field_id = md["field_ref"][1]
-                        if isinstance(old_field_id, int):
-                            field_name = src_table_fields.get_column_name(old_field_id)
-                            new_field_id = dst_table_fields.get_column_id(field_name)
-                            # awesomeness!
-                            md["field_ref"][1] = new_field_id
-                            md["id"] = new_field_id
+                if ("result_metadata" not in card_json) or (
+                    card_json["result_metadata"] is None
+                ):
+                    _logger.debug(f"There is no 'result_metadata' in cards")
+                else:
+                    for md in card_json["result_metadata"]:
+                        if ("field_ref" in md) and (md["field_ref"][0] == "field"):
+                            old_field_id = md["field_ref"][1]
+                            if isinstance(old_field_id, int):
+                                field_name = src_table_fields.get_column_name(
+                                    old_field_id
+                                )
+                                new_field_id = dst_table_fields.get_column_id(
+                                    field_name
+                                )
+                                # awesomeness!
+                                md["field_ref"][1] = new_field_id
+                                md["id"] = new_field_id
             # change query
             query_part = card_json["dataset_query"]["query"]
             update_query_part(
@@ -339,7 +351,12 @@ def update_query_part(
     elif str(src_table_in_query).startswith("card"):
         # it's reference a card. Which one?
         ref_card_id = int(src_table_in_query.split("__")[1])
-        query_part["source-table"] = f"card__{cards_src2dst[ref_card_id]}"
+        try:
+            query_part["source-table"] = f"card__{cards_src2dst[ref_card_id]}"
+        except KeyError as ke:
+            raise KeyError(
+                f"Card {ref_card_id} is referenced in dashboard but we can't find the card itself."
+            ) from ke
     else:
         raise ValueError(f"I don't know what this reference is: {src_table_in_query}")
     #
