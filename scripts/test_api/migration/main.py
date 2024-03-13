@@ -38,18 +38,20 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config = vars(args)
 
-    try:
-        migrate_collection(
-            metabase_api=Metabase_API(
-                "https://assistiq.metabaseapp.com", "wafa@assistiq.ai", "AssistIQ2023."
-            ),
-            source_collection_id=config["from"],
-            db_target=config["db_target"],
-            parent_collection_id=config["to_parent"],
-            destination_collection_name=config["to"],
-            table_src2dst=config["tables"],
-            new_dashboard_name=config["to"],
-        )
-    except Exception as e:
-        _logger.error(f"Dashboard not properly migrated!: {str(e)}")
-        # todo: delete the destination collection, since it's not valid
+    metabase_api = Metabase_API(
+        "https://assistiq.metabaseapp.com", "wafa@assistiq.ai", "AssistIQ2023."
+    )
+    # try:
+    migrate_collection(
+        metabase_api=metabase_api,
+        source_collection_id=config["from"],
+        db_target=config["db_target"],
+        parent_collection_id=config["to_parent"],
+        destination_collection_name=config["to"],
+        table_src2dst=config["tables"],
+        new_dashboard_name=config["to"],
+    )
+    # except Exception as e:
+    #     _logger.error(f"Dashboard not properly migrated!: {str(e)}")
+    #     r = metabase_api.put("/api/collection/{}".format(dashboard_id), json=dash)
+    #     # todo: delete the destination collection, since it's not valid
