@@ -141,11 +141,10 @@ def migrate_collection(
                         if ("field_ref" in md) and (md["field_ref"][0] == "field"):
                             old_field_id = md["field_ref"][1]
                             if isinstance(old_field_id, int):
-                                field_name = src_table_fields.get_column_name(
-                                    old_field_id
-                                )
-                                new_field_id = dst_table_fields.get_column_id(
-                                    field_name
+                                new_field_id = find_field_destination(
+                                    old_field_id,
+                                    column_references=column_references,
+                                    table_src2dst=table_src2dst,
                                 )
                                 # awesomeness!
                                 md["field_ref"][1] = new_field_id
@@ -477,16 +476,15 @@ def find_field_destination(
     # I am not sure to which table; I just know it's a _source_ table;
     # let's then search in ALL of them
     all_src_table_fields = column_references["src"]
-    found_table = False
     for src_table_id, src_table_fields in all_src_table_fields.items():
+        dst_table_id = table_src2dst[src_table_id]
+        dst_table_fields = column_references["dst"][dst_table_id]
         try:
             field_name = src_table_fields.get_column_name(old_field_id)
-            found_table = True
             # ok. Now let's go to the destination table
-            dst_table_id = table_src2dst[src_table_id]
-            return column_references["dst"][dst_table_id].get_column_id(field_name)
-        except KeyError as ke:
+            return dst_table_fields.get_column_id(field_name)
+        except ValueError as ke:
             # it wasn't in this table...
-            pass
+            continue
     # if I got here it's because I couldn't find the field anywhere!
     raise ValueError(f"Field '{old_field_id}' does not appear in any source table.")
