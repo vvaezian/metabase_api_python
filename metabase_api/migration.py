@@ -151,13 +151,14 @@ def migrate_collection(
                                 md["id"] = new_field_id
             # change query
             query_part = card_json["dataset_query"]["query"]
-            update_query_part(
-                card_id=card_id,
-                query_part=query_part,
-                column_references=column_references,
-                cards_src2dst=transformations["cards"],
-                table_src2dst=table_src2dst,
-            )
+            if "source-table" in query_part:
+                update_query_part(
+                    card_id=card_id,
+                    query_part=query_part,
+                    column_references=column_references,
+                    cards_src2dst=transformations["cards"],
+                    table_src2dst=table_src2dst,
+                )
             handle_card(
                 card_json,
                 column_references=column_references,
@@ -381,7 +382,10 @@ def update_query_part(
     """change query."""
 
     # table
-    src_table_in_query = query_part["source-table"]
+    try:
+        src_table_in_query = query_part["source-table"]
+    except Exception as e:
+        raise e
     if isinstance(src_table_in_query, int):
         if table_src2dst is not None:
             # if the source is an int => it MUST be the id of a table
