@@ -173,7 +173,7 @@ def copy_dashboard(self, source_dashboard_name=None, source_dashboard_id=None,
         cards_collection_id = res['id']
 
         # duplicate cards and put them in the created collection and make a card_id mapping
-        source_dashboard_card_IDs = [ i['card_id'] for i in source_dashboard['ordered_cards'] if i['card_id'] is not None ]
+        source_dashboard_card_IDs = [ i['card_id'] for i in source_dashboard['dashcards'] if i['card_id'] is not None ]
         card_id_mapping = {}
         for card_id in source_dashboard_card_IDs:
             dup_card_id = self.copy_card(source_card_id=card_id, destination_collection_id=cards_collection_id)
@@ -181,7 +181,7 @@ def copy_dashboard(self, source_dashboard_name=None, source_dashboard_id=None,
 
         # replace cards in the duplicated dashboard with duplicated cards
         dup_dashboard = self.get('/api/dashboard/{}'.format(dup_dashboard_id))
-        for card in dup_dashboard['ordered_cards']:
+        for card in dup_dashboard['dashcards']:
 
             # ignore text boxes. These get copied in the shallow-copy stage.
             if card['card_id'] is None:
