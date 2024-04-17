@@ -1,3 +1,11 @@
+## 0.3.2
+### Changed
+- Refactored for API changes introduced in Metabase v48 (`ordered_cards` -> `dashcards`)
+
+## 0.3.1
+### Changed
+- Fixed a typo in create_card function (PR [#47](https://github.com/vvaezian/metabase_api_python/pull/47))
+
 ## 0.3.0
 ### Changed
 - Option for local unittest is added. Also GitHub Actions Workflow is modified to use local testing.
