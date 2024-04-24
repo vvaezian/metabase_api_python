@@ -321,17 +321,18 @@ def handle_click_behavior(
     table_src2dst: dict[int, int],
     transformations,
 ):
-    try:
-        old_targetid = click_behavior["targetId"]
-    except KeyError as ke:
-        raise ValueError(f"no target id") from ke
-    try:
-        new_targetid = transformations["cards"][old_targetid]
-    except KeyError:
-        msg = f"Target '{old_targetid}' is referenced at source, but no replacement is specified."
-        _logger.error(msg)
-        raise RuntimeError(msg)
-    click_behavior["targetId"] = new_targetid
+    if "targetId" in click_behavior:
+        try:
+            old_targetid = click_behavior["targetId"]
+        except KeyError as ke:
+            raise ValueError(f"no target id") from ke
+        try:
+            new_targetid = transformations["cards"][old_targetid]
+        except KeyError:
+            msg = f"Target '{old_targetid}' is referenced at source, but no replacement is specified."
+            _logger.error(msg)
+            raise RuntimeError(msg)
+        click_behavior["targetId"] = new_targetid
     if "parameterMapping" in click_behavior:
         for mapping_name, mapping in deepcopy(
             click_behavior["parameterMapping"]
@@ -429,18 +430,19 @@ def update_query_part(
     for section_name in ["aggregation"]:
         if section_name in query_part:
             for agg in query_part[section_name]:
-                field_info = agg[1]
-                if field_info[0] == "field":
-                    # reference to a table's column. Replace it.
-                    old_field_id = field_info[1]
-                    if isinstance(old_field_id, int):
-                        new_field_id = find_field_destination(
-                            old_field_id=old_field_id,
-                            column_references=column_references,
-                            table_src2dst=table_src2dst,
-                        )
-                        # awesomeness!
-                        field_info[1] = new_field_id
+                if len(agg) > 1:
+                    field_info = agg[1]
+                    if field_info[0] == "field":
+                        # reference to a table's column. Replace it.
+                        old_field_id = field_info[1]
+                        if isinstance(old_field_id, int):
+                            new_field_id = find_field_destination(
+                                old_field_id=old_field_id,
+                                column_references=column_references,
+                                table_src2dst=table_src2dst,
+                            )
+                            # awesomeness!
+                            field_info[1] = new_field_id
     # breakout
     if "breakout" in query_part:
         for brk in query_part["breakout"]:
