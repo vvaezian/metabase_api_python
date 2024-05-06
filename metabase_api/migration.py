@@ -478,7 +478,12 @@ def update_table_cols_info(
                         column_references=column_references,
                         table_src2dst=table_src2dst,
                     )
-                    table_column[key] = str(l).replace("None", "null").replace("'", '"')
+                    table_column[key] = (
+                        str(l)
+                        .replace("None", "null")
+                        .replace("'", '"')
+                        .replace(" ", "")
+                    )
                     # new_k = str(l).replace("None", "null").replace("'", '"')
                     # viz_settings["column_settings"][new_k] = viz_settings[
                     #     "column_settings"
