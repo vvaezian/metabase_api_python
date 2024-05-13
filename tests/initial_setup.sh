@@ -28,8 +28,8 @@ wget -O metabase.jar -q https://downloads.metabase.com/v$MB_VERSION/metabase.jar
 # starting metabase jar locally
 java -jar metabase.jar > logs 2>&1 &
 
-# waiting 45 seconds for the initialization to complete
-sleep 45
+# waiting 60 seconds for the initialization to complete
+sleep 60
 
 # checking whether the metabase initialization has completed. If not, wait another 45 seconds
 success='False'
@@ -102,7 +102,7 @@ json='{
     "dataset_query":{
         "type":"native",
         "native":{
-            "query":"select *\nfrom test_table\nwhere 1 = 1 \n[[ and {{test_filter}} ]]\n",
+            "query":"select *\nfrom test_table2\nwhere 1 = 1 \n[[ and {{test_filter}} ]]\n",
             "template-tags":{
                 "test_filter":{
                     "name":"test_filter",
