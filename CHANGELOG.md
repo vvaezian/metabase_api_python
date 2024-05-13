@@ -1,3 +1,7 @@
+## 0.3.3
+### Changed
+- Authentication using API key
+
 ## 0.3.2
 ### Changed
 - Refactored for API changes introduced in Metabase v48 (`ordered_cards` -> `dashcards`)
