@@ -13,7 +13,11 @@ pip install metabase-api
 ```python
 from metabase_api import Metabase_API
 
+# authentication using username/password
 mb = Metabase_API('https://...', 'username', 'password')  # if password is not given, it will prompt for password
+
+# authentication using API key
+mb = Metabase_API('https://...', api_key='YOUR_API_KEY')
 ```
 ## Functions
 ### REST functions (get, post, put, delete)

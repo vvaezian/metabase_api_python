@@ -3,15 +3,18 @@ import getpass
 
 class Metabase_API():
 
-    def __init__(self, domain, email, password=None, basic_auth=False, is_admin=True):
-
+    def __init__(self, domain, email=None, password=None, api_key=None, basic_auth=False, is_admin=True):
+        assert email is not None or api_key is not None
         self.domain = domain.rstrip('/')
         self.email = email
-        self.password = getpass.getpass(prompt='Please enter your password: ') if password is None else password
-        self.session_id = None
-        self.header = None
-        self.auth = (self.email, self.password) if basic_auth else None
-        self.authenticate()
+        self.auth = (self.email, self.password) if basic_auth and email else None
+        if email:
+            self.password = getpass.getpass(prompt='Please enter your password: ') if password is None else password
+            self.session_id = None
+            self.header = None
+            self.authenticate()
+        else:
+            self.header = {"X-API-KEY": api_key}
         self.is_admin = is_admin
         if not self.is_admin:
             print('''
@@ -37,6 +40,8 @@ class Metabase_API():
 
     def validate_session(self):
         """Get a new session ID if the previous one has expired"""
+        if not self.email: # if email was not provided then the authentication would be based on api key so there would be no session to validate
+            return
         res = requests.get(self.domain + '/api/user/current', headers=self.header, auth=self.auth)
 
         if res.ok:  # 200
@@ -62,7 +67,7 @@ class Metabase_API():
     from .create_methods import create_card, create_collection, create_segment
     from .copy_methods import copy_card, copy_collection, copy_dashboard, copy_pulse
     
-    def search(self, q, item_type=None, archived=False):
+    def search(self, q, item_type=None):
         """
         Search for Metabase objects and return their basic info. 
         We can limit the search to a certain item type by providing a value for item_type keyword. 
@@ -70,12 +75,10 @@ class Metabase_API():
         Keyword arguments:
         q -- search input
         item_type -- to limit the search to certain item types (default:None, means no limit)
-        archived -- whether to include archived items in the search
         """
         assert item_type in [None, 'card', 'dashboard', 'collection', 'table', 'pulse', 'segment', 'metric' ]
-        assert archived in [True, False]
 
-        res = self.get(endpoint='/api/search/', params={'q':q, 'archived':archived})
+        res = self.get(endpoint='/api/search/', params={'q':q})
         if type(res) == dict:  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
             res = res['data']
         if item_type is not None:
