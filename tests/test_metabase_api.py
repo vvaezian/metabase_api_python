@@ -265,10 +265,10 @@ class Metabase_API_Test(unittest.TestCase):
     csv_data = 'col1,col2\nrow1 cell1,1\n,2\nrow3 cell1,\n,\nrow5 cell1,5\n'
     self.assertEqual(res, csv_data)
 
-    # # filtered data
-    # res = mb.get_card_data(card_id=2, parameters=[{"type":"string/=","value":['row1 cell1', 'row3 cell1'],"target":["dimension",["template-tag","test_filter"]]}])
-    # filtered_data = [{'col1': 'row1 cell1', 'col2': 1}, {'col1': 'row3 cell1', 'col2': None}]
-    # self.assertEqual(res, filtered_data)
+    # filtered data
+    res = mb.get_card_data(card_id=2, parameters=[{"type":"string/=","value":['row1 cell1', 'row3 cell1'],"target":["dimension",["template-tag","test_filter"]]}])
+    filtered_data = [{'col1': 'row1 cell1', 'col2': '1'}, {'col1': 'row3 cell1', 'col2': None}]
+    self.assertEqual(res, filtered_data)
 
 
 
