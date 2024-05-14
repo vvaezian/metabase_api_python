@@ -228,6 +228,10 @@ def migrate_collection(
             raise RuntimeError(f"Impossible to migrate card '{item['id']}'")
     # and now we migrate dashboards
     dashboard_items = [item for item in items if item["model"] == "dashboard"]
+    if (len(dashboard_items) == 0) and (new_dashboard_name is not None):
+        _logger.warning(
+            f"Dashboard name specified ('{new_dashboard_name}') but no dashboard present in the collection."
+        )
     for item in dashboard_items:
         dashboard_id = item["id"]
         _logger.info(f"Migrating dashboard {dashboard_id}...")
