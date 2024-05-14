@@ -34,6 +34,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-t", "--to", required=True, type=str, help="target collection name"
     )
+    parser.add_argument("--title", required=True, type=str, help="new dashboard title")
 
     args = parser.parse_args()
     config = vars(args)
@@ -49,7 +50,7 @@ if __name__ == "__main__":
         parent_collection_id=config["to_parent"],
         destination_collection_name=config["to"],
         table_src2dst=config["tables"],
-        new_dashboard_name=config["to"],
+        new_dashboard_name=config["title"],
     )
     # except Exception as e:
     #     _logger.error(f"Dashboard not properly migrated!: {str(e)}")
