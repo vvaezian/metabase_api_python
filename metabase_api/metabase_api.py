@@ -7,11 +7,13 @@ class Metabase_API():
         assert email is not None or api_key is not None
         self.domain = domain.rstrip('/')
         self.email = email
-        self.auth = (self.email, self.password) if basic_auth and email else None
+        self.auth = None
         if email:
             self.password = getpass.getpass(prompt='Please enter your password: ') if password is None else password
             self.session_id = None
             self.header = None
+            if basic_auth:
+                self.auth = (self.email, self.password) 
             self.authenticate()
         else:
             self.header = {"X-API-KEY": api_key}
