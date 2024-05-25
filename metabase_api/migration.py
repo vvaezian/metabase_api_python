@@ -1,5 +1,5 @@
 from copy import deepcopy
-from typing import Optional
+from typing import Optional, Any
 
 from metabase_api import Metabase_API
 
@@ -593,17 +593,49 @@ def update_query_part(
             table_src2dst=table_src2dst,
         )
     if "filter" in query_part:
-        field_info = query_part["filter"][1]
-        if field_info[0] == "field":
-            # reference to a table's column. Replace it.
-            old_field_id = field_info[1]
-            new_field_id = find_field_destination(
-                old_field_id=old_field_id,
-                column_references=column_references,
-                table_src2dst=table_src2dst,
-            )
-            # awesomeness!
-            field_info[1] = new_field_id
+
+        def handle_condition_filter(filter_parts: Any):
+            # todo: do I need to return anything....?
+            def _is_cmp_op(op: str) -> bool:
+                # cmp operator (like '>', '=', ...)
+                return (op == ">") or (op == "=") or (op == "<=>")
+
+            if isinstance(filter_parts, list):
+                op = filter_parts[0]
+                if op == "field":
+                    # reference to a table's column. Replace it.
+                    field_info = filter_parts
+                    old_field_id = field_info[1]
+                    new_field_id = find_field_destination(
+                        old_field_id=old_field_id,
+                        column_references=column_references,
+                        table_src2dst=table_src2dst,
+                    )
+                    # awesomeness!
+                    field_info[1] = new_field_id
+                elif (op == "or") or (op == "and"):
+                    handle_condition_filter(filter_parts=filter_parts[1])
+                    handle_condition_filter(filter_parts=filter_parts[2])
+                elif _is_cmp_op(op):
+                    handle_condition_filter(filter_parts=filter_parts[1])
+                    handle_condition_filter(filter_parts=filter_parts[2])
+                else:
+                    print(f"Luis, this should be a constant: '{op}'... is it?")
+
+        handle_condition_filter(filter_parts=query_part["filter"])
+        #
+        #
+        # field_info = query_part["filter"][1]
+        # if field_info[0] == "field":
+        #     # reference to a table's column. Replace it.
+        #     old_field_id = field_info[1]
+        #     new_field_id = find_field_destination(
+        #         old_field_id=old_field_id,
+        #         column_references=column_references,
+        #         table_src2dst=table_src2dst,
+        #     )
+        #     # awesomeness!
+        #     field_info[1] = new_field_id
     if "aggregation" in query_part:
         for agg_details_as_list in query_part["aggregation"]:
             _replace_field_info_refs(
