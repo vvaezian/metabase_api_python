@@ -398,5 +398,7 @@ def copy_collection(
             # all good, we already copied it! (see just before this loop)
             continue
         else:
-            raise ValueError(f"We are not copying model '{item['model']}'!!!")
+            raise ValueError(
+                f"We are not copying objects of type '{item['model']}'; specifically the one named '{item['name']}'!!!"
+            )
     return transf
