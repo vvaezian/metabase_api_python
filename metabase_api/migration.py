@@ -469,12 +469,13 @@ def update_table_cols_info(
             field_ref = value  # table_column["fieldRef"]
             if field_ref[0] == "field":
                 old_field_id = field_ref[1]
-                new_field_id = find_field_destination(
-                    old_field_id=old_field_id,
-                    column_references=column_references,
-                    table_src2dst=table_src2dst,
-                )
-                field_ref[1] = new_field_id
+                if isinstance(old_field_id, int):
+                    new_field_id = find_field_destination(
+                        old_field_id=old_field_id,
+                        column_references=column_references,
+                        table_src2dst=table_src2dst,
+                    )
+                    field_ref[1] = new_field_id
         elif key == "key":
             l = eval(value.replace("null", "None"))
             if l[0] == "ref":
@@ -685,13 +686,14 @@ def update_query_part(
             if brk[0] == "field":
                 # reference to a table's column. Replace it.
                 old_field_id = brk[1]
-                new_field_id = find_field_destination(
-                    old_field_id=old_field_id,
-                    column_references=column_references,
-                    table_src2dst=table_src2dst,
-                )
-                # awesomeness!
-                brk[1] = new_field_id
+                if isinstance(old_field_id, int):
+                    new_field_id = find_field_destination(
+                        old_field_id=old_field_id,
+                        column_references=column_references,
+                        table_src2dst=table_src2dst,
+                    )
+                    # awesomeness!
+                    brk[1] = new_field_id
     if "order-by" in query_part:
         for ob in query_part["order-by"]:
             # reference to a table's column. Replace it.
