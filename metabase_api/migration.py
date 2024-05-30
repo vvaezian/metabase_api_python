@@ -310,11 +310,12 @@ def handle_card(
         if "target" in mapping:
             t = mapping["target"]
             if (t[0] == "dimension") and (t[1][0] == "field"):
-                t[1][1] = find_field_destination(
-                    old_field_id=t[1][1],
-                    column_references=column_references,
-                    table_src2dst=table_src2dst,
-                )
+                if isinstance(t[1][1], int):
+                    t[1][1] = find_field_destination(
+                        old_field_id=t[1][1],
+                        column_references=column_references,
+                        table_src2dst=table_src2dst,
+                    )
     if "visualization_settings" in card_json:
         update_viz_settings(
             viz_settings=card_json["visualization_settings"],
@@ -329,8 +330,10 @@ def handle_card(
         if "table_id" in card:
             try:
                 card["table_id"] = table_src2dst[card["table_id"]]
-            except Exception as e:
-                _logger.debug("all is good - I think it's because the reference is ok")
+            except KeyError as e:
+                if card["table_id"] not in table_src2dst.values():
+                    # (otherwise, all good: the table reference is already ok)
+                    raise e
         if "database_id" in card:
             if card["database_id"] != db_target:
                 card["database_id"] = db_target
