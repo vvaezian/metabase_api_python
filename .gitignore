@@ -1,0 +1,7 @@
+metabase.db.mv.db
+metabase.db.trace.db
+metabase.jar
+logs
+output
+plugins
+__pycache__

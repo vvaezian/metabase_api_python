@@ -18,7 +18,7 @@ then
     exit 1
 fi
 
-# cleaup (in case the script is not running for the first time)
+# cleanup (in case the script is not running for the first time)
 rm -f metabase.db.mv.db
 rm -f metabase.db.trace.db
 
