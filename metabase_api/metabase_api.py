@@ -60,7 +60,7 @@ class Metabase_API():
     # import helper functions
     from ._helper_methods import get_item_info, get_item_id, get_item_name, \
                                 get_db_id_from_table_id, get_db_info, get_table_metadata, \
-                                get_columns_name_id, friendly_names_is_disabled, verbose_print
+                                get_database_name_id, get_columns_name_id, friendly_names_is_disabled, verbose_print
 
 
     ##################################################################
@@ -68,6 +68,7 @@ class Metabase_API():
     ##################################################################
     from .create_methods import create_card, create_collection, create_segment
     from .copy_methods import copy_card, copy_collection, copy_dashboard, copy_pulse
+    from .clone_methods import clone_collection_new_database, clone_dashboard_new_database, clone_card_new_database
     
     def search(self, q, item_type=None):
         """
