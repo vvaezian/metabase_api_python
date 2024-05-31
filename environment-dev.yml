@@ -5,6 +5,7 @@ channels:
   - defaults
 dependencies:
   - pre-commit=2.20.0
+  - pylint=2.16.2
   - pytest=7.1.2
   - pandas-stubs=2.0.0.230412
   - pyyaml=6.0.0

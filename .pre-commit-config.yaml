@@ -32,3 +32,14 @@ repos:
   rev: 0.6.2
   hooks:
     - id: sql_formatter
+- repo: local
+  hooks:
+    - id: pylint
+      name: pylint
+      entry: pylint
+      language: system
+      types: [python]
+      args:
+        [
+          "--rcfile=pylintrc",
+        ]

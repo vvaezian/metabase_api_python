@@ -235,7 +235,6 @@ class Metabase_API_Test(unittest.TestCase):
             source_dashboard_id=1,
             destination_collection_id=1,
             postfix="_dup_deep_{}".format(t),
-            deepcopy=True,
         )
         new_collection_id = mb.get_item_id(
             "collection", "test_dashboard_dup_deep_{}'s cards".format(t)
