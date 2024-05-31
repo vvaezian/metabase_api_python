@@ -32,7 +32,7 @@ jobs:
       with:
           miniforge-variant: Mambaforge
           miniforge-version: latest
-          activate-environment: data-science
+          activate-environment: metabase_api
           use-mamba: true
     - name: Set cache date
       run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
@@ -43,11 +43,11 @@ jobs:
       id: cache
     - name: Update environment
       run: |
-        mamba env update -n data-science -f environment.yml
-        mamba env update -n data-science -f environment-dev.yml
-        mamba env update -n data-science -f environment-exploration.yml
+        mamba env update -n metabase_api -f environment.yml
+        mamba env update -n metabase_api -f environment-dev.yml
       if: steps.cache.outputs.cache-hit != 'true'
     - name: pre-commit all things
       shell: bash -l {0}
       run: |
+        export PYTHONPATH=$PWD:$PYTHONPATH
         pre-commit run --all-files
