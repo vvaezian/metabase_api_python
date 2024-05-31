@@ -49,4 +49,5 @@ jobs:
     - name: pre-commit all things
       shell: bash -l {0}
       run: |
+        export PYTHONPATH=$PWD:$PYTHONPATH
         pre-commit run --all-files
