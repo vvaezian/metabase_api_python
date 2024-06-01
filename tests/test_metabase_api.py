@@ -260,13 +260,13 @@ class Metabase_API_Test(unittest.TestCase):
     ]
     self.assertEqual(res, json_data)
 
-    # formatted rows (in json export mode, None become '' and numbers become strings, e.g. 123 -> '123')
+    # formatted rows (in json export mode, Null values in varchar columns become '' and numbers become strings, e.g. 123 -> '123')
     res = mb.get_card_data(card_id=1, format_rows=True)
     json_data = [
       {'col1': 'row1 cell1', 'col2': '1'},
       {'col1': '', 'col2': '2'},
-      {'col1': 'row3 cell1', 'col2': ''},
-      {'col1': '', 'col2': ''},
+      {'col1': 'row3 cell1', 'col2': None},
+      {'col1': '', 'col2': None},
       {'col1': 'row5 cell1', 'col2': '5'}
     ]
     self.assertEqual(res, json_data)
