@@ -1,3 +1,8 @@
+## 3.4
+### Changed
+- New versioning format (3.4 instead of 0.3.4)
+- Added `format_rows` option to `get_card_data` function
+
 ## 0.3.3
 ### Changed
 - Authentication using API key

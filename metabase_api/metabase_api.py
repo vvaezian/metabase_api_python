@@ -90,16 +90,19 @@ class Metabase_API():
 
 
 
-    def get_card_data(self, card_name=None, card_id=None, collection_name=None, 
-                      collection_id=None, data_format='json', parameters=None):
+    def get_card_data(self, card_name=None, card_id=None, collection_name=None, collection_id=None, 
+                      data_format='json', parameters=None, format_rows=False):
         '''
         Run the query associated with a card and get the results.
-        The data_format keyword specifies the format of the returned data:
+
+        Keyword arguments:
+        data_format -- specifies the format of the returned data:
             - 'json': every row is a dictionary of <column-header, cell> key-value pairs    
             - 'csv': the entire result is returned as a string, where rows are separated by newlines and cells with commas.
-        To pass the filter values use 'parameters' param:
+        parameters -- can be used to pass filter values:
             The format is like [{"type":"category","value":["val1","val2"],"target":["dimension",["template-tag","filter_variable_name"]]}]
             See the network tab when exporting the results using the web interface to get the proper format pattern.
+        format_rows -- whether the returned results should be formatted or not
         '''
         assert data_format in [ 'json', 'csv' ]
         if parameters:
@@ -113,9 +116,11 @@ class Metabase_API():
                                        collection_id=collection_id,
                                        item_type='card')
 
-        # add the filter values (if any)
         import json
-        params_json = {'parameters':json.dumps(parameters)}
+        params_json = { 
+            'parameters':json.dumps(parameters), 
+            'format_rows':'true' if format_rows else 'false' 
+        }
 
         # get the results
         res = self.post("/api/card/{}/query/{}".format(card_id, data_format), 'raw', data=params_json)

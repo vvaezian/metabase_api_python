@@ -169,6 +169,3 @@ Deletes the item (Card, Dashboard, Pulse). Currently Collections and Segments ca
 ```python
 mb.delete_item('card', item_id=123)
 ```
-
-## Notes
-There are also two other Python wrappers for Metabase API [here](https://github.com/mertsalik/metabasepy) and [here](https://github.com/STUnitas/metabase-py).
