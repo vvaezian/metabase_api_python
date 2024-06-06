@@ -166,7 +166,7 @@ class Metabase_API():
             if not target_table_name:
                 raise ValueError('Either the name or id of the target table needs to be provided.')
             else:
-                source_table_id = self.get_item_id('table', source_table_name)
+                target_table_id = self.get_item_id('table', target_table_name)
 
         if ignore_these_filters:
             assert type(ignore_these_filters) == list 
