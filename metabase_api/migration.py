@@ -156,7 +156,6 @@ def migrate_collection(
     parent_collection_id: int,
     destination_collection_name: str,
     table_src2dst: Optional[dict[int, int]] = None,
-    new_dashboard_name: Optional[str] = None,
     new_dashboard_description: Optional[str] = None,
 ):
     # references to columns are organized as follows:
@@ -246,9 +245,9 @@ def migrate_collection(
             raise RuntimeError(f"Impossible to migrate card '{item['id']}'")
     # and now we migrate dashboards
     dashboard_items = [item for item in items if item["model"] == "dashboard"]
-    if (len(dashboard_items) == 0) and (new_dashboard_name is not None):
+    if (len(dashboard_items) == 0) and (new_dashboard_description is not None):
         _logger.warning(
-            f"Dashboard name specified ('{new_dashboard_name}') but no dashboard present in the collection."
+            f"Dashboard description specified ('{new_dashboard_description}') but no dashboard present in the collection."
         )
     for item in dashboard_items:
         dashboard_id = item["id"]
@@ -307,9 +306,6 @@ def migrate_collection(
             new_dashboard_description
             if new_dashboard_description is not None
             else dash["description"]
-        )
-        dash["name"] = (
-            new_dashboard_name if new_dashboard_name is not None else dash["name"]
         )
         r = metabase_api.put("/api/dashboard/{}".format(dashboard_id), json=dash)
         assert (

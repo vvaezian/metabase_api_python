@@ -34,7 +34,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "-t", "--to", required=True, type=str, help="target collection name"
     )
-    parser.add_argument("--title", required=True, type=str, help="new dashboard title")
     parser.add_argument(
         "--about", required=False, type=str, help="new dashboard 'about' section"
     )
@@ -53,7 +52,6 @@ if __name__ == "__main__":
         parent_collection_id=config["to_parent"],
         destination_collection_name=config["to"],
         table_src2dst=config["tables"],
-        new_dashboard_name=config["title"],
         new_dashboard_description=config["about"],
     )
     # except Exception as e:
