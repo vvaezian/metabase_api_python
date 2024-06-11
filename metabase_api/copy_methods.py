@@ -255,7 +255,7 @@ def copy_collection(
     postfix="",
     child_items_postfix="",
     verbose=False,
-):
+) -> dict[str, dict[int, int]]:
     """
     Copy the collection with the given name/id into the given destination parent collection.
 
@@ -354,23 +354,28 @@ def copy_collection(
             )
             card_id_mapping[card_id] = dup_card_id
         transf["cards"] = card_id_mapping
+    # next we want to copy all internal collections (as they might contain cards too)
+    collection_items = [c for c in items if c["model"] == "collection"]
+    for collection in collection_items:
+        collection_id = collection["id"]
+        collection_name = collection["name"]
+        # destination_collection_name = collection_name + child_items_postfix
+        self.verbose_print(
+            verbose, 'Copying the collection "{}" ...'.format(collection_name)
+        )
+        int_transf = self.copy_collection(
+            source_collection_id=collection_id,
+            destination_parent_collection_id=destination_collection_id,
+            child_items_postfix=child_items_postfix,
+            deepcopy_dashboards=deepcopy_dashboards,
+            verbose=verbose,
+        )
+        # updates the transformations
+        for k in set(transf.keys()).union(int_transf.keys()):
+            transf[k] = transf.get(k, {}) | int_transf.get(k, {})
     # let's now create all other items
     for item in items:
-        if item["model"] == "collection":  # copy a collection
-            collection_id = item["id"]
-            collection_name = item["name"]
-            destination_collection_name = collection_name + child_items_postfix
-            self.verbose_print(
-                verbose, 'Copying the collection "{}" ...'.format(collection_name)
-            )
-            self.copy_collection(
-                source_collection_id=collection_id,
-                destination_parent_collection_id=destination_collection_id,
-                child_items_postfix=child_items_postfix,
-                deepcopy_dashboards=deepcopy_dashboards,
-                verbose=verbose,
-            )
-        elif item["model"] == "dashboard":  # copy a dashboard
+        if item["model"] == "dashboard":  # copy a dashboard
             dashboard_id = item["id"]
             dashboard_name = item["name"]
             destination_dashboard_name = dashboard_name + child_items_postfix
@@ -381,7 +386,7 @@ def copy_collection(
                 source_dashboard_id=dashboard_id,
                 destination_collection_id=destination_collection_id,
                 destination_dashboard_name=destination_dashboard_name,
-                card_id_mapping=card_id_mapping if deepcopy_dashboards else None,
+                card_id_mapping=transf["cards"] if deepcopy_dashboards else None,
             )
         # copy a pulse
         elif item["model"] == "pulse":
@@ -394,7 +399,7 @@ def copy_collection(
                 destination_collection_id=destination_collection_id,
                 destination_pulse_name=destination_pulse_name,
             )
-        elif item["model"] == "card":
+        elif (item["model"] == "card") or (item["model"] == "collection"):
             # all good, we already copied it! (see just before this loop)
             continue
         else:
