@@ -468,11 +468,12 @@ def handle_click_behavior(
                     map_target_dim = map_target["dimension"]
                     field_info = map_target_dim[1]
                     if field_info[0] == "field":
-                        field_info[1] = find_field_destination(
-                            old_field_id=field_info[1],
-                            column_references=column_references,
-                            table_src2dst=table_src2dst,
-                        )
+                        if isinstance(field_info[1], int):
+                            field_info[1] = find_field_destination(
+                                old_field_id=field_info[1],
+                                column_references=column_references,
+                                table_src2dst=table_src2dst,
+                            )
                         map_target["id"] = str(map_target["dimension"])
                         old_id = mapping["id"]
                         mapping["id"] = map_target["id"]
