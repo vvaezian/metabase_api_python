@@ -1,3 +1,7 @@
+## 3.4.1
+### Changed
+- PR #54 (fixes a typo in the `clone_card` function)
+
 ## 3.4
 ### Changed
 - New versioning format (3.4 instead of 0.3.4)
