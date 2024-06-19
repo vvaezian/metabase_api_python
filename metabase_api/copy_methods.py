@@ -328,6 +328,10 @@ def copy_collection(
         parent_collection_name=destination_parent_collection_name,
         return_results=True,
     )
+    if not res:
+        raise ConnectionRefusedError(
+            "Current user does not have permissions to create destination collection."
+        )
     destination_collection_id = res["id"]
 
     # get the items to copy
