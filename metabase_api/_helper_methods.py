@@ -448,10 +448,11 @@ def friendly_names_is_disabled(self):
     if not self.is_admin:
         return True
 
+    settings = self.get("/api/setting")
+    if not isinstance(settings, list):
+        return True
     friendly_name_setting = [
-        i["value"]
-        for i in self.get("/api/setting")
-        if i["key"] == "humanization-strategy"
+        i["value"] for i in settings if i["key"] == "humanization-strategy"
     ][0]
     return friendly_name_setting == "none"  # 'none' means disabled
 
