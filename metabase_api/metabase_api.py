@@ -1,14 +1,23 @@
+from typing import Optional
+
 import requests
 import getpass
 
 
 class Metabase_API:
-    def __init__(self, domain, email, password=None, basic_auth=False, is_admin=True):
+    def __init__(
+        self,
+        domain: str,
+        email: str,
+        password: Optional[str] = None,
+        basic_auth: bool = False,
+        is_admin: bool = True,
+    ):
 
         self.domain = domain.rstrip("/")
         self.email = email
         self.password = (
-            getpass.getpass(prompt="Please enter your password: ")
+            getpass.getpass(prompt=f"Password for {email}: ")
             if password is None
             else password
         )
@@ -33,7 +42,9 @@ class Metabase_API:
             self.domain + "/api/session", json=conn_header, auth=self.auth
         )
         if not res.ok:
-            raise Exception(res)
+            raise ConnectionRefusedError(
+                f"{self.email} not authorized (maybe bad password)"
+            )
 
         self.session_id = res.json()["id"]
         self.header = {"X-Metabase-Session": self.session_id}
