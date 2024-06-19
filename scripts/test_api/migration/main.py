@@ -3,6 +3,7 @@ Migrates a collection.
 """
 import argparse
 import ast
+import re
 
 import logging
 
@@ -13,6 +14,16 @@ from metabase_api.utility import logger
 
 _logger = logging.getLogger(__name__)
 
+
+RE_EMAIL = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+
+
+def email_type(value):
+    if not RE_EMAIL.match(value):
+        raise argparse.ArgumentTypeError(f"'{value}' is not a valid email")
+    return value
+
+
 if __name__ == "__main__":
     logger.setup()
     _logger = logging.getLogger(__name__)
@@ -20,6 +31,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Collection migration",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "-u", "--user", required=True, type=email_type, help="email address of user"
     )
     parser.add_argument(
         "-f", "--from", required=True, type=int, help="id for session to migrate"
@@ -41,9 +55,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config = vars(args)
 
-    metabase_api = Metabase_API(
-        "https://assistiq.metabaseapp.com", "wafa@assistiq.ai", "AssistIQ2023."
-    )
+    metabase_api = Metabase_API("https://assistiq.metabaseapp.com", config["user"])
     # try:
     migrate_collection(
         metabase_api=metabase_api,
