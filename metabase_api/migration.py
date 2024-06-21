@@ -323,7 +323,10 @@ def handle_card(
 ):
     # mappings to filters
     for mapping in card_json["parameter_mappings"]:
-        mapping["card_id"] = transformations["cards"][mapping["card_id"]]
+        if "card_id" in mapping:
+            mapping["card_id"] = transformations["cards"][mapping["card_id"]]
+        else:
+            print("1")
         if "target" in mapping:
             t = mapping["target"]
             if (t[0] == "dimension") and (t[1][0] == "field"):
