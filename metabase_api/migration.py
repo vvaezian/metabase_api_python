@@ -157,6 +157,7 @@ def migrate_collection(
     destination_collection_name: str,
     table_src2dst: Optional[dict[int, int]] = None,
     new_dashboard_description: Optional[str] = None,
+    new_dashboard_name: Optional[str] = None,
 ):
     # references to columns are organized as follows:
     # * key 'src' contains all source table
@@ -302,6 +303,10 @@ def migrate_collection(
                 db_target=db_target,
             )
         # change name, tag it, and go!
+        dash["name"] = (
+            new_dashboard_name if new_dashboard_name is not None else dash["name"]
+        )
+        # change description
         dash["description"] = (
             new_dashboard_description
             if new_dashboard_description is not None
