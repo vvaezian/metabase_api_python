@@ -36,7 +36,7 @@ if __name__ == "__main__":
         "-u", "--user", required=True, type=email_type, help="email address of user"
     )
     parser.add_argument(
-        "-f", "--from", required=True, type=int, help="id for session to migrate"
+        "-f", "--from", required=True, type=str, help="collection name to migrate"
     )
     parser.add_argument(
         "--db_target", required=True, type=int, help="id for database target"
@@ -57,10 +57,15 @@ if __name__ == "__main__":
     config = vars(args)
 
     metabase_api = Metabase_API("https://assistiq.metabaseapp.com", config["user"])
+    # convert 'from' name to id
+    src_collection_id = metabase_api.get_item_id(
+        item_type="collection", item_name=config["from"]
+    )
     # try:
+
     migrate_collection(
         metabase_api=metabase_api,
-        source_collection_id=config["from"],
+        source_collection_id=src_collection_id,
         db_target=config["db_target"],
         parent_collection_id=config["to_parent"],
         destination_collection_name=config["to"],
