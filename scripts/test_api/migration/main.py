@@ -4,6 +4,7 @@ Migrates a collection.
 import argparse
 import ast
 import re
+import os
 
 import logging
 
@@ -33,7 +34,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "-u", "--user", required=True, type=email_type, help="email address of user"
+        "-u", "--user", required=False, type=email_type, help="email address of user"
     )
     parser.add_argument(
         "-f", "--from", required=True, type=str, help="collection name to migrate"
@@ -56,13 +57,30 @@ if __name__ == "__main__":
     args = parser.parse_args()
     config = vars(args)
 
-    metabase_api = Metabase_API("https://assistiq.metabaseapp.com", config["user"])
+    # if user's email wasn't specified, I need to find it as an env variable
+    if not config["user"]:
+        config["user"] = os.environ.get("METABASE_LOGIN")
+        if not config["user"]:
+            raise ValueError(
+                "User's email not specified and not found in env variable METABASE_LOGIN"
+            )
+        _logger.info(f"Read {config['user']} from env variable METABASE_LOGIN")
+    else:
+        _logger.info("User's email can be stored in env variable METABASE_LOGIN")
+    # is user's passwd kept as an env variable?
+    _logger.info(
+        f"Checking existence of passwd for {config['user']} in env variable METABASE_PASSWD"
+    )
+    user_passwd = os.environ.get("METABASE_PASSWD")
+
+    metabase_api = Metabase_API(
+        "https://assistiq.metabaseapp.com", email=config["user"], password=user_passwd
+    )
     # convert 'from' name to id
     src_collection_id = metabase_api.get_item_id(
         item_type="collection", item_name=config["from"]
     )
-    # try:
-
+    # let's do it!
     migrate_collection(
         metabase_api=metabase_api,
         source_collection_id=src_collection_id,
