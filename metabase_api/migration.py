@@ -266,11 +266,12 @@ def migrate_collection(
                     if "value_field" in src_config:
                         value_field = src_config["value_field"]
                         if value_field[0] == "field":
-                            value_field[1] = find_field_destination(
-                                old_field_id=value_field[1],
-                                column_references=column_references,
-                                table_src2dst=table_src2dst,
-                            )
+                            if isinstance(value_field[1], int):
+                                value_field[1] = find_field_destination(
+                                    old_field_id=value_field[1],
+                                    column_references=column_references,
+                                    table_src2dst=table_src2dst,
+                                )
         # param values
         param_values = dash["param_values"]
         if param_values is not None:
