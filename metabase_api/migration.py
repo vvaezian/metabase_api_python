@@ -254,6 +254,23 @@ def migrate_collection(
         dashboard_id = item["id"]
         _logger.info(f"Migrating dashboard {dashboard_id}...")
         dash = metabase_api.get(f"/api/dashboard/{dashboard_id}")
+        # parameters
+        parameters = dash.get("parameters", None)
+        if parameters is not None:
+            for params_dict in parameters:
+                if params_dict.get("values_source_type", "nothing") == "card":
+                    src_config = params_dict["values_source_config"]
+                    src_config["card_id"] = transformations["cards"][
+                        src_config["card_id"]
+                    ]
+                    if "value_field" in src_config:
+                        value_field = src_config["value_field"]
+                        if value_field[0] == "field":
+                            value_field[1] = find_field_destination(
+                                old_field_id=value_field[1],
+                                column_references=column_references,
+                                table_src2dst=table_src2dst,
+                            )
         # param values
         param_values = dash["param_values"]
         if param_values is not None:
