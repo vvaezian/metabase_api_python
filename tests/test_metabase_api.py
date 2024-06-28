@@ -31,27 +31,27 @@ class Metabase_API_Test(unittest.TestCase):
 
     def test_get_item_info(self):
         # database
-        res = mb.get_item_info("database", 2)
+        res = mb.get_item_info_from_id("database", 2)
         self.assertEqual(res["name"], "test_db")
         self.assertEqual(res["id"], 2)
 
         # table
-        res = mb.get_item_info("table", 9)
+        res = mb.get_item_info_from_id("table", 9)
         self.assertEqual(res["name"], "test_table")
         self.assertEqual(res["id"], 9)
 
         # card
-        res = mb.get_item_info("card", 1)
+        res = mb.get_item_info_from_id("card", 1)
         self.assertEqual(res["name"], "test_card")
         self.assertEqual(res["id"], 1)
 
         # collection
-        res = mb.get_item_info("collection", 2)
+        res = mb.get_item_info_from_id("collection", 2)
         self.assertEqual(res["name"], "test_collection")
         self.assertEqual(res["id"], 2)
 
         # dashboard
-        res = mb.get_item_info("dashboard", 1)
+        res = mb.get_item_info_from_id("dashboard", 1)
         self.assertEqual(res["name"], "test_dashboard")
         self.assertEqual(res["id"], 1)
 

@@ -1,47 +1,44 @@
-def get_item_info(
+"""Valid Item types."""
+from typing import Optional
+
+ALLOWED_ITEM_TYPES = [
+    "database",
+    "table",
+    "card",
+    "collection",
+    "dashboard",
+    "pulse",
+    "segment",
+]
+
+
+def get_item_info_from_id(
     self,
-    item_type,
-    item_id=None,
-    item_name=None,
-    collection_id=None,
-    collection_name=None,
-    params=None,
-):
+    item_type: str,
+    item_id,
+    params: Optional[dict] = None,
+) -> dict:
+    """
+
+    Args:
+        self:
+        item_type:
+        item_id:
+        params:
+
+    Returns:
+
+    """
     """
     Return the info for the given item.
     Use 'params' for providing arguments. E.g. to include tables in the result for databases, use: params={'include':'tables'}
     """
-
-    assert item_type in [
-        "database",
-        "table",
-        "card",
-        "collection",
-        "dashboard",
-        "pulse",
-        "segment",
-    ]
-
-    if params:
-        assert type(params) == dict
-
-    if not item_id:
-        if not item_name:
-            raise ValueError(
-                "Either the name or id of the {} must be provided.".format(item_type)
-            )
-        item_id = self.get_item_id(
-            item_type,
-            item_name,
-            collection_id=collection_id,
-            collection_name=collection_name,
-        )
-
-    res = self.get("/api/{}/{}".format(item_type, item_id), params=params)
+    assert item_type in ALLOWED_ITEM_TYPES
+    res = self.get(f"/api/{item_type}/{item_id}", params=params)
     if res:
         return res
     else:
-        raise ValueError('There is no {} with the id "{}"'.format(item_type, item_id))
+        raise ValueError(f'There is no {item_type} with the id "{item_id}"')
 
 
 def get_item_name(self, item_type, item_id):
@@ -63,6 +60,97 @@ def get_item_name(self, item_type, item_id):
         raise ValueError('There is no {} with the id "{}"'.format(item_type, item_id))
 
 
+def get_item_info_from_name(
+    self,
+    item_type: str,
+    item_name: str,
+    collection_id=None,
+    collection_name=None,
+    db_id=None,
+    db_name=None,
+    table_id=None,
+) -> list[dict]:
+    """
+    Gets info for ALL items matching a name.
+
+    Args:
+        self: this module.
+        item_type:
+        item_name:
+        collection_id:
+        collection_name:
+        db_id:
+        db_name:
+        table_id:
+
+    Returns: a list of full info (as json) for items matching the name; if nobody matches, returns empty.
+
+    """
+
+    assert item_type in ALLOWED_ITEM_TYPES
+
+    if item_type in ["card", "dashboard", "pulse"]:
+        if not collection_id:
+            if not collection_name:
+                # Collection name/id is not provided. Searching in all collections
+                return [
+                    i
+                    for i in self.get("/api/{}/".format(item_type))
+                    if i["name"] == item_name and not i["archived"]
+                ]
+            else:
+                collection_id = (
+                    self.get_item_id("collection", collection_name)
+                    if collection_name != "root"
+                    else None
+                )
+                return [
+                    i
+                    for i in self.get("/api/{}/".format(item_type))
+                    if i["name"] == item_name
+                    and i["collection_id"] == collection_id
+                    and i["archived"] == False
+                ]
+        else:
+            return [
+                i
+                for i in self.get("/api/{}/".format(item_type))
+                if i["name"] == item_name
+                and i["collection_id"] == collection_id
+                and i["archived"] == False
+            ]
+    elif item_type == "collection":
+        return [i for i in self.get("/api/collection/") if i["name"] == item_name]
+    elif item_type == "database":
+        res = self.get("/api/database/")
+        if (
+            type(res) == dict
+        ):  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
+            res = res["data"]
+        return [i for i in res if i["name"] == item_name]
+    elif item_type == "table":
+        tables = self.get("/api/table/")
+
+        if db_id:
+            return [
+                i for i in tables if i["name"] == item_name and i["db"]["id"] == db_id
+            ]
+        elif db_name:
+            return [
+                i
+                for i in tables
+                if i["name"] == item_name and i["db"]["name"] == db_name
+            ]
+        else:
+            return [i for i in tables if i["name"] == item_name]
+    elif item_type == "segment":
+        return [
+            i
+            for i in self.get("/api/segment/")
+            if i["name"] == item_name and (not table_id or i["table_id"] == table_id)
+        ]
+
+
 def get_item_id(
     self,
     item_type: str,
@@ -73,151 +161,34 @@ def get_item_id(
     db_name=None,
     table_id=None,
 ):
+    """Gets item id for object. Raises Exception if there are more than 1 such objects, or 0 of them."""
 
-    assert item_type in [
-        "database",
-        "table",
-        "card",
-        "collection",
-        "dashboard",
-        "pulse",
-        "segment",
-    ]
+    assert item_type in ALLOWED_ITEM_TYPES
 
-    if item_type in ["card", "dashboard", "pulse"]:
-        if not collection_id:
-            if not collection_name:
-                # Collection name/id is not provided. Searching in all collections
-                item_IDs = [
-                    i["id"]
-                    for i in self.get("/api/{}/".format(item_type))
-                    if i["name"] == item_name and i["archived"] == False
-                ]
-            else:
-                collection_id = (
-                    self.get_item_id("collection", collection_name)
-                    if collection_name != "root"
-                    else None
-                )
-                item_IDs = [
-                    i["id"]
-                    for i in self.get("/api/{}/".format(item_type))
-                    if i["name"] == item_name
-                    and i["collection_id"] == collection_id
-                    and i["archived"] == False
-                ]
-        else:
-            collection_name = self.get_item_name("collection", collection_id)
-            item_IDs = [
-                i["id"]
-                for i in self.get("/api/{}/".format(item_type))
-                if i["name"] == item_name
-                and i["collection_id"] == collection_id
-                and i["archived"] == False
-            ]
-
-        if len(item_IDs) > 1:
-            if not collection_name:
-                raise ValueError(
-                    'There is more than one {} with the name "{}".\n\
-                        Provide collection id/name to limit the search space'.format(
-                        item_type, item_name
-                    )
-                )
-            raise ValueError(
-                'There is more than one {} with the name "{}" in the collection "{}"'.format(
-                    item_type, item_name, collection_name
-                )
-            )
-        if len(item_IDs) == 0:
-            if not collection_name:
-                raise ValueError(
-                    'There is no {} with the name "{}"'.format(item_type, item_name)
-                )
-            raise ValueError(
-                'There is no item with the name "{}" in the collection "{}"'.format(
-                    item_name, collection_name
-                )
-            )
-
-        return item_IDs[0]
-    elif item_type == "collection":
-        collection_IDs = [
-            i["id"] for i in self.get("/api/collection/") if i["name"] == item_name
-        ]
-
-        if len(collection_IDs) > 1:
-            raise ValueError(
-                'There is more than one collection with the name "{}"'.format(item_name)
-            )
-        if len(collection_IDs) == 0:
-            raise ValueError(
-                'There is no collection with the name "{}"'.format(item_name)
-            )
-
-        return collection_IDs[0]
-    elif item_type == "database":
-        res = self.get("/api/database/")
-        if (
-            type(res) == dict
-        ):  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
-            res = res["data"]
-        db_IDs = [i["id"] for i in res if i["name"] == item_name]
-
-        if len(db_IDs) > 1:
-            raise ValueError(
-                'There is more than one DB with the name "{}"'.format(item_name)
-            )
-        if len(db_IDs) == 0:
-            raise ValueError('There is no DB with the name "{}"'.format(item_name))
-
-        return db_IDs[0]
-    elif item_type == "table":
-        tables = self.get("/api/table/")
-
-        if db_id:
-            table_IDs = [
-                i["id"]
-                for i in tables
-                if i["name"] == item_name and i["db"]["id"] == db_id
-            ]
-        elif db_name:
-            table_IDs = [
-                i["id"]
-                for i in tables
-                if i["name"] == item_name and i["db"]["name"] == db_name
-            ]
-        else:
-            table_IDs = [i["id"] for i in tables if i["name"] == item_name]
-
-        if len(table_IDs) > 1:
-            raise ValueError(
-                "There is more than one table with the name {}. Provide db id/name.".format(
-                    item_name
-                )
-            )
-        if len(table_IDs) == 0:
-            raise ValueError(
-                'There is no table with the name "{}" (in the provided db, if any)'.format(
-                    item_name
-                )
-            )
-
-        return table_IDs[0]
-    elif item_type == "segment":
-        segment_IDs = [
-            i["id"]
-            for i in self.get("/api/segment/")
-            if i["name"] == item_name and (not table_id or i["table_id"] == table_id)
-        ]
-        if len(segment_IDs) > 1:
-            raise ValueError(
-                'There is more than one segment with the name "{}"'.format(item_name)
-            )
-        if len(segment_IDs) == 0:
-            raise ValueError('There is no segment with the name "{}"'.format(item_name))
-
-        return segment_IDs[0]
+    all_infos = get_item_info_from_name(
+        self,
+        item_type=item_type,
+        item_name=item_name,
+        collection_id=collection_id,
+        collection_name=collection_name,
+        db_id=db_id,
+        db_name=db_name,
+        table_id=table_id,
+    )
+    all_ids = [i["id"] for i in all_infos]
+    if len(all_ids) > 1:
+        msg = f'There is more than one {item_type} with the name "{item_name}"'
+        msg += (
+            "Provide collection id/name to limit the search space"
+            if not collection_name
+            else f'in the collection "{collection_name}"'
+        )
+        raise ValueError(msg)
+    if len(all_ids) == 0:
+        msg = f'There is no {item_type} with the name "{item_name}"'
+        msg += f" in the collection '{collection_name}'" if collection_name else ""
+        raise ValueError(msg)
+    return all_ids[0]
 
 
 def get_db_id_from_table_id(self, table_id):
