@@ -71,7 +71,6 @@ class Metabase_API:
         get_item_id,
         get_item_name,
         get_db_id_from_table_id,
-        get_db_info,
         get_table_metadata,
         get_columns_name_id,
         friendly_names_is_disabled,

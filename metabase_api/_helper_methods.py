@@ -231,29 +231,6 @@ def get_db_id_from_table_id(self, table_id):
     return tables[0]
 
 
-def get_db_info(self, db_name=None, db_id=None, params=None):
-    """
-    Return Database info. Use 'params' for providing arguments.
-    For example to include tables in the result, use: params={'include':'tables'}
-    """
-    import warnings
-
-    warnings.warn(
-        "The function get_db_info will be removed in the next version. Use get_item_info function instead.",
-        DeprecationWarning,
-    )
-
-    if params:
-        assert type(params) == dict
-
-    if not db_id:
-        if not db_name:
-            raise ValueError("Either the name or id of the DB needs to be provided.")
-        db_id = self.get_item_id("database", db_name)
-
-    return self.get("/api/database/{}".format(db_id), params=params)
-
-
 def get_table_metadata(
     self, table_name=None, table_id=None, db_name=None, db_id=None, params=None
 ):
