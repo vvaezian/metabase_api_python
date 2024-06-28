@@ -65,8 +65,8 @@ def get_item_name(self, item_type, item_id):
 
 def get_item_id(
     self,
-    item_type,
-    item_name,
+    item_type: str,
+    item_name: str,
     collection_id=None,
     collection_name=None,
     db_id=None,
@@ -141,8 +141,7 @@ def get_item_id(
             )
 
         return item_IDs[0]
-
-    if item_type == "collection":
+    elif item_type == "collection":
         collection_IDs = [
             i["id"] for i in self.get("/api/collection/") if i["name"] == item_name
         ]
@@ -157,8 +156,7 @@ def get_item_id(
             )
 
         return collection_IDs[0]
-
-    if item_type == "database":
+    elif item_type == "database":
         res = self.get("/api/database/")
         if (
             type(res) == dict
@@ -174,8 +172,7 @@ def get_item_id(
             raise ValueError('There is no DB with the name "{}"'.format(item_name))
 
         return db_IDs[0]
-
-    if item_type == "table":
+    elif item_type == "table":
         tables = self.get("/api/table/")
 
         if db_id:
@@ -207,8 +204,7 @@ def get_item_id(
             )
 
         return table_IDs[0]
-
-    if item_type == "segment":
+    elif item_type == "segment":
         segment_IDs = [
             i["id"]
             for i in self.get("/api/segment/")
