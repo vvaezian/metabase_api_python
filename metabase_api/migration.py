@@ -166,15 +166,14 @@ def migrate_collection(
     column_references: dict[str, dict[int, ColumnReferences]] = dict()
     column_references["src"] = dict()
     column_references["dst"] = dict()
-    for table_id in table_src2dst.keys():
-        column_references["src"][table_id] = ColumnReferences.from_metabase(
-            metabase_api=metabase_api, table_id=table_id
+    for table_id_src, table_id_dst in table_src2dst.items():
+        column_references["src"][table_id_src] = ColumnReferences.from_metabase(
+            metabase_api=metabase_api, table_id=table_id_src
         )
-    for table_id in table_src2dst.values():
-        column_references["dst"][table_id] = ColumnReferences.from_metabase(
-            metabase_api=metabase_api, table_id=table_id
+        column_references["dst"][table_id_dst] = ColumnReferences.from_metabase(
+            metabase_api=metabase_api, table_id=table_id_dst
         )
-
+    #
     source_collection_name = metabase_api.get_item_name(
         item_type="collection", item_id=source_collection_id
     )
