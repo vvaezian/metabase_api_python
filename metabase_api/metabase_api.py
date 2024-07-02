@@ -67,11 +67,10 @@ class Metabase_API:
 
     # import helper functions
     from ._helper_methods import (
-        get_item_info,
+        get_item_info_from_id,
         get_item_id,
         get_item_name,
         get_db_id_from_table_id,
-        get_db_info,
         get_table_metadata,
         get_columns_name_id,
         friendly_names_is_disabled,
@@ -216,7 +215,7 @@ class Metabase_API:
             assert type(ignore_these_filters) == list
 
         # get the card info
-        card_info = self.get_item_info("card", card_id)
+        card_info = self.get_item_info_from_id("card", card_id)
         # get the mappings, both name -> id and id -> name
         target_table_col_name_id_mapping = self.get_columns_name_id(
             table_id=target_table_id
