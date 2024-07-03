@@ -31,7 +31,7 @@ def get_item_info_from_id(
     """
     """
     Return the info for the given item.
-    Use 'params' for providing arguments. E.g. to include tables in the result for databases, use: params={'include':'tables'}
+    Use 'params' for providing arguments. E.g. to include db in the result for databases, use: params={'include':'db'}
     """
     assert item_type in ALLOWED_ITEM_TYPES
     res = self.get(f"/api/{item_type}/{item_id}", params=params)
