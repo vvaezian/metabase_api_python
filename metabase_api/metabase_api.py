@@ -183,7 +183,7 @@ class Metabase_API:
         The filters that were based on the old table would become based on the new table.
         In the current version of the function there are some limitations which would be removed in future versions:
             - The column names used in filters need to be the same in the source and target table (except the ones that are ignored by 'ignore_these_filters' param).
-            - The source and target tables need to be in the same DB.
+            - The source and target db need to be in the same DB.
 
         Keyword arguments:
         card_id -- id of the card

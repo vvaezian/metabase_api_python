@@ -12,6 +12,7 @@ from metabase_api.metabase_api import Metabase_API
 from metabase_api.migration import migrate_collection
 
 from metabase_api.utility import logger
+from metabase_api.utility.db.tables import TableEquivalency, Table, Src2DstEquivalencies
 
 _logger = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ if __name__ == "__main__":
         "--db_target", required=True, type=int, help="id for database target"
     )
     parser.add_argument("--tables", type=ast.literal_eval, help="table mapping")
+    # parser.add_argument("--db", type=ast.literal_eval, help="table mapping")
     parser.add_argument(
         "--to_parent", required=True, type=int, help="target parent collection id"
     )
@@ -68,28 +70,42 @@ if __name__ == "__main__":
     else:
         _logger.info("User's email can be stored in env variable METABASE_LOGIN")
     # is user's passwd kept as an env variable?
-    _logger.info(
-        f"Checking existence of passwd for {config['user']} in env variable METABASE_PASSWD"
-    )
     user_passwd = os.environ.get("METABASE_PASSWD")
-
+    if user_passwd is not None:
+        _logger.info(
+            f"Read of passwd for {config['user']} from env variable METABASE_PASSWD"
+        )
+    _logger.info(f"Turning on metabase API...")
     metabase_api = Metabase_API(
         "https://assistiq.metabaseapp.com", email=config["user"], password=user_passwd
     )
+    table_equivalencies: Src2DstEquivalencies = Src2DstEquivalencies(
+        metabase_api=metabase_api, dst_bd_id=config["db_target"]
+    )
+    if (config["tables"] is not None) and (len(config["tables"]) > 0):
+        _logger.warning(
+            "No need to specify a mapping for tables! This code resolves it automatically."
+        )
+        _logger.info(
+            f"Establishing {len(config['tables'])} pre-defined tables' dependencies..."
+        )
+        table_equivalencies.add(src2dst=config["tables"])
+
+    # let's do it!
     # convert 'from' name to id
     src_collection_id = metabase_api.get_item_id(
         item_type="collection", item_name=config["from"]
     )
-    # let's do it!
+    _logger.info(f"Starting migration of collection {src_collection_id}")
     migrate_collection(
         metabase_api=metabase_api,
         source_collection_id=src_collection_id,
         db_target=config["db_target"],
         parent_collection_id=config["to_parent"],
         destination_collection_name=config["to"],
-        table_src2dst=config["tables"],
         new_dashboard_description=config["about"],
         new_dashboard_name=config["name"],
+        table_equivalencies=table_equivalencies,
     )
     # except Exception as e:
     #     _logger.error(f"Dashboard not properly migrated!: {str(e)}")

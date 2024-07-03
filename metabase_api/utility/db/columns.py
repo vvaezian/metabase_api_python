@@ -1,5 +1,9 @@
 from metabase_api import Metabase_API
 
+import logging
+
+_logger = logging.getLogger(__name__)
+
 
 class ColumnReferences:
     """Keeps mapping between column id and name for a specified table."""
@@ -16,6 +20,7 @@ class ColumnReferences:
     def from_metabase(
         cls, metabase_api: Metabase_API, table_id: int
     ) -> "ColumnReferences":
+        _logger.debug(f"Fetching columns' info for table {table_id}")
         dst_table_fields = metabase_api.get_columns_name_id(table_id=table_id)
         return ColumnReferences(table_id=table_id, mapping=dst_table_fields)
 

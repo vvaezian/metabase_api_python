@@ -288,7 +288,7 @@ def copy_collection(
     }
 
     """
-    ### making sure we have the data that we need
+    # making sure we have the data that we need
     if not source_collection_id:
         if not source_collection_name:
             raise ValueError(

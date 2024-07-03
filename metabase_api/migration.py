@@ -5,7 +5,9 @@ from metabase_api import Metabase_API
 
 import logging
 
-from metabase_api.utility.tables.columns import ColumnReferences
+from metabase_api.utility.db.tables import Src2DstEquivalencies
+
+from metabase_api.utility.db.columns import ColumnReferences
 
 _logger = logging.getLogger(__name__)
 
@@ -17,9 +19,8 @@ def migrate_card_by_id(
     card_id: int,
     metabase_api: Metabase_API,
     db_target: int,
-    column_references: dict[str, dict[int, ColumnReferences]],
     transformations,
-    table_src2dst: Optional[dict[int, int]] = None,
+    table_equivalencies: Src2DstEquivalencies,
 ) -> bool:
     if card_id in MIGRATED_CARDS:
         _logger.debug(f"[already migrated card id '{card_id}']")
@@ -32,41 +33,37 @@ def migrate_card_by_id(
     card_json["database_id"] = db_target
     card_json["dataset_query"]["database"] = db_target
     # table
-    if table_src2dst is not None:
-        table_id = card_json["table_id"]
-        if table_id is not None:
-            try:
-                card_json["table_id"] = table_src2dst[table_id]
-            except KeyError as ke:
-                # mmmh... by any chance is this table_id already in target?
-                # (in which case it would mean that it had already been replaced)
-                if table_id not in set(table_src2dst.values()):
-                    msg = f"[re-writing references on card '{card_id}']"
-                    msg += f"Table '{table_id}' is referenced at source, but no replacement is specified."
-                    raise ValueError(msg) from ke
-            # and now I have to replace the fields' references to this table
-            src_table_fields = column_references["src"][table_id]
-            dst_table_fields = column_references["dst"][table_src2dst[table_id]]
-        # change result metadata
-        if ("result_metadata" not in card_json) or (
-            card_json["result_metadata"] is None
-        ):
-            _logger.debug(f"[card: {card_id}] There is no 'result_metadata'")
-        else:
-            for md in card_json["result_metadata"]:
-                if ("field_ref" in md) and (md["field_ref"][0] == "field"):
-                    old_field_id = md["field_ref"][1]
-                    if isinstance(old_field_id, int):
-                        new_field_id = find_field_destination(
-                            old_field_id,
-                            column_references=column_references,
-                            table_src2dst=table_src2dst,
-                        )
-                        # awesomeness!
-                        md["field_ref"][1] = new_field_id
-                        md["id"] = new_field_id
-                if "table_id" in md:
-                    md["table_id"] = table_src2dst[table_id]
+    table_id = card_json["table_id"]
+    if table_id is not None:
+        try:
+            card_json["table_id"] = table_equivalencies[table_id].unique_id
+        except KeyError as ke:
+            # mmmh... by any chance is this table_id already in target?
+            # (in which case it would mean that it had already been replaced)
+            if table_id not in table_equivalencies.dst_tables_ids:
+                msg = f"[re-writing references on card '{card_id}']"
+                msg += f"Table '{table_id}' is referenced at source, but no replacement is specified."
+                raise ValueError(msg) from ke
+        # and now I have to replace the fields' references to this table
+        # these next 2 lines were not used. Commenting them as I don't understand what's up. todo: delete?
+        # src_table_fields = column_references["src"][table_id]
+        # dst_table_fields = column_references["dst"][table_src2dst[table_id]]
+    # change result metadata
+    if ("result_metadata" not in card_json) or (card_json["result_metadata"] is None):
+        _logger.debug(f"[card: {card_id}] There is no 'result_metadata'")
+    else:
+        for md in card_json["result_metadata"]:
+            if ("field_ref" in md) and (md["field_ref"][0] == "field"):
+                old_field_id = md["field_ref"][1]
+                if isinstance(old_field_id, int):
+                    new_field_id = table_equivalencies.find_field_destination(
+                        old_field_id=old_field_id
+                    )
+                    # awesomeness!
+                    md["field_ref"][1] = new_field_id
+                    md["id"] = new_field_id
+            if "table_id" in md:
+                md["table_id"] = table_equivalencies[table_id].unique_id
     # change query
     if "query" in card_json["dataset_query"]:
         query_part = card_json["dataset_query"]["query"]
@@ -74,17 +71,15 @@ def migrate_card_by_id(
         update_query_part(
             card_id=card_id,
             query_part=query_part,
-            column_references=column_references,
+            table_equivalencies=table_equivalencies,
             cards_src2dst=transformations["cards"],
-            table_src2dst=table_src2dst,
             metabase_api=metabase_api,
             db_target=db_target,
             transformations=transformations,
         )
     handle_card(
         card_json,
-        column_references=column_references,
-        table_src2dst=table_src2dst,
+        table_equivalencies=table_equivalencies,
         transformations=transformations,
         db_target=db_target,
     )
@@ -99,9 +94,10 @@ def migrate_card(
     item: dict,
     metabase_api: Metabase_API,
     db_target: int,
-    column_references: dict[str, dict[int, ColumnReferences]],
+    table_equivalencies: Src2DstEquivalencies,
+    # column_references: dict[str, dict[int, ColumnReferences]],
     transformations,
-    table_src2dst: Optional[dict[int, int]] = None,
+    # table_src2dst: Optional[dict[int, int]] = None,
 ) -> bool:
     assert (
         item["model"] == "card"
@@ -110,9 +106,8 @@ def migrate_card(
         card_id=item["id"],
         metabase_api=metabase_api,
         db_target=db_target,
-        column_references=column_references,
+        table_equivalencies=table_equivalencies,
         transformations=transformations,
-        table_src2dst=table_src2dst,
     )
 
 
@@ -122,38 +117,26 @@ def migrate_collection(
     db_target: int,
     parent_collection_id: int,
     destination_collection_name: str,
-    table_src2dst: Optional[dict[int, int]] = None,
+    table_equivalencies: Src2DstEquivalencies,
     new_dashboard_description: Optional[str] = None,
     new_dashboard_name: Optional[str] = None,
 ):
-    # references to columns are organized as follows:
-    # * key 'src' contains all source table
-    # * key 'dst' contains all destination tables
-    # * inside of each key we find another dictionary, with key the table id, and value the column references.
-    column_references: dict[str, dict[int, ColumnReferences]] = dict()
-    column_references["src"] = dict()
-    column_references["dst"] = dict()
-    for table_id_src, table_id_dst in table_src2dst.items():
-        column_references["src"][table_id_src] = ColumnReferences.from_metabase(
-            metabase_api=metabase_api, table_id=table_id_src
-        )
-        column_references["dst"][table_id_dst] = ColumnReferences.from_metabase(
-            metabase_api=metabase_api, table_id=table_id_dst
-        )
-    #
     source_collection_name = metabase_api.get_item_name(
         item_type="collection", item_id=source_collection_id
     )
-    print(f"source_collection_name = '{source_collection_name}'")
+    _logger.info(f"source_collection_name = '{source_collection_name}'")
 
     # let's copy the collection inside a (manually chosen) parent collect
     parent_collection_name = metabase_api.get_item_name(
         item_type="collection", item_id=parent_collection_id
     )
-    print(
+    _logger.info(
         f"parent collection for target=id:{parent_collection_id}, name: '{parent_collection_name}'"
     )
     # if the destination collection already exists, fail
+    _logger.debug(
+        f"Checking that the destination collection '{destination_collection_name}' doesn't already exist..."
+    )
     try:
         _ = metabase_api.get_item_id(
             item_type="collection",
@@ -165,6 +148,9 @@ def migrate_collection(
         # if I am here it's because the collection doesn't exist - which is exactly what I want
         pass
     # all good
+    _logger.debug(
+        f"ok. Let's now copy {source_collection_id} as a kid of {parent_collection_id}..."
+    )
     transformations = metabase_api.copy_collection(
         source_collection_id=source_collection_id,
         destination_parent_collection_id=parent_collection_id,
@@ -204,9 +190,10 @@ def migrate_collection(
             metabase_api=metabase_api,
             item=item,
             db_target=db_target,
-            column_references=column_references,
+            table_equivalencies=table_equivalencies,
+            # column_references=column_references,
             transformations=transformations,
-            table_src2dst=table_src2dst,
+            # table_src2dst=table_src2dst,
         )
         if not r:
             raise RuntimeError(f"Impossible to migrate card '{item['id']}'")
@@ -233,20 +220,18 @@ def migrate_collection(
                         value_field = src_config["value_field"]
                         if value_field[0] == "field":
                             if isinstance(value_field[1], int):
-                                value_field[1] = find_field_destination(
-                                    old_field_id=value_field[1],
-                                    column_references=column_references,
-                                    table_src2dst=table_src2dst,
+                                value_field[
+                                    1
+                                ] = table_equivalencies.find_field_destination(
+                                    old_field_id=value_field[1]
                                 )
         # param values
         param_values = dash["param_values"]
         if param_values is not None:
             for field_id_as_str, field_info in deepcopy(dash["param_values"]).items():
                 field_id = int(field_id_as_str)
-                new_field_id = find_field_destination(
-                    old_field_id=field_id,
-                    column_references=column_references,
-                    table_src2dst=table_src2dst,
+                new_field_id = table_equivalencies.find_field_destination(
+                    old_field_id=field_id
                 )
                 new_field_id_as_str = str(new_field_id)
                 param_values[new_field_id_as_str] = param_values.pop(field_id_as_str)
@@ -257,13 +242,14 @@ def migrate_collection(
             for field_id_as_str, field_info in old_param_fields.items():
                 try:
                     field_id = int(field_id_as_str)
-                    src_table = field_info["table_id"]
-                    field_name = column_references["src"][src_table].get_column_name(
-                        field_id
-                    )
-                    new_field_id = column_references["dst"][
-                        table_src2dst[src_table]
-                    ].get_column_id(field_name)
+                    src_table_id = field_info["table_id"]
+                    field_name = table_equivalencies.get_src_table(
+                        table_id=src_table_id
+                    ).get_column_name(column_id=field_id)
+                    dst_table_id = table_equivalencies[src_table_id].unique_id
+                    new_field_id = table_equivalencies.get_dst_table(
+                        dst_table_id
+                    ).get_column_id(field_name)
                     # ok. Let's now change:
                     new_field_id_as_str = str(new_field_id)
                     dash["param_fields"][new_field_id_as_str] = dash[
@@ -272,17 +258,14 @@ def migrate_collection(
                     dash["param_fields"][new_field_id_as_str][
                         "id"
                     ] = new_field_id_as_str
-                    dash["param_fields"][new_field_id_as_str][
-                        "table_id"
-                    ] = table_src2dst[src_table]
+                    dash["param_fields"][new_field_id_as_str]["table_id"] = dst_table_id
                 except ValueError as ve:
                     # apparently one of the param fields is not an int...?
                     pass
         for card_json in dash["dashcards"]:
             handle_card(
                 card_json,
-                column_references=column_references,
-                table_src2dst=table_src2dst,
+                table_equivalencies=table_equivalencies,
                 transformations=transformations,
                 db_target=db_target,
             )
@@ -305,8 +288,9 @@ def migrate_collection(
 
 def handle_card(
     card_json,
-    column_references: dict[str, dict[int, ColumnReferences]],
-    table_src2dst: dict[int, int],
+    table_equivalencies: Src2DstEquivalencies,
+    #     column_references: dict[str, dict[int, ColumnReferences]],
+    # table_src2dst: dict[int, int],
     transformations,
     db_target: int,
 ):
@@ -320,16 +304,13 @@ def handle_card(
             t = mapping["target"]
             if (t[0] == "dimension") and (t[1][0] == "field"):
                 if isinstance(t[1][1], int):
-                    t[1][1] = find_field_destination(
-                        old_field_id=t[1][1],
-                        column_references=column_references,
-                        table_src2dst=table_src2dst,
+                    t[1][1] = table_equivalencies.find_field_destination(
+                        old_field_id=t[1][1]
                     )
     if "visualization_settings" in card_json:
         update_viz_settings(
             viz_settings=card_json["visualization_settings"],
-            column_references=column_references,
-            table_src2dst=table_src2dst,
+            table_equivalencies=table_equivalencies,
             transformations=transformations,
         )
     # card itself
@@ -338,12 +319,8 @@ def handle_card(
         card = card_json["card"]
         if "table_id" in card:
             if card["table_id"] is not None:
-                try:
-                    card["table_id"] = table_src2dst[card["table_id"]]
-                except KeyError as e:
-                    if card["table_id"] not in table_src2dst.values():
-                        # (otherwise, all good: the table reference is already ok)
-                        raise e
+                if card["table_id"] not in table_equivalencies.dst_tables_ids:
+                    card["table_id"] = table_equivalencies[card["table_id"]].unique_id
         if "database_id" in card:
             if card["database_id"] != db_target:
                 card["database_id"] = db_target
@@ -384,16 +361,14 @@ def handle_card(
 
 def update_viz_settings(
     viz_settings: dict,
-    column_references: dict[str, dict[int, ColumnReferences]],
-    table_src2dst: dict[int, int],
+    table_equivalencies: Src2DstEquivalencies,
     transformations,
 ):
     if "table.columns" in viz_settings:
         for table_column in viz_settings["table.columns"]:
             update_table_cols_info(
                 table_column,
-                column_references=column_references,
-                table_src2dst=table_src2dst,
+                table_equivalencies=table_equivalencies,
             )
     if "column_settings" in viz_settings:
         # first, let's change keys (if needed)
@@ -403,10 +378,8 @@ def update_viz_settings(
             if l[0] == "ref":
                 field_info = l[1]
                 if field_info[0] == "field":
-                    field_info[1] = find_field_destination(
-                        field_info[1],
-                        column_references=column_references,
-                        table_src2dst=table_src2dst,
+                    field_info[1] = table_equivalencies.find_field_destination(
+                        old_field_id=field_info[1]
                     )
                     new_k = str(l).replace("None", "null").replace("'", '"')
                     viz_settings["column_settings"][new_k] = viz_settings[
@@ -417,24 +390,21 @@ def update_viz_settings(
                 click_behavior = d["click_behavior"]
                 handle_click_behavior(
                     click_behavior=click_behavior,
-                    column_references=column_references,
-                    table_src2dst=table_src2dst,
+                    table_equivalencies=table_equivalencies,
                     transformations=transformations,
                 )
     if "click_behavior" in viz_settings:
         click_behavior = viz_settings["click_behavior"]
         handle_click_behavior(
             click_behavior=click_behavior,
-            column_references=column_references,
-            table_src2dst=table_src2dst,
+            table_equivalencies=table_equivalencies,
             transformations=transformations,
         )
 
 
 def handle_click_behavior(
     click_behavior: dict,
-    column_references: dict[str, dict[int, ColumnReferences]],
-    table_src2dst: dict[int, int],
+    table_equivalencies: Src2DstEquivalencies,
     transformations,
 ):
     if "targetId" in click_behavior:
@@ -461,10 +431,8 @@ def handle_click_behavior(
                     field_info = map_target_dim[1]
                     if field_info[0] == "field":
                         if isinstance(field_info[1], int):
-                            field_info[1] = find_field_destination(
-                                old_field_id=field_info[1],
-                                column_references=column_references,
-                                table_src2dst=table_src2dst,
+                            field_info[1] = table_equivalencies.find_field_destination(
+                                old_field_id=field_info[1]
                             )
                         map_target["id"] = str(map_target["dimension"])
                         old_id = mapping["id"]
@@ -475,8 +443,7 @@ def handle_click_behavior(
 
 def update_table_cols_info(
     table_column: dict,
-    column_references: dict[str, dict[int, ColumnReferences]],
-    table_src2dst: dict[int, int],
+    table_equivalencies: Src2DstEquivalencies,
 ) -> dict:
     for key, value in table_column.items():
         if key == "fieldRef":
@@ -484,10 +451,8 @@ def update_table_cols_info(
             if field_ref[0] == "field":
                 old_field_id = field_ref[1]
                 if isinstance(old_field_id, int):
-                    new_field_id = find_field_destination(
-                        old_field_id=old_field_id,
-                        column_references=column_references,
-                        table_src2dst=table_src2dst,
+                    new_field_id = table_equivalencies.find_field_destination(
+                        old_field_id=old_field_id
                     )
                     field_ref[1] = new_field_id
         elif key == "key":
@@ -495,10 +460,8 @@ def update_table_cols_info(
             if l[0] == "ref":
                 field_info = l[1]
                 if field_info[0] == "field":
-                    field_info[1] = find_field_destination(
-                        field_info[1],
-                        column_references=column_references,
-                        table_src2dst=table_src2dst,
+                    field_info[1] = table_equivalencies.find_field_destination(
+                        old_field_id=field_info[1]
                     )
                     table_column[key] = (
                         str(l)
@@ -516,17 +479,14 @@ def update_table_cols_info(
 
 def _replace_field_info_refs(
     field_info: list,
-    column_references: dict[str, dict[int, ColumnReferences]],
-    table_src2dst: Optional[dict[int, int]] = None,
+    table_equivalencies: Src2DstEquivalencies,
 ) -> list:
     if field_info[0] == "field":
         # reference to a table's column. Replace it.
         old_field_id = field_info[1]
         if isinstance(old_field_id, int):
-            new_field_id = find_field_destination(
-                old_field_id=old_field_id,
-                column_references=column_references,
-                table_src2dst=table_src2dst,
+            new_field_id = table_equivalencies.find_field_destination(
+                old_field_id=old_field_id
             )
             # awesomeness!
             field_info[1] = new_field_id
@@ -535,8 +495,7 @@ def _replace_field_info_refs(
             if isinstance(item, list):
                 field_info[idx] = _replace_field_info_refs(
                     item,
-                    column_references=column_references,
-                    table_src2dst=table_src2dst,
+                    table_equivalencies=table_equivalencies,
                 )
     return field_info
 
@@ -547,9 +506,8 @@ def update_query_part(
     metabase_api: Metabase_API,
     db_target: int,
     transformations,
-    column_references: dict[str, dict[int, ColumnReferences]],
     cards_src2dst: dict[int, int],  # transformations['cards']
-    table_src2dst: Optional[dict[int, int]] = None,
+    table_equivalencies: Src2DstEquivalencies,
 ) -> tuple[dict, list[int]]:  # todo: be more specific!
     """change query."""
 
@@ -557,20 +515,21 @@ def update_query_part(
     if "source-table" in query_part:
         src_table_in_query = query_part["source-table"]
         if isinstance(src_table_in_query, int):
-            if table_src2dst is not None:
-                # if the source is an int => it MUST be the id of a table
-                # (and so its correspondence must be found in the input)
-                try:
-                    query_part["source-table"] = table_src2dst[src_table_in_query]
-                except KeyError as ke:
-                    msg = f"[re-writing references on card '{card_id}']"
-                    msg += f"Table '{src_table_in_query}' is referenced at source, but no replacement is specified."
-                    raise ValueError(msg)
-                # # and now I have to replace the fields' references to this table
-                # src_table_fields = column_references["src"][src_table_in_query]
-                # dst_table_fields = column_references["dst"][
-                #     table_src2dst[src_table_in_query]
-                # ]
+            # if the source is an int => it MUST be the id of a table
+            # (and so its correspondence must be found in the input)
+            try:
+                query_part["source-table"] = table_equivalencies[
+                    src_table_in_query
+                ].unique_id
+            except KeyError as ke:
+                msg = f"[re-writing references on card '{card_id}']"
+                msg += f"Table '{src_table_in_query}' is referenced at source, but no replacement is specified."
+                raise ValueError(msg) from ke
+            # # and now I have to replace the fields' references to this table
+            # src_table_fields = column_references["src"][src_table_in_query]
+            # dst_table_fields = column_references["dst"][
+            #     table_src2dst[src_table_in_query]
+            # ]
         elif str(src_table_in_query).startswith("card"):
             # it's reference a card. Which one?
             ref_card_id = int(src_table_in_query.split("__")[1])
@@ -586,9 +545,8 @@ def update_query_part(
                 card_id=new_card_id,
                 metabase_api=metabase_api,
                 db_target=db_target,
-                column_references=column_references,
+                table_equivalencies=table_equivalencies,
                 transformations=transformations,
-                table_src2dst=table_src2dst,
             )
             query_part["source-table"] = f"card__{new_card_id}"
         else:
@@ -603,9 +561,8 @@ def update_query_part(
             db_target=db_target,
             transformations=transformations,
             query_part=query_part["source-query"],
-            column_references=column_references,
             cards_src2dst=cards_src2dst,
-            table_src2dst=table_src2dst,
+            table_equivalencies=table_equivalencies,
         )
     if "filter" in query_part:
 
@@ -622,10 +579,8 @@ def update_query_part(
                     field_info = filter_parts
                     old_field_id = field_info[1]
                     if isinstance(old_field_id, int):
-                        new_field_id = find_field_destination(
-                            old_field_id=old_field_id,
-                            column_references=column_references,
-                            table_src2dst=table_src2dst,
+                        new_field_id = table_equivalencies.find_field_destination(
+                            old_field_id=old_field_id
                         )
                         # awesomeness!
                         field_info[1] = new_field_id
@@ -656,8 +611,7 @@ def update_query_part(
         for agg_details_as_list in query_part["aggregation"]:
             _replace_field_info_refs(
                 field_info=agg_details_as_list,
-                column_references=column_references,
-                table_src2dst=table_src2dst,
+                table_equivalencies=table_equivalencies,
             )
             # for agg_detail_item in agg_details_as_list:
             # if isinstance(agg_detail_item, list):
@@ -681,8 +635,7 @@ def update_query_part(
                 if isinstance(field_info, list):
                     _replace_field_info_refs(
                         field_info,
-                        column_references=column_references,
-                        table_src2dst=table_src2dst,
+                        table_equivalencies=table_equivalencies,
                     )
                     # if field_info[0] == "field":
                     #     # reference to a table's column. Replace it.
@@ -702,10 +655,8 @@ def update_query_part(
                 # reference to a table's column. Replace it.
                 old_field_id = brk[1]
                 if isinstance(old_field_id, int):
-                    new_field_id = find_field_destination(
-                        old_field_id=old_field_id,
-                        column_references=column_references,
-                        table_src2dst=table_src2dst,
+                    new_field_id = table_equivalencies.find_field_destination(
+                        old_field_id=old_field_id
                     )
                     # awesomeness!
                     brk[1] = new_field_id
@@ -717,10 +668,8 @@ def update_query_part(
             if isinstance(old_field_id, int) and (
                 desc != "aggregation"
             ):  # todo: this ok?
-                new_field_id = find_field_destination(
-                    old_field_id=old_field_id,
-                    column_references=column_references,
-                    table_src2dst=table_src2dst,
+                new_field_id = table_equivalencies.find_field_destination(
+                    old_field_id=old_field_id
                 )
                 # awesomeness!
                 ob[1][1] = new_field_id
