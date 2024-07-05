@@ -3,7 +3,7 @@ def copy_card(self, source_card_name=None, source_card_id=None,
                 source_collection_name=None, source_collection_id=None,
                 destination_card_name=None, 
                 destination_collection_name=None, destination_collection_id=None,
-                postfix='', verbose=False):
+                postfix='', verbose=False, return_card=False):
     """
     Copy the card with the given name/id to the given destination collection. 
 
@@ -55,8 +55,7 @@ def copy_card(self, source_card_name=None, source_card_id=None,
     # Save as a new card
     res = self.create_card(custom_json=card_json, verbose=verbose, return_card=True)
 
-    # Return the id of the created card
-    return res['id']
+    return res if return_card else res['id']
 
 
 

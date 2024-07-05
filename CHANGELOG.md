@@ -1,3 +1,7 @@
+## 3.4.2
+### Changed
+- Added 'return_card' argument to the `copy_card` function.
+
 ## 3.4.1
 ### Changed
 - PR #54 (fixes a typo in the `clone_card` function)
