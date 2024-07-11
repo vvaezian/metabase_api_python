@@ -2,7 +2,6 @@
 Migrates a collection.
 """
 import argparse
-import ast
 import re
 import os
 
@@ -43,7 +42,6 @@ if __name__ == "__main__":
     parser.add_argument(
         "--db_target", required=True, type=int, help="id for database target"
     )
-    parser.add_argument("--tables", type=ast.literal_eval, help="table mapping")
     # parser.add_argument("--db", type=ast.literal_eval, help="table mapping")
     parser.add_argument(
         "--to_parent", required=True, type=int, help="target parent collection id"
@@ -82,15 +80,6 @@ if __name__ == "__main__":
     table_equivalencies: Src2DstEquivalencies = Src2DstEquivalencies(
         metabase_api=metabase_api, dst_bd_id=config["db_target"]
     )
-    if (config["tables"] is not None) and (len(config["tables"]) > 0):
-        _logger.warning(
-            "No need to specify a mapping for tables! This code resolves it automatically."
-        )
-        _logger.info(
-            f"Establishing {len(config['tables'])} pre-defined tables' dependencies..."
-        )
-        table_equivalencies.add(src2dst=config["tables"])
-
     # let's do it!
     # convert 'from' name to id
     src_collection_id = metabase_api.get_item_id(
