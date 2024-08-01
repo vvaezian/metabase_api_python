@@ -10,6 +10,7 @@ from metabase_api.metabase_api import Metabase_API
 from metabase_api.migration import migrate_collection
 from metabase_api.utility import logger
 from metabase_api.utility.db.tables import Src2DstEquivalencies
+from metabase_api.utility.translation import Language
 
 _logger = logging.getLogger(__name__)
 
@@ -51,6 +52,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--about", required=False, type=str, help="new dashboard 'about' section"
     )
+    parser.add_argument(
+        "--lang",
+        choices=[l.name for l in Language],
+        required=False,
+        default=Language.EN.name,
+    )
 
     args = parser.parse_args()
     config = vars(args)
@@ -83,9 +90,14 @@ if __name__ == "__main__":
     src_collection_id = metabase_api.get_item_id(
         item_type="collection", item_name=config["from"]
     )
+    # translating to a language other than English?
+    target_lang = Language[args.lang]
+    if target_lang != Language.EN:
+        _logger.info(f"Translating to {target_lang.name}")
     _logger.info(f"Starting migration of collection {src_collection_id}")
     migrate_collection(
         metabase_api=metabase_api,
+        lang=target_lang,
         source_collection_id=src_collection_id,
         db_target=config["db_target"],
         parent_collection_id=config["to_parent"],

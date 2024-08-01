@@ -14,7 +14,7 @@ dependencies:
   - importlib_metadata=6.0.0
   - importlib-metadata=6.0.0
   - requests=2.31.0
-  - pip=21.2.4
+#  - pip=21.2.4 # already defined in environment.yml
   - pip:
       - types-tqdm==4.65.0.1
       - coverage==7.3.2

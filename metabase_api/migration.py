@@ -3,17 +3,74 @@ from copy import deepcopy
 from typing import Optional, Any
 
 from metabase_api import Metabase_API
-from metabase_api.utility.db.columns import ColumnReferences
 from metabase_api.utility.db.tables import Src2DstEquivalencies
+from metabase_api.utility.translation import (
+    Language,
+    Translators,
+)
+
+MIGRATED_CARDS: list[int] = list()
 
 _logger = logging.getLogger(__name__)
 
 
-MIGRATED_CARDS: list[int] = list()
+def _translate_card(card_json: dict, lang: Language) -> dict:
+    """
+    Translates a card, on its totality.
+    Args:
+        card_json:
+
+    Returns:
+
+    """
+    for k, v in card_json.items():
+        if (k == "description") and (v is not None):
+            card_json[k] = Translators[lang].translate(v)
+        elif (k == "name") and (v is not None):
+            card_json[k] = Translators[lang].translate(v)
+        elif k == "visualization_settings":
+            viz_set = v
+            for k, v in viz_set.items():
+                if k.endswith("title_text"):
+                    viz_set[k] = Translators[lang].translate(v)
+                elif (k == "graph.metrics") or (k == "pie.metric"):
+                    _logger.debug(
+                        f"[visualization_settings] anything I have to do for '{k}'...? (value is '{v}')"
+                    )
+                elif k == "column_settings":
+                    cols_set = viz_set["column_settings"]
+                    for _, d in cols_set.items():
+                        for k, v in d.items():
+                            if k == "column_title":
+                                d[k] = Translators[lang].translate(v)
+                            else:
+                                _logger.debug(
+                                    f"[visualization_settings][column_settings] '{k}': I guess I do nothing? (value is '{v}')"
+                                )
+                elif k == "series_settings":
+                    series_set = viz_set["series_settings"]
+                    for _, d in series_set.items():
+                        for k, v in d.items():
+                            if k == "title":
+                                d[k] = Translators[lang].translate(v)
+                            else:
+                                _logger.debug(
+                                    f"[visualization_settings][series_settings] '{k}': I guess I do nothing? (value is '{v}')"
+                                )
+                elif k.endswith("column") or k.endswith("columns"):
+                    _logger.debug(
+                        f"[visualization_settings]['{k}']: accesses column names so I don't think we need to change anything (value is '{v}')"
+                    )
+                else:
+                    _logger.debug(
+                        f"[visualization_settings]['{k}'] is it possible there is nothing to do? (value is '{v}')"
+                    )
+    return card_json
 
 
 def migrate_card_by_id(
     card_id: int,
+    lang: Language,
     metabase_api: Metabase_API,
     db_target: int,
     transformations,
@@ -23,9 +80,10 @@ def migrate_card_by_id(
         _logger.debug(f"[already migrated card id '{card_id}']")
         return True
     _logger.info(f"Visiting card id '{card_id}'")
-    source_card = metabase_api.get(f"/api/card/{card_id}")
+    card_json = metabase_api.get(f"/api/card/{card_id}")
+    # translate to specific language
+    card_json = _translate_card(card_json, lang=lang)
     # update db and table id
-    card_json = source_card
     # db
     card_json["database_id"] = db_target
     card_json["dataset_query"]["database"] = db_target
@@ -67,6 +125,7 @@ def migrate_card_by_id(
         # if "source-table" in query_part:
         update_query_part(
             card_id=card_id,
+            lang=lang,
             query_part=query_part,
             table_equivalencies=table_equivalencies,
             cards_src2dst=transformations["cards"],
@@ -76,6 +135,7 @@ def migrate_card_by_id(
         )
     handle_card(
         card_json,
+        lang=lang,
         table_equivalencies=table_equivalencies,
         transformations=transformations,
         db_target=db_target,
@@ -89,6 +149,7 @@ def migrate_card_by_id(
 
 def migrate_card(
     item: dict,
+    lang: Language,
     metabase_api: Metabase_API,
     db_target: int,
     table_equivalencies: Src2DstEquivalencies,
@@ -101,6 +162,7 @@ def migrate_card(
     ), f"Trying to migrate a card that is NOT actually a card: it is a '{item['model']}'"
     return migrate_card_by_id(
         card_id=item["id"],
+        lang=lang,
         metabase_api=metabase_api,
         db_target=db_target,
         table_equivalencies=table_equivalencies,
@@ -115,6 +177,7 @@ def migrate_collection(
     parent_collection_id: int,
     destination_collection_name: str,
     table_equivalencies: Src2DstEquivalencies,
+    lang: Language,
     new_dashboard_description: Optional[str] = None,
     new_dashboard_name: Optional[str] = None,
 ):
@@ -184,6 +247,7 @@ def migrate_collection(
     card_items = [item for item in items if item["model"] == "card"]
     for item in card_items:
         r = migrate_card(
+            lang=lang,
             metabase_api=metabase_api,
             item=item,
             db_target=db_target,
@@ -202,89 +266,120 @@ def migrate_collection(
         )
     for item in dashboard_items:
         dashboard_id = item["id"]
-        _logger.info(f"Migrating dashboard {dashboard_id}...")
+        _logger.info(f"Obtaining details of dashboard {dashboard_id}...")
         dash = metabase_api.get(f"/api/dashboard/{dashboard_id}")
-        # parameters
-        parameters = dash.get("parameters", None)
-        if parameters is not None:
-            for params_dict in parameters:
-                if params_dict.get("values_source_type", "nothing") == "card":
-                    src_config = params_dict["values_source_config"]
-                    src_config["card_id"] = transformations["cards"][
-                        src_config["card_id"]
-                    ]
-                    if "value_field" in src_config:
-                        value_field = src_config["value_field"]
-                        if value_field[0] == "field":
-                            if isinstance(value_field[1], int):
-                                value_field[
-                                    1
-                                ] = table_equivalencies.find_field_destination(
-                                    old_field_id=value_field[1]
-                                )
-        # param values
-        param_values = dash["param_values"]
-        if param_values is not None:
-            for field_id_as_str, field_info in deepcopy(dash["param_values"]).items():
-                field_id = int(field_id_as_str)
-                new_field_id = table_equivalencies.find_field_destination(
-                    old_field_id=field_id
+        if dash["archived"]:
+            _logger.info(f"Dashboard {dashboard_id} is archived. Will migrate anyways.")
+        _logger.info(f"Migrating dashboard {dashboard_id}...")
+        # let's visit all of its parts - to translate or to update references
+        for k, v in dash.items():
+            if k == "description":
+                dash["description"] = Translators[lang].translate(dash["description"])
+            elif k == "tabs":
+                # tabs in dashboard
+                tabs = v
+                for a_tab in tabs:
+                    # let's translate the name
+                    a_tab["name"] = Translators[lang].translate(a_tab["name"])
+            elif k == "parameters":
+                parameters = v
+                for params_dict in parameters:
+                    # let's translate the name
+                    params_dict["name"] = Translators[lang].translate(
+                        params_dict["name"]
+                    )
+                    # and now let's update all references
+                    if params_dict.get("values_source_type", "nothing") == "card":
+                        src_config = params_dict["values_source_config"]
+                        src_config["card_id"] = transformations["cards"][
+                            src_config["card_id"]
+                        ]
+                        if "value_field" in src_config:
+                            value_field = src_config["value_field"]
+                            if value_field[0] == "field":
+                                if isinstance(value_field[1], int):
+                                    value_field[
+                                        1
+                                    ] = table_equivalencies.find_field_destination(
+                                        old_field_id=value_field[1]
+                                    )
+            elif k == "param_values":
+                param_values = v
+                if param_values is not None:
+                    for field_id_as_str, field_info in deepcopy(
+                        dash["param_values"]
+                    ).items():
+                        field_id = int(field_id_as_str)
+                        new_field_id = table_equivalencies.find_field_destination(
+                            old_field_id=field_id
+                        )
+                        new_field_id_as_str = str(new_field_id)
+                        param_values[new_field_id_as_str] = param_values.pop(
+                            field_id_as_str
+                        )
+                        param_values[new_field_id_as_str]["field_id"] = new_field_id
+            elif k == "param_fields":
+                # param fields
+                old_param_fields = deepcopy(dash["param_fields"])
+                if old_param_fields is not None:
+                    for field_id_as_str, field_info in old_param_fields.items():
+                        try:
+                            field_id = int(field_id_as_str)
+                            src_table_id = field_info["table_id"]
+                            field_name = table_equivalencies.get_src_table(
+                                table_id=src_table_id
+                            ).get_column_name(column_id=field_id)
+                            dst_table_id = table_equivalencies[src_table_id].unique_id
+                            new_field_id = table_equivalencies.get_dst_table(
+                                dst_table_id
+                            ).get_column_id(field_name)
+                            # ok. Let's now change:
+                            new_field_id_as_str = str(new_field_id)
+                            dash["param_fields"][new_field_id_as_str] = dash[
+                                "param_fields"
+                            ].pop(field_id_as_str)
+                            dash["param_fields"][new_field_id_as_str][
+                                "id"
+                            ] = new_field_id_as_str
+                            dash["param_fields"][new_field_id_as_str][
+                                "table_id"
+                            ] = dst_table_id
+                        except ValueError as ve:
+                            # apparently one of the param fields is not an int...?
+                            pass
+            elif k == "dashcards":
+                for card_json in dash["dashcards"]:
+                    handle_card(
+                        card_json,
+                        lang=lang,
+                        table_equivalencies=table_equivalencies,
+                        transformations=transformations,
+                        db_target=db_target,
+                    )
+            elif k == "name":
+                # change name, tag it, and go!
+                dash["name"] = (
+                    new_dashboard_name
+                    if new_dashboard_name is not None
+                    else dash["name"]
                 )
-                new_field_id_as_str = str(new_field_id)
-                param_values[new_field_id_as_str] = param_values.pop(field_id_as_str)
-                param_values[new_field_id_as_str]["field_id"] = new_field_id
-        # param fields
-        old_param_fields = deepcopy(dash["param_fields"])
-        if old_param_fields is not None:
-            for field_id_as_str, field_info in old_param_fields.items():
-                try:
-                    field_id = int(field_id_as_str)
-                    src_table_id = field_info["table_id"]
-                    field_name = table_equivalencies.get_src_table(
-                        table_id=src_table_id
-                    ).get_column_name(column_id=field_id)
-                    dst_table_id = table_equivalencies[src_table_id].unique_id
-                    new_field_id = table_equivalencies.get_dst_table(
-                        dst_table_id
-                    ).get_column_id(field_name)
-                    # ok. Let's now change:
-                    new_field_id_as_str = str(new_field_id)
-                    dash["param_fields"][new_field_id_as_str] = dash[
-                        "param_fields"
-                    ].pop(field_id_as_str)
-                    dash["param_fields"][new_field_id_as_str][
-                        "id"
-                    ] = new_field_id_as_str
-                    dash["param_fields"][new_field_id_as_str]["table_id"] = dst_table_id
-                except ValueError as ve:
-                    # apparently one of the param fields is not an int...?
-                    pass
-        for card_json in dash["dashcards"]:
-            handle_card(
-                card_json,
-                table_equivalencies=table_equivalencies,
-                transformations=transformations,
-                db_target=db_target,
-            )
-        # change name, tag it, and go!
-        dash["name"] = (
-            new_dashboard_name if new_dashboard_name is not None else dash["name"]
-        )
-        # change description
-        dash["description"] = (
-            new_dashboard_description
-            if new_dashboard_description is not None
-            else dash["description"]
-        )
-        r = metabase_api.put("/api/dashboard/{}".format(dashboard_id), json=dash)
-        assert (
-            r == 200
-        ), f"Problems updating dashboard '{dashboard_id}'; code {r}"  # sanity check
+            elif k == "description":
+                # change description
+                dash["description"] = (
+                    new_dashboard_description
+                    if new_dashboard_description is not None
+                    else dash["description"]
+                )
+        _logger.info(f"Using API to update dashboard '{dashboard_id}'...")
+        r = metabase_api.put(f"/api/dashboard/{dashboard_id}", json=dash)
+        # sanity check
+        assert r == 200, f"Problems updating dashboard '{dashboard_id}'; code {r}"
     _logger.info("Migration terminated")
 
 
 def handle_card(
     card_json,
+    lang: Language,
     table_equivalencies: Src2DstEquivalencies,
     transformations,
     db_target: int,
@@ -305,6 +400,7 @@ def handle_card(
     if "visualization_settings" in card_json:
         update_viz_settings(
             viz_settings=card_json["visualization_settings"],
+            lang=lang,
             table_equivalencies=table_equivalencies,
             transformations=transformations,
         )
@@ -319,46 +415,16 @@ def handle_card(
         if "database_id" in card:
             if card["database_id"] != db_target:
                 card["database_id"] = db_target
-        # if "result_metadata" in card:
-        #     if card["result_metadata"] is None:
-        #         print("watde!")
-        #         # raise RuntimeError("watde!")
-        #     else:
-        #         for md in card["result_metadata"]:
-        #             for md_key, md_value in md.items():
-        #                 if md_key == "field_ref":
-        #                     try:
-        #                         _v = _replace_field_info_refs(
-        #                             field_info=md_value,
-        #                             column_references=column_references,
-        #                             table_src2dst=table_src2dst,
-        #                         )
-        #                         md[md_key] = _v
-        #                     except Exception as e:
-        #                         print("AAAAAAAAH")
-        #                 elif md_key == "id":
-        #                     try:
-        #                         md["id"] = find_field_destination(
-        #                             old_field_id=md_value,
-        #                             column_references=column_references,
-        #                             table_src2dst=table_src2dst,
-        #                         )
-        #                     except Exception as e:
-        #                         print("AAAAAAAAH")
-        # # if "visualization_settings" in card_json["card"]:
-        # #     update_viz_settings(
-        # #         viz_settings=card_json["card"]["visualization_settings"],
-        # #         column_references=column_references,
-        # #         table_src2dst=table_src2dst,
-        # #         transformations=transformations,
-        # #     )
 
 
 def update_viz_settings(
     viz_settings: dict,
     table_equivalencies: Src2DstEquivalencies,
+    lang: Language,
     transformations,
 ):
+    if "text" in viz_settings:
+        viz_settings["text"] = Translators[lang].translate(viz_settings["text"])
     if "table.columns" in viz_settings:
         for table_column in viz_settings["table.columns"]:
             update_table_cols_info(
@@ -497,6 +563,7 @@ def _replace_field_info_refs(
 
 def update_query_part(
     card_id: int,
+    lang: Language,
     query_part: dict,  # todo: be more specific!
     metabase_api: Metabase_API,
     db_target: int,
@@ -538,6 +605,7 @@ def update_query_part(
             _logger.debug(f"=---- migrating referenced card '{new_card_id}'")
             migrate_card_by_id(
                 card_id=new_card_id,
+                lang=lang,
                 metabase_api=metabase_api,
                 db_target=db_target,
                 table_equivalencies=table_equivalencies,
@@ -552,6 +620,7 @@ def update_query_part(
     if "source-query" in query_part:
         query_part["source-query"] = update_query_part(
             card_id=card_id,
+            lang=lang,
             metabase_api=metabase_api,
             db_target=db_target,
             transformations=transformations,
