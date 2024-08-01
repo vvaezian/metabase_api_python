@@ -1,13 +1,10 @@
+import logging
 from copy import deepcopy
 from typing import Optional, Any
 
 from metabase_api import Metabase_API
-
-import logging
-
-from metabase_api.utility.db.tables import Src2DstEquivalencies
-
 from metabase_api.utility.db.columns import ColumnReferences
+from metabase_api.utility.db.tables import Src2DstEquivalencies
 
 _logger = logging.getLogger(__name__)
 
@@ -289,8 +286,6 @@ def migrate_collection(
 def handle_card(
     card_json,
     table_equivalencies: Src2DstEquivalencies,
-    #     column_references: dict[str, dict[int, ColumnReferences]],
-    # table_src2dst: dict[int, int],
     transformations,
     db_target: int,
 ):
