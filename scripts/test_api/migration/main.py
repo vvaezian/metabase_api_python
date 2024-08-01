@@ -2,16 +2,14 @@
 Migrates a collection.
 """
 import argparse
-import re
-import os
-
 import logging
+import os
+import re
 
 from metabase_api.metabase_api import Metabase_API
 from metabase_api.migration import migrate_collection
-
 from metabase_api.utility import logger
-from metabase_api.utility.db.tables import TableEquivalency, Table, Src2DstEquivalencies
+from metabase_api.utility.db.tables import Src2DstEquivalencies
 
 _logger = logging.getLogger(__name__)
 
