@@ -1,0 +1,105 @@
+# All terms we want translated
+# --------------------------- A
+"Average Procedure Cost":
+    FR: "Coût moyen de la procédure"
+"Avg. Captured Products":
+    FR: "Produits capturés (moyenne)"
+"Avg. Procedure Cost":
+    FR: "Coût moyen de la procédure"
+# --------------------------- C
+"Capture Analytics":
+    FR: "Analytiques de capture"
+"Captured Procedures":
+    FR: "Procédures Capturées"
+"Captured Procedure ID":
+    FR: "ID de la Procédure"
+"Captured Products":
+    FR: "Produits Captures"
+#"Category":
+#    FR: "Catégorie"
+#"Cost":
+#    FR: "Coût"
+# --------------------------- D
+"Date":
+    FR: "Date"
+"Department":
+    FR: "Département"
+"Departments":
+    FR: "Départements"
+# --------------------------- F
+"Floor":
+    FR: "Étage"
+# --------------------------- H
+"High Procedure Cost":
+    FR: "Coût Maximum de la Procedure"
+# --------------------------- I
+#"Implants":
+#    FR: "Implants"
+"Implant Quantity":
+    FR: "Nombre d'implants"
+"Implant Cost":
+    FR: "Coût des implants"
+# --------------------------- M
+"Manufacturer":
+    FR: "Fabricant"
+"Median Procedure Cost":
+    FR: "Coût Median de la Procedure"
+# --------------------------- N
+'NIH Description':
+    FR: "Description chez NIH"
+"Not Implants":
+    FR: "Non-Implants"
+# --------------------------- L
+"Low Procedure Cost":
+    FR: "Coût Minimal de la Procédure"
+"Location":
+    FR: "Localisation"
+# --------------------------- P
+#"Procedure Type":
+#    FR: "Type de la Procédure"
+#"Procedure Types":
+#    FR: "Types de Procédures"
+"Physician":
+    FR: "Docteur"
+"Physicians":
+    FR: "Docteurs"
+#"Procedure Cost":
+#    FR: "Coût de la Procédure"
+#"Product":
+#    FR: "Produit"
+#"Products":
+#    FR: "Produits"
+#"Procedure":
+#    FR: "Procédure"
+"Product ID":
+    FR: "ID du Produit"
+# --------------------------- Q
+#"Quantity":
+#    FR: "Quantité"
+# --------------------------- R
+"Room":
+    FR: "Chambre"
+"Rooms":
+    FR: "Chambres"
+# --------------------------- S
+"Service Line":
+    FR: "Groupe"
+"Service Lines":
+    FR: "Groupes"
+# --------------------------- T
+#"title":
+#    FR: "titre"
+"Total Procedure Cost":
+    FR: "Coût Total de la Procedure"
+"Total Cost":
+    FR: "Coût Total"
+# --------------------------- U
+"Unit Cost":
+    FR: "Coût Unitaire"
+"Unused Reason":
+    FR: "Raison pour non-utilisation"
+# --------------------------- W
+"Waste Category":
+    FR: "Catégorie du déchet"
+"Waste Details":
+    FR: "Détails du déchet"
