@@ -24,14 +24,15 @@ def _translate_card(card_json: dict, lang: Language) -> dict:
 
     """
     for k, v in card_json.items():
-        if (k == "description") and (v is not None):
-            card_json[k] = Translators[lang].translate(v)
-        elif (k == "name") and (v is not None):
-            card_json[k] = Translators[lang].translate(v)
+        if (k == "description") or (k == "name"):
+            if v is not None:
+                card_json[k] = Translators[lang].translate(v)
         elif k == "visualization_settings":
             viz_set = v
             for k, v in viz_set.items():
                 if k.endswith("title_text"):
+                    viz_set[k] = Translators[lang].translate(v)
+                elif "text" in k:
                     viz_set[k] = Translators[lang].translate(v)
                 elif (k == "graph.metrics") or (k == "pie.metric"):
                     _logger.debug(
@@ -65,6 +66,12 @@ def _translate_card(card_json: dict, lang: Language) -> dict:
                     _logger.debug(
                         f"[visualization_settings]['{k}'] is it possible there is nothing to do? (value is '{v}')"
                     )
+        # elif k == 'parameter_mappings':
+        #     print("lala")
+        # elif k == 'parameters':
+        #     print("lala")
+        # else:
+        #     print(f"[{k}] Anything else to translate?")
     return card_json
 
 
@@ -82,7 +89,7 @@ def migrate_card_by_id(
     _logger.info(f"Visiting card id '{card_id}'")
     card_json = metabase_api.get(f"/api/card/{card_id}")
     # translate to specific language
-    card_json = _translate_card(card_json, lang=lang)
+    # card_json = _translate_card(card_json, lang=lang)
     # update db and table id
     # db
     card_json["database_id"] = db_target
@@ -384,6 +391,8 @@ def handle_card(
     transformations,
     db_target: int,
 ):
+    # todo: this...?
+    _translate_card(card_json, lang=lang)
     # mappings to filters
     for mapping in card_json["parameter_mappings"]:
         if "card_id" in mapping:
@@ -425,6 +434,16 @@ def update_viz_settings(
 ):
     if "text" in viz_settings:
         viz_settings["text"] = Translators[lang].translate(viz_settings["text"])
+    if "graph.x_axis.title_text" in viz_settings:
+        viz_settings["graph.x_axis.title_text"] = Translators[lang].translate(
+            viz_settings["graph.x_axis.title_text"]
+        )
+    if "series_settings" in viz_settings:
+        ser_sets = viz_settings["series_settings"]
+        for _, d in ser_sets.items():
+            for k, v in d.items():
+                if k == "title":
+                    d[k] = Translators[lang].translate(v)
     if "table.columns" in viz_settings:
         for table_column in viz_settings["table.columns"]:
             update_table_cols_info(

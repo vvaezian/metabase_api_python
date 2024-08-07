@@ -12,7 +12,7 @@ def setup(
     Properly setups a logger. Writes INFO+ to stdout and DEBUG to a file
     Args:
         only_to_stdout:
-        hint_opt: a certain hint used tocreate the DEBUG file.
+        hint_opt: a certain hint used to create the DEBUG file.
 
     Returns: Optionally (if only_to_stdout == False): a Path, pointing to the DEBUG file.
 
@@ -42,6 +42,8 @@ def setup(
         # because they are VERY noisy
         logging.getLogger("requests").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
+        logging.getLogger("hpack").setLevel(logging.WARNING)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
         # add the handler to the root logger
         logging.getLogger("").addHandler(stdout_handler)
         return log_path

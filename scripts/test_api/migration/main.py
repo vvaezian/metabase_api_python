@@ -25,7 +25,7 @@ def email_type(value):
 
 
 if __name__ == "__main__":
-    logger.setup()
+    logger.setup(hint_opt="migration_api")
     _logger = logging.getLogger(__name__)
 
     parser = argparse.ArgumentParser(

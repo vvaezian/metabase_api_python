@@ -13,8 +13,8 @@
     FR: "Procédures Capturées"
 "Captured Procedure ID":
     FR: "ID de la Procédure"
-"Captured Products":
-    FR: "Produits Captures"
+#"Captured Products":
+#    FR: "Produits Captures"
 #"Category":
 #    FR: "Catégorie"
 #"Cost":
@@ -67,12 +67,14 @@
 #    FR: "Coût de la Procédure"
 #"Product":
 #    FR: "Produit"
-#"Products":
-#    FR: "Produits"
+"Products":
+    FR: "Produits"
 #"Procedure":
 #    FR: "Procédure"
 "Product ID":
     FR: "ID du Produit"
+"Products Not in the Hospital Database":
+    FR: "Produits absents des bases de données de l'hôpital"
 # --------------------------- Q
 #"Quantity":
 #    FR: "Quantité"
