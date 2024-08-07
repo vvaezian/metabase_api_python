@@ -1,7 +1,9 @@
 import logging
 import os
+import time
 from enum import Enum, auto
 from pathlib import Path
+from typing import Callable
 
 import yaml
 from googletrans import Translator as GoogleTranslator
@@ -23,6 +25,12 @@ class Language(Enum):
     FR = auto()
 
 
+def _start_google_translator() -> GoogleTranslator:
+    _google_translator: GoogleTranslator = GoogleTranslator()
+    _google_translator.raise_Exception = True
+    return _google_translator
+
+
 class Translator:
     """Translator from English."""
 
@@ -33,22 +41,56 @@ class Translator:
         self.on_miss = on_miss
         self.case_sensitive = case_sensitive
         _logger.info("Firing up Google Translator")
-        self._google_translator: GoogleTranslator = GoogleTranslator()
-        # Reads procedure's definition from its YAML file
+        self._google_translator: GoogleTranslator = _start_google_translator()
+        # Reads translation terms from a YAML file
         with open(TRANSLATION_CONFIG_LOC / "translation_from_en.yml", "r") as stream:
             self._translation_dict = yaml.safe_load(stream)
         if not self.case_sensitive:
             self._translation_dict = {
                 k.lower(): v for (k, v) in self._translation_dict.items()
             }
+        # since we know the specific language, let's get rid of a level of this dict:
+        _logger.info(f"Flattening translation dict for {self.to_lang.name}")
+        self._translation_dict = {
+            k: v[self.to_lang.name]
+            for (k, v) in self._translation_dict.items()
+            if self.to_lang.name in v
+        }
 
     def _use_google_translate(self, s: str) -> str:
-        r = self._google_translator.translate(s, dest=self.to_lang.name)
-        t = r.text
-        _logger.debug(
-            f"Using Google Translate to decipher '{s}' -> '{t}'; updating dictionary."
+        def _with_retry(f: Callable[[str], str], s: str) -> str:
+            try:
+                r = f(s)
+            except Exception as e:
+                # let's wait and re-try
+                _logger.warning("Google Translate needs to re-try... sleeping...")
+                # self._google_translator = _start_google_translator()
+                time.sleep(5)  # in seconds
+                _logger.warning("...back!")
+                r = f(s)
+            return r
+
+        _detected_lang = _with_retry(
+            f=lambda p: self._google_translator.detect(p).lang, s=s
         )
-        self._translation_dict[s] = {self.to_lang.name: t}
+        if _detected_lang != "en":
+            # weird, what I've been asked to translate is not in English. Is it already translated?
+            if _detected_lang.lower() == self.to_lang.name.lower():
+                _logger.warning(f"'{s}' is already on language '{self.to_lang.name}'")
+                t = s
+            else:
+                msg = f"Sentence '{s}' does not seem to be in English nor the target language ({self.to_lang.name})"
+                msg += f", so I can't translate it"
+                raise RuntimeError(msg)
+        else:
+            t = _with_retry(
+                f=lambda p: self._google_translator.translate(
+                    p, dest=self.to_lang.name
+                ).text,
+                s=s,
+            )
+            _logger.debug(f"[Google Translate] '{s}' -> '{t}'; updating dictionary...")
+            self._translation_dict[s] = t
         return t
 
     def translate(self, sentence: str) -> str:
@@ -61,31 +103,47 @@ class Translator:
         lblanks = len(sentence) - len(sentence.lstrip())
         rblanks = len(sentence) - len(sentence.rstrip())
         sentence = sentence.strip()
+        t: str
         if len(sentence) == 0:
-            return sentence
-        case_sentence = sentence.lower() if not self.case_sensitive else sentence
-        if case_sentence not in self._translation_dict:
-            _err_msg = f"No translation found for '{sentence}'"
-            if self.on_miss == TranslationPolicyOnMiss.FAIL:
-                _logger.error(_err_msg)
-                raise RuntimeError(_err_msg)
-            elif self.on_miss == TranslationPolicyOnMiss.MIRROR:
-                _logger.debug(f"{_err_msg}; returning it as policy is '{self.on_miss}'")
-                t = sentence
-            elif self.on_miss == TranslationPolicyOnMiss.FALLBACK_ON_GOOGLE_TRANSLATE:
-                t = self._use_google_translate(sentence)
-            else:
-                raise RuntimeError(
-                    f"Internal: I don't know what to do with translation policy {self.on_miss}"
-                )
+            t = sentence
         else:
-            if self.to_lang.name not in self._translation_dict[case_sentence]:
-                raise ValueError(f"No {self.to_lang.name} translation for '{sentence}'")
-            t = self._translation_dict[case_sentence][self.to_lang.name]
+            # by any chance - am I trying to translate something I already translated...?
+            if sentence in self._translation_dict.values():
+                _logger.debug(
+                    f"Asked to translate '{sentence}', which is in fact a translated term. Ignoring it :shrug:"
+                )
+                t = sentence
+            else:
+                case_sentence = (
+                    sentence.lower() if not self.case_sensitive else sentence
+                )
+                if case_sentence not in self._translation_dict:
+                    _err_msg = f"No translation found for '{sentence}'"
+                    if self.on_miss == TranslationPolicyOnMiss.FAIL:
+                        _logger.error(_err_msg)
+                        raise RuntimeError(_err_msg)
+                    elif self.on_miss == TranslationPolicyOnMiss.MIRROR:
+                        _logger.debug(
+                            f"{_err_msg}; returning it as policy is '{self.on_miss}'"
+                        )
+                        t = sentence
+                    elif (
+                        self.on_miss
+                        == TranslationPolicyOnMiss.FALLBACK_ON_GOOGLE_TRANSLATE
+                    ):
+                        t = self._use_google_translate(sentence)
+                    else:
+                        raise RuntimeError(
+                            f"Internal: I don't know what to do with translation policy {self.on_miss}"
+                        )
+                else:
+                    t = self._translation_dict[case_sentence]
         # let's re-add the white spaces
         return " " * lblanks + t + " " * rblanks
 
 
+"""Structure with a translator for each language we handle."""
+_logger.info("Seeding translator for all languages...")
 Translators: dict[Language, Translator] = {
     lang: Translator(
         to=lang,
@@ -94,18 +152,3 @@ Translators: dict[Language, Translator] = {
     )
     for lang in Language
 }
-
-#
-# Translators: dict[Language, Translator] = {
-#     Language.FR: Translator(
-#         to=Language.FR,
-#         on_miss=TranslationPolicyOnMiss.FALLBACK_ON_GOOGLE_TRANSLATE,
-#         case_sensitive=False,
-#     ),
-#     Language.EN: Translator(
-#         to=Language.EN,
-#         on_miss=TranslationPolicyOnMiss.FALLBACK_ON_GOOGLE_TRANSLATE,
-#         case_sensitive=False,
-#     )
-#
-# }
