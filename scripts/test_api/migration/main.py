@@ -39,7 +39,7 @@ if __name__ == "__main__":
         "-f", "--from", required=True, type=str, help="collection name to migrate"
     )
     parser.add_argument(
-        "--db_target", required=True, type=int, help="id for database target"
+        "--db_target", required=True, type=str, help="name of target database"
     )
     # parser.add_argument("--db", type=ast.literal_eval, help="table mapping")
     parser.add_argument(
@@ -82,10 +82,14 @@ if __name__ == "__main__":
     metabase_api = Metabase_API(
         "https://assistiq.metabaseapp.com", email=config["user"], password=user_passwd
     )
-    table_equivalencies: Src2DstEquivalencies = Src2DstEquivalencies(
-        metabase_api=metabase_api, dst_bd_id=config["db_target"]
-    )
     # let's do it!
+    # convert 'db_target' name to id
+    db_target_id = metabase_api.get_item_id(
+        item_type="database", item_name=config["db_target"]
+    )
+    table_equivalencies: Src2DstEquivalencies = Src2DstEquivalencies(
+        metabase_api=metabase_api, dst_bd_id=db_target_id
+    )
     # convert 'from' name to id
     src_collection_id = metabase_api.get_item_id(
         item_type="collection", item_name=config["from"]
@@ -99,7 +103,7 @@ if __name__ == "__main__":
         metabase_api=metabase_api,
         lang=target_lang,
         source_collection_id=src_collection_id,
-        db_target=config["db_target"],
+        db_target=db_target_id,
         parent_collection_id=config["to_parent"],
         destination_collection_name=config["to"],
         new_dashboard_description=config["about"],
