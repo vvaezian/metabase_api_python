@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import Optional, Any
 
 from metabase_api import Metabase_API
-from metabase_api.utility.db.tables import Src2DstEquivalencies
+from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.translation import (
     Language,
     Translators,
@@ -81,7 +81,7 @@ def migrate_card_by_id(
     metabase_api: Metabase_API,
     db_target: int,
     transformations,
-    table_equivalencies: Src2DstEquivalencies,
+    table_equivalencies: TablesEquivalencies,
 ) -> bool:
     if card_id in MIGRATED_CARDS:
         _logger.debug(f"[already migrated card id '{card_id}']")
@@ -159,7 +159,7 @@ def migrate_card(
     lang: Language,
     metabase_api: Metabase_API,
     db_target: int,
-    table_equivalencies: Src2DstEquivalencies,
+    table_equivalencies: TablesEquivalencies,
     # column_references: dict[str, dict[int, ColumnReferences]],
     transformations,
     # table_src2dst: Optional[dict[int, int]] = None,
@@ -183,7 +183,7 @@ def migrate_collection(
     db_target: int,
     parent_collection_id: int,
     destination_collection_name: str,
-    table_equivalencies: Src2DstEquivalencies,
+    table_equivalencies: TablesEquivalencies,
     lang: Language,
     new_dashboard_description: Optional[str] = None,
     new_dashboard_name: Optional[str] = None,
@@ -373,7 +373,7 @@ def migrate_collection(
 def handle_card(
     card_json,
     lang: Language,
-    table_equivalencies: Src2DstEquivalencies,
+    table_equivalencies: TablesEquivalencies,
     transformations,
     db_target: int,
 ):
@@ -414,7 +414,7 @@ def handle_card(
 
 def update_viz_settings(
     viz_settings: dict,
-    table_equivalencies: Src2DstEquivalencies,
+    table_equivalencies: TablesEquivalencies,
     lang: Language,
     transformations,
 ):
@@ -470,7 +470,7 @@ def update_viz_settings(
 
 def handle_click_behavior(
     click_behavior: dict,
-    table_equivalencies: Src2DstEquivalencies,
+    table_equivalencies: TablesEquivalencies,
     transformations,
 ):
     if "targetId" in click_behavior:
@@ -509,7 +509,7 @@ def handle_click_behavior(
 
 def update_table_cols_info(
     table_column: dict,
-    table_equivalencies: Src2DstEquivalencies,
+    table_equivalencies: TablesEquivalencies,
 ) -> dict:
     for key, value in table_column.items():
         if key == "fieldRef":
@@ -545,7 +545,7 @@ def update_table_cols_info(
 
 def _replace_field_info_refs(
     field_info: list,
-    table_equivalencies: Src2DstEquivalencies,
+    table_equivalencies: TablesEquivalencies,
 ) -> list:
     if field_info[0] == "field":
         # reference to a table's column. Replace it.
@@ -574,7 +574,7 @@ def update_query_part(
     db_target: int,
     transformations,
     cards_src2dst: dict[int, int],  # transformations['cards']
-    table_equivalencies: Src2DstEquivalencies,
+    table_equivalencies: TablesEquivalencies,
 ) -> tuple[dict, list[int]]:  # todo: be more specific!
     """change query."""
 

@@ -9,7 +9,7 @@ import re
 from metabase_api.metabase_api import Metabase_API
 from metabase_api.migration import migrate_collection
 from metabase_api.utility import logger
-from metabase_api.utility.db.tables import Src2DstEquivalencies
+from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.translation import Language
 
 _logger = logging.getLogger(__name__)
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     db_target_id = metabase_api.get_item_id(
         item_type="database", item_name=config["db_target"]
     )
-    table_equivalencies: Src2DstEquivalencies = Src2DstEquivalencies(
+    table_equivalencies: TablesEquivalencies = TablesEquivalencies(
         metabase_api=metabase_api, dst_bd_id=db_target_id
     )
     # convert 'from' name to id

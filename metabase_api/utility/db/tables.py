@@ -1,9 +1,8 @@
+import logging
 from dataclasses import dataclass, field
 
 from metabase_api import Metabase_API
 from metabase_api.utility.db.columns import ColumnReferences
-
-import logging
 
 _logger = logging.getLogger(__name__)
 
@@ -65,45 +64,9 @@ class Table:
         return f"[db: '{self.db_name}' (id:{self.db_id})] Table '{self.name}' (id:{self.unique_id})"
 
 
-class TableEquivalency:
-    def __init__(self, tables: set[Table]):
-        db_ids = {t.db_id for t in tables}
-        assert len(db_ids) == len(
-            tables
-        ), f"There are {len(tables)} but only {len(db_ids)} (meaning more than 1 table on a database)"
-        self.tables = tables
-
-
-# @dataclass
-# class TableEquivalencies:
-#     """A bunch of equivalencies."""
-#
-#     equivalencies: list[TableEquivalency] = field(default_factory=list)
-#
-#     def add(self, metabase_api: Metabase_API, equiv_dict: dict[int, int]):
-#         for table_src_id, table_dst_id in equiv_dict:
-#             table_src = Table.from_id(metabase_api=metabase_api, table_id=table_src_id)
-#             table_dst = Table.from_id(metabase_api=metabase_api, table_id=table_dst_id)
-#             self.equivalencies.append(TableEquivalency(tables={table_src, table_dst}))
-#
-#     def __getitem__(self, table_id: int) -> set[Table]:
-#         """All tables equivalent to the one mentioned. ValueError if table does not exist."""
-#         for equiv in self.equivalencies:
-#             matching_tables = [t for t in equiv.tables if t.table_id == table_id]
-#             if len(matching_tables) > 1:
-#                 raise RuntimeError(f"how come?? {table_id} appears more than ONE time in this equiv??")
-#             if matching_tables == 1:
-#                 # found it!
-#                 r = copy(equiv.tables)
-#                 r.remove(matching_tables[0])
-#                 return r
-#         # did not find any table matching that id
-#         raise ValueError(f"I don't know of any table with id '{table_id}'")
-
-
 @dataclass
-class Src2DstEquivalencies:
-    """A bunch of equivalencies.
+class TablesEquivalencies:
+    """A bunch of equivalencies between tables.
     We explicitly enforce that the _destination_ bd is only ONE
     (ie, the equivalencies can not refer to different target databases).
     We don't explicitly put any restriction on _sources_
@@ -253,26 +216,3 @@ class Src2DstEquivalencies:
             return table_dst.get_column_id(column_name=column_name)
         # if I got here it's because I couldn't find the field anywhere!
         raise ValueError(f"Field '{old_field_id}' does not appear in any source table.")
-
-
-# # ---------------------------
-#
-# class Equivalencies:
-#     """Equivalencies between tables on different databases."""
-#
-#     def __init__(self, table_src2dst: Optional[dict[int, int]] = None):
-#         self.table_src2dst: dict[int, int] = table_src2dst if table_src2dst is not None else dict()
-#
-#     def __getitem__(self, src_table_id: int):
-#         if src_table_id not in self.table_src2dst:
-#             self.table_src2dst[src_table_id] = self.resolve(src_table_id=src_table_id, src_db_id=, dst_db_id=)
-#         return self.table_src2dst[src_table_id]
-#
-#     def resolve(self, src_table_id: int, src_db_id: int, dst_db_id: int) -> int:
-#         """Resolves a table if from a certain db to another db. Raises ValueError if impossible."""
-#         raise NotImplementedError("to do")
-#
-#     @property
-#     def references(self) -> set[int]:
-#         """Returns ids of all tables referenced here."""
-#         return set(self.table_src2dst.values())
