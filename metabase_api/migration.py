@@ -200,20 +200,6 @@ def migrate_collection(
     _logger.info(
         f"parent collection for target=id:{parent_collection_id}, name: '{parent_collection_name}'"
     )
-    # if the destination collection already exists, fail
-    _logger.debug(
-        f"Checking that the destination collection '{destination_collection_name}' doesn't already exist..."
-    )
-    try:
-        _ = metabase_api.get_item_id(
-            item_type="collection",
-            item_name=destination_collection_name,
-            collection_name=destination_collection_name,
-        )
-        raise RuntimeError(f"Collection '{destination_collection_name}' exists")
-    except ValueError as ve:
-        # if I am here it's because the collection doesn't exist - which is exactly what I want
-        pass
     # all good
     _logger.debug(
         f"ok. Let's now copy {source_collection_id} as a kid of {parent_collection_id}..."

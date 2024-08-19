@@ -98,6 +98,21 @@ if __name__ == "__main__":
     target_lang = Language[args.lang]
     if target_lang != Language.EN:
         _logger.info(f"Translating to {target_lang.name}")
+    destination_collection_name = config["to"]
+    # if the destination collection already exists, fail
+    _logger.debug(
+        f"Checking that the destination collection '{destination_collection_name}' doesn't already exist..."
+    )
+    try:
+        _ = metabase_api.get_item_id(
+            item_type="collection",
+            item_name=destination_collection_name,
+            collection_name=destination_collection_name,
+        )
+        raise RuntimeError(f"Collection '{destination_collection_name}' exists")
+    except ValueError as ve:
+        # if I am here it's because the collection doesn't exist - which is exactly what I want
+        pass
     _logger.info(f"Starting migration of collection {src_collection_id}")
     migrate_collection(
         metabase_api=metabase_api,
@@ -105,7 +120,7 @@ if __name__ == "__main__":
         source_collection_id=src_collection_id,
         db_target=db_target_id,
         parent_collection_id=config["to_parent"],
-        destination_collection_name=config["to"],
+        destination_collection_name=destination_collection_name,
         new_dashboard_description=config["about"],
         new_dashboard_name=config["name"],
         table_equivalencies=table_equivalencies,
