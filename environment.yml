@@ -8,6 +8,7 @@ dependencies:
   - pandas=1.4.4
   - numpy=1.22.3
   - requests=2.31.0
+  - python-fastjsonschema=2.16.2
   - pip=21.2.4
   - pip:
       - googletrans==4.0.0rc1
