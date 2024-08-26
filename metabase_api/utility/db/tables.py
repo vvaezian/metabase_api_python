@@ -2,6 +2,7 @@ import logging
 from dataclasses import dataclass, field
 
 from metabase_api import Metabase_API
+from metabase_api._helper_methods import ItemType
 from metabase_api.utility.db.columns import ColumnReferences
 
 _logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class Table:
     ) -> "Table":
         _logger.debug(f"Fetching table {table_name} in db {db_id}")
         table_id = metabase_api.get_item_id(
-            item_type="table", item_name=table_name, db_id=db_id
+            item_type=ItemType.TABLE, item_name=table_name, db_id=db_id
         )
         return Table.from_id(metabase_api=metabase_api, table_id=table_id)
 

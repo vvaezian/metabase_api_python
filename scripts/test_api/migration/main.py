@@ -7,6 +7,7 @@ import os
 import re
 from pathlib import Path
 
+from metabase_api._helper_methods import ItemType
 from metabase_api.metabase_api import Metabase_API
 from metabase_api.migration.migration_main import migrate_collection
 from metabase_api.utility import logger
@@ -93,14 +94,14 @@ if __name__ == "__main__":
     # let's do it!
     # convert 'db_target' name to id
     db_target_id = metabase_api.get_item_id(
-        item_type="database", item_name=config["db_target"]
+        item_type=ItemType.DATABASE, item_name=config["db_target"]
     )
     table_equivalencies: TablesEquivalencies = TablesEquivalencies(
         metabase_api=metabase_api, dst_bd_id=db_target_id
     )
     # convert 'from' name to id
     src_collection_id = metabase_api.get_item_id(
-        item_type="collection", item_name=config["from"]
+        item_type=ItemType.COLLECTION, item_name=config["from"]
     )
     destination_collection_name = config["to"]
     # if the destination collection already exists, fail
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     )
     try:
         _ = metabase_api.get_item_id(
-            item_type="collection",
+            item_type=ItemType.COLLECTION,
             item_name=destination_collection_name,
             collection_name=destination_collection_name,
         )

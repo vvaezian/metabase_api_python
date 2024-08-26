@@ -1,3 +1,4 @@
+from metabase_api._helper_methods import ItemType
 from metabase_api.metabase_api import Metabase_API
 import datetime
 import unittest
@@ -78,36 +79,36 @@ class Metabase_API_Test(unittest.TestCase):
 
     def test_get_item_id(self):
         # database
-        db_id = mb.get_item_id("database", "test_db")
+        db_id = mb.get_item_id(ItemType.DATABASE, "test_db")
         self.assertEqual(db_id, 2)
 
         # table
-        table_id = mb.get_item_id("table", "test_table")
+        table_id = mb.get_item_id(ItemType.TABLE, "test_table")
         self.assertEqual(table_id, 9)
 
         # card
-        card_id = mb.get_item_id("card", "test_card")
+        card_id = mb.get_item_id(ItemType.CARD, "test_card")
         self.assertEqual(card_id, 1)
 
         # collection
-        collection_id = mb.get_item_id("collection", "test_collection")
+        collection_id = mb.get_item_id(ItemType.COLLECTION, "test_collection")
         self.assertEqual(collection_id, 2)
 
         with self.assertRaises(ValueError) as error:
-            mb.get_item_id("collection", "test_collection_dup")
+            mb.get_item_id(ItemType.COLLECTION, "test_collection_dup")
         self.assertEqual(
             str(error.exception),
             'There is more than one collection with the name "test_collection_dup"',
         )
 
         with self.assertRaises(ValueError) as error:
-            mb.get_item_id("collection", "xyz")
+            mb.get_item_id(ItemType.COLLECTION, "xyz")
         self.assertEqual(
             str(error.exception), 'There is no collection with the name "xyz"'
         )
 
         # dashboard
-        dashboard_id = mb.get_item_id("dashboard", "test_dashboard")
+        dashboard_id = mb.get_item_id(ItemType.DASHBOARD, "test_dashboard")
         self.assertEqual(dashboard_id, 1)
 
     def test_get_db_id_from_table_id(self):
@@ -237,7 +238,7 @@ class Metabase_API_Test(unittest.TestCase):
             postfix="_dup_deep_{}".format(t),
         )
         new_collection_id = mb.get_item_id(
-            "collection", "test_dashboard_dup_deep_{}'s cards".format(t)
+            ItemType.COLLECTION, "test_dashboard_dup_deep_{}'s cards".format(t)
         )
 
         # add to cleanup list
@@ -254,7 +255,7 @@ class Metabase_API_Test(unittest.TestCase):
             destination_collection_name="test_copy_collection_{}".format(t),
         )
         new_collection_id = mb.get_item_id(
-            "collection", "test_copy_collection_{}".format(t)
+            ItemType.COLLECTION, "test_copy_collection_{}".format(t)
         )
 
         # add to cleanup list
