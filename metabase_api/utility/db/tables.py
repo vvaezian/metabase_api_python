@@ -27,6 +27,7 @@ class Table:
             item_type="table", item_id=self.unique_id
         )
         self.column_references = column_references
+        _logger.debug(f"Registered {str(self)}")
 
     @classmethod
     def from_id(cls, metabase_api: Metabase_API, table_id: int) -> "Table":
@@ -159,28 +160,33 @@ class TablesEquivalencies:
             table_src = Table.from_id(
                 metabase_api=self.metabase_api, table_id=table_src_id
             )
-            table_src_name = table_src.name
             # get this id from 'column name' above AND target db id
-            table_dst_id = Table.from_name_and_db(
-                metabase_api=self.metabase_api,
-                table_name=table_src_name,
-                db_id=self.dst_bd_id,
-            ).unique_id
-            # is table_dst_id already mentioned as a SRC?
-            d = {
-                t_src.unique_id: t_dst
-                for (t_src, t_dst) in self._src2dst.items()
-                if t_src.unique_id == table_dst_id
-            }
-            if len(d) > 0:
-                raise ValueError(
-                    f"Resolving src table {table_src_id}: table {table_dst_id} is already mentioned as a source - so it can't be a destination also."
+            # -- special case: dst bd is the same as the source db.
+            if table_src.db_id == self.dst_bd_id:
+                # -- In that case the solution is pretty simple:
+                table_dst = table_src
+            else:
+                # -- otherwise let's fetch it
+                table_dst_id = Table.from_name_and_db(
+                    metabase_api=self.metabase_api,
+                    table_name=table_src.name,
+                    db_id=self.dst_bd_id,
+                ).unique_id
+                # is table_dst_id already mentioned as a SRC?
+                d = {
+                    t_src.unique_id: t_dst
+                    for (t_src, t_dst) in self._src2dst.items()
+                    if t_src.unique_id == table_dst_id
+                }
+                if len(d) > 0:
+                    raise ValueError(
+                        f"Resolving src table {table_src_id}: table {table_dst_id} is already mentioned as a source - so it can't be a destination also."
+                    )
+                table_dst = Table.from_id(
+                    metabase_api=self.metabase_api, table_id=table_dst_id
                 )
-            table_dst = Table.from_id(
-                metabase_api=self.metabase_api, table_id=table_dst_id
-            )
             _logger.debug(
-                f"Recording that table {table_src_id} (db: {table_src.db_id}) is equivalent to {table_dst_id} (db: {table_dst.db_id})"
+                f"Recording that table {str(table_src)} is equivalent to {str(table_dst)}"
             )
             self._src2dst[table_src] = table_dst
             return True
@@ -204,15 +210,33 @@ class TablesEquivalencies:
             )
         return d[table_id]
 
-    def find_field_destination(self, old_field_id: int) -> int:
-        """Looking for a field equivalence, but I don't know from what table it came from."""
+    def column_equivalent_and_details_for(
+        self, column_id: int
+    ) -> tuple[int, Table, Table]:
+        """
+        Given a column id (supposedly from a 'src' table), finds the column id on a 'target' table.
+        Also returns the src/target tables.
+        """
+        if len(self._src2dst) == 0:
+            raise ValueError("No tables have been defined as equivalent.")
         for table_src, table_dst in self._src2dst.items():
             try:
-                column_name = table_src.get_column_name(column_id=old_field_id)
+                column_name = table_src.get_column_name(column_id=column_id)
             except ValueError:
                 # no problemo - column is not on this table. Carry on...
                 continue
             # found it! (if I am here I didn't get short-circuited by the 'continue' above
-            return table_dst.get_column_id(column_name=column_name)
+            return (
+                table_dst.get_column_id(column_name=column_name),
+                table_src,
+                table_dst,
+            )
         # if I got here it's because I couldn't find the field anywhere!
-        raise ValueError(f"Field '{old_field_id}' does not appear in any source table.")
+        raise ValueError(f"Field '{column_id}' does not appear in any source table.")
+
+    def column_equivalent_for(self, column_id: int) -> int:
+        """Looking for a column equivalence, but I don't know from what table it came from."""
+        target_column, t_src, t_dst = self.column_equivalent_and_details_for(
+            column_id=column_id
+        )
+        return target_column

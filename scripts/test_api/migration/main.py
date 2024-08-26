@@ -5,12 +5,14 @@ import argparse
 import logging
 import os
 import re
+from pathlib import Path
 
 from metabase_api.metabase_api import Metabase_API
-from metabase_api.migration import migrate_collection
+from metabase_api.migration.migration_main import migrate_collection
 from metabase_api.utility import logger
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.translation import Language
+from metabase_api.utility.options import Options
 
 _logger = logging.getLogger(__name__)
 
@@ -58,9 +60,21 @@ if __name__ == "__main__":
         required=False,
         default=Language.EN.name,
     )
+    parser.add_argument(
+        "--personalization",
+        "-p",
+        required=False,
+        type=Path,
+        help="File (json) with personalization options",
+    )
 
     args = parser.parse_args()
     config = vars(args)
+
+    # did I just get personalization options?
+    perso_options: Options = Options(fields_replacements=dict())
+    if config["personalization"] is not None:
+        perso_options = Options.from_json_file(p=Path(config["personalization"]))
 
     # if user's email wasn't specified, I need to find it as an env variable
     if not config["user"]:
@@ -78,7 +92,7 @@ if __name__ == "__main__":
         _logger.info(
             f"Read of passwd for {config['user']} from env variable METABASE_PASSWD"
         )
-    _logger.info(f"Turning on metabase API...")
+    _logger.info(f"Turning metabase API on...")
     metabase_api = Metabase_API(
         "https://assistiq.metabaseapp.com", email=config["user"], password=user_passwd
     )
@@ -116,6 +130,7 @@ if __name__ == "__main__":
     _logger.info(f"Starting migration of collection {src_collection_id}")
     migrate_collection(
         metabase_api=metabase_api,
+        personalization_options=perso_options,
         lang=target_lang,
         source_collection_id=src_collection_id,
         db_target=db_target_id,
