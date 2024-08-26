@@ -7,6 +7,11 @@
   "properties": {
     "fields_replacements": {
       "$ref": "#/definitions/fields_replacements"
+    },
+    "language": {
+      "type": "string",
+      "description": "Language of resulting dashboard",
+      "minLength": 2
     }
   },
   "definitions": {
@@ -16,6 +21,8 @@
     }
   },
   "required": [
-    "fields_replacements"
-  ]
+    "fields_replacements",
+    "language"
+  ],
+  "additionalProperties": false
 }

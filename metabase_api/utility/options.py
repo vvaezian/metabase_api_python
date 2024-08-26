@@ -8,6 +8,7 @@ from typing import Optional
 import fastjsonschema
 
 from metabase_api.utility.db.tables import Table
+from metabase_api.utility.translation import Language
 
 _logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class Options:
     """Migration options."""
 
     fields_replacements: dict[str, str]
+    language: Language
 
     @classmethod
     def from_json_file(cls, p: Path) -> "Options":
@@ -41,9 +43,12 @@ class Options:
             validate(personalization_dict)
         except fastjsonschema.exceptions.JsonSchemaValueException as json_exc:
             raise ValueError(
-                "Structure does not look like a personalisation file"
+                f"Structure in '{str(p)}' does not look like a personalisation file"
             ) from json_exc
-        return Options(fields_replacements=personalization_dict["fields_replacements"])
+        return Options(
+            fields_replacements=personalization_dict["fields_replacements"],
+            language=Language[personalization_dict["language"]],
+        )
 
     def replacement_column_id_for(self, column_id: int, t: Table) -> Optional[int]:
         """Finds id of column replacement, if mentioned on these options."""
