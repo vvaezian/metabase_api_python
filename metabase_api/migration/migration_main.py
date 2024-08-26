@@ -21,11 +21,14 @@ def migrate_collection(
     parent_collection_id: int,
     destination_collection_name: str,
     table_equivalencies: TablesEquivalencies,
-    lang: Language,
     personalization_options: Options,
     new_dashboard_description: Optional[str] = None,
     new_dashboard_name: Optional[str] = None,
 ):
+    # translating to a language other than English?
+    lang = personalization_options.language
+    if lang != Language.EN:
+        _logger.info(f"Translating to {lang.name}")
     source_collection_name = metabase_api.get_item_name(
         item_type="collection", item_id=source_collection_id
     )

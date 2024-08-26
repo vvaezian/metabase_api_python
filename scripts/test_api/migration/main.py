@@ -55,12 +55,6 @@ if __name__ == "__main__":
         "--about", required=False, type=str, help="new dashboard 'about' section"
     )
     parser.add_argument(
-        "--lang",
-        choices=[l.name for l in Language],
-        required=False,
-        default=Language.EN.name,
-    )
-    parser.add_argument(
         "--personalization",
         "-p",
         required=False,
@@ -72,7 +66,7 @@ if __name__ == "__main__":
     config = vars(args)
 
     # did I just get personalization options?
-    perso_options: Options = Options(fields_replacements=dict())
+    perso_options: Options = Options(fields_replacements=dict(), language=Language.EN)
     if config["personalization"] is not None:
         perso_options = Options.from_json_file(p=Path(config["personalization"]))
 
@@ -108,10 +102,6 @@ if __name__ == "__main__":
     src_collection_id = metabase_api.get_item_id(
         item_type="collection", item_name=config["from"]
     )
-    # translating to a language other than English?
-    target_lang = Language[args.lang]
-    if target_lang != Language.EN:
-        _logger.info(f"Translating to {target_lang.name}")
     destination_collection_name = config["to"]
     # if the destination collection already exists, fail
     _logger.debug(
@@ -131,7 +121,6 @@ if __name__ == "__main__":
     migrate_collection(
         metabase_api=metabase_api,
         personalization_options=perso_options,
-        lang=target_lang,
         source_collection_id=src_collection_id,
         db_target=db_target_id,
         parent_collection_id=config["to_parent"],
