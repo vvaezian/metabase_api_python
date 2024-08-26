@@ -1,0 +1,8 @@
+{
+  "language": "FR",
+  "fields_replacements": {
+    "l_name": "_dr_id",
+    "name_en": "name_fr",
+    "procedure_en": "procedure_fr"
+  }
+}
