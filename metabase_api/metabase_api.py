@@ -3,6 +3,8 @@ from typing import Optional
 import requests
 import getpass
 
+from metabase_api._helper_methods import ItemType
+
 
 class Metabase_API:
     def __init__(
@@ -144,7 +146,7 @@ class Metabase_API:
                 item_name=card_name,
                 collection_name=collection_name,
                 collection_id=collection_id,
-                item_type="card",
+                item_type=ItemType.CARD,
             )
 
         # add the filter values (if any)
@@ -201,7 +203,7 @@ class Metabase_API:
                     "Either the name or id of the source table needs to be provided."
                 )
             else:
-                source_table_id = self.get_item_id("table", source_table_name)
+                source_table_id = self.get_item_id(ItemType.TABLE, source_table_name)
 
         if not target_table_id:
             if not target_table_name:
@@ -209,7 +211,7 @@ class Metabase_API:
                     "Either the name or id of the target table needs to be provided."
                 )
             else:
-                source_table_id = self.get_item_id("table", source_table_name)
+                source_table_id = self.get_item_id(ItemType.TABLE, source_table_name)
 
         if ignore_these_filters:
             assert type(ignore_these_filters) == list
@@ -300,7 +302,7 @@ class Metabase_API:
 
     def move_to_archive(
         self,
-        item_type,
+        item_type: ItemType,
         item_name=None,
         item_id=None,
         collection_name=None,
@@ -318,25 +320,23 @@ class Metabase_API:
                         item_type
                     )
                 )
-            if item_type == "collection":
-                item_id = self.get_item_id("collection", item_name)
-            elif item_type == "segment":
-                item_id = self.get_item_id("segment", item_name, table_id=table_id)
+            if item_type == ItemType.COLLECTION:
+                item_id = self.get_item_id(item_type, item_name)
+            elif item_type == ItemType.SEGMENT:
+                item_id = self.get_item_id(item_type, item_name, table_id=table_id)
             else:
                 item_id = self.get_item_id(
                     item_type, item_name, collection_id, collection_name
                 )
 
-        if item_type == "segment":
+        if item_type == ItemType.SEGMENT:
             # 'revision_message' is mandatory for archiving segments
             res = self.put(
-                "/api/{}/{}".format(item_type, item_id),
+                f"/api/{str(item_type)}/{item_id}",
                 json={"archived": True, "revision_message": "archived!"},
             )
         else:
-            res = self.put(
-                "/api/{}/{}".format(item_type, item_id), json={"archived": True}
-            )
+            res = self.put(f"/api/{str(item_type)}/{item_id}", json={"archived": True})
 
         if res in [
             200,
@@ -406,11 +406,11 @@ class Metabase_API:
                         "When column_id is not given, either the name or id of the table needs to be provided."
                     )
                 table_id = self.get_item_id(
-                    "table", table_name, db_id=db_id, db_name=db_name
+                    ItemType.TABLE, table_name, db_id=db_id, db_name=db_name
                 )
 
             columns_name_id_mapping = self.get_columns_name_id(
-                table_name=table_name, table_id=table_id, db_name=db_name, db_id=db_id
+                table_id=table_id, db_name=db_name, db_id=db_id
             )
             column_id = columns_name_id_mapping.get(column_name)
             if column_id is None:

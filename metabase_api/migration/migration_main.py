@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import Optional
 
 from metabase_api import Metabase_API
+from metabase_api._helper_methods import ItemType
 from metabase_api.migration.card import CardParameters
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.options import Options
@@ -53,7 +54,7 @@ def migrate_collection(
     )
     _logger.info(f"'{source_collection_id}' duplicated - now starts the migration")
     dst_collection_id = metabase_api.get_item_id(
-        item_type="collection",
+        item_type=ItemType.COLLECTION,
         item_name=destination_collection_name,
         collection_name=destination_collection_name,
     )

@@ -1,20 +1,24 @@
-"""Valid Item types."""
 from typing import Optional
 
-ALLOWED_ITEM_TYPES = [
-    "database",
-    "table",
-    "card",
-    "collection",
-    "dashboard",
-    "pulse",
-    "segment",
-]
+from enum import Enum, auto
+
+
+class ItemType(Enum):
+    DATABASE = auto()
+    TABLE = auto()
+    CARD = auto()
+    COLLECTION = auto()
+    DASHBOARD = auto()
+    PULSE = auto()
+    SEGMENT = auto()
+
+    def __str__(self) -> str:
+        return self.name.lower()
 
 
 def get_item_info_from_id(
     self,
-    item_type: str,
+    item_type: ItemType,
     item_id,
     params: Optional[dict] = None,
 ) -> dict:
@@ -33,27 +37,17 @@ def get_item_info_from_id(
     Return the info for the given item.
     Use 'params' for providing arguments. E.g. to include db in the result for databases, use: params={'include':'db'}
     """
-    assert item_type in ALLOWED_ITEM_TYPES
-    res = self.get(f"/api/{item_type}/{item_id}", params=params)
+    as_str = str(item_id)
+    res = self.get(f"/api/{item_type}/{as_str}", params=params)
     if res:
         return res
     else:
-        raise ValueError(f'There is no {item_type} with the id "{item_id}"')
+        raise ValueError(f'There is no {as_str} with the id "{item_id}"')
 
 
-def get_item_name(self, item_type, item_id):
+def get_item_name(self, item_type: ItemType, item_id):
 
-    assert item_type in [
-        "database",
-        "table",
-        "card",
-        "collection",
-        "dashboard",
-        "pulse",
-        "segment",
-    ]
-
-    res = self.get("/api/{}/{}".format(item_type, item_id))
+    res = self.get(f"/api/{str(item_type)}/{item_id}")
     if res:
         return res["name"]
     else:
@@ -62,7 +56,7 @@ def get_item_name(self, item_type, item_id):
 
 def get_item_info_from_name(
     self,
-    item_type: str,
+    item_type: ItemType,
     item_name: str,
     collection_id=None,
     collection_name=None,
@@ -87,15 +81,13 @@ def get_item_info_from_name(
 
     """
 
-    assert item_type in ALLOWED_ITEM_TYPES
-
-    if item_type in ["card", "dashboard", "pulse"]:
+    if item_type in [ItemType.CARD, ItemType.DASHBOARD, ItemType.PULSE]:
         if not collection_id:
             if not collection_name:
                 # Collection name/id is not provided. Searching in all collections
                 return [
                     i
-                    for i in self.get("/api/{}/".format(item_type))
+                    for i in self.get(f"/api/{str(item_type)}/")
                     if i["name"] == item_name and not i["archived"]
                 ]
             else:
@@ -106,7 +98,7 @@ def get_item_info_from_name(
                 )
                 return [
                     i
-                    for i in self.get("/api/{}/".format(item_type))
+                    for i in self.get(f"/api/{str(item_type)}/")
                     if i["name"] == item_name
                     and i["collection_id"] == collection_id
                     and i["archived"] == False
@@ -114,21 +106,21 @@ def get_item_info_from_name(
         else:
             return [
                 i
-                for i in self.get("/api/{}/".format(item_type))
+                for i in self.get(f"/api/{str(item_type)}/")
                 if i["name"] == item_name
                 and i["collection_id"] == collection_id
                 and i["archived"] == False
             ]
-    elif item_type == "collection":
+    elif item_type == ItemType.COLLECTION:
         return [i for i in self.get("/api/collection/") if i["name"] == item_name]
-    elif item_type == "database":
+    elif item_type == ItemType.DATABASE:
         res = self.get("/api/database/")
         if (
             type(res) == dict
         ):  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
             res = res["data"]
         return [i for i in res if i["name"] == item_name]
-    elif item_type == "table":
+    elif item_type == ItemType.TABLE:
         tables = self.get("/api/table/")
 
         if db_id:
@@ -143,7 +135,7 @@ def get_item_info_from_name(
             ]
         else:
             return [i for i in tables if i["name"] == item_name]
-    elif item_type == "segment":
+    elif item_type == ItemType.SEGMENT:
         return [
             i
             for i in self.get("/api/segment/")
@@ -153,7 +145,7 @@ def get_item_info_from_name(
 
 def get_item_id(
     self,
-    item_type: str,
+    item_type: ItemType,
     item_name: str,
     collection_id=None,
     collection_name=None,
@@ -162,8 +154,6 @@ def get_item_id(
     table_id=None,
 ):
     """Gets item id for object. Raises Exception if there are more than 1 such objects, or 0 of them."""
-
-    assert item_type in ALLOWED_ITEM_TYPES
 
     all_infos = get_item_info_from_name(
         self,
@@ -219,11 +209,9 @@ def get_table_metadata(
 
 def get_columns_name_id(
     self,
-    table_name=None,
     db_name=None,
     table_id=None,
     db_id=None,
-    verbose=False,
     column_id_name=False,
 ):
     """
@@ -243,11 +231,6 @@ def get_columns_name_id(
         raise NotImplementedError(
             f"Can't respond without a table_id; implementation to come."
         )
-
-    # if not table_name:
-    #     if not table_id:
-    #         raise ValueError("Either the name or id of the table must be provided.")
-    #     table_name = self.get_item_name(item_type="table", item_id=table_id)
 
     # Get db_id
     if not db_id:
