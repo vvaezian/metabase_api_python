@@ -6,6 +6,7 @@ from metabase_api import Metabase_API
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.options import Options
 from metabase_api.utility.translation import Language, Translators
+from copy import copy
 
 from dataclasses import dataclass
 
@@ -15,11 +16,18 @@ MIGRATED_CARDS: list[int] = list()
 _logger = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(init=False)
 class Card:
     """A Card! :-)"""
 
     card_json: dict
+
+    def __init__(self, card_json: dict):
+        if "model" in card_json:  # field not always there. Depends on provenance.
+            assert (
+                card_json["model"] == "card"
+            ), f"json structure does not contain a card; it contains '{card_json['model']}'"
+        self.card_json = card_json
 
     @classmethod
     def from_id(cls, card_id: int, metabase_api: Metabase_API) -> "Card":
@@ -122,19 +130,13 @@ class CardParameters:
             MIGRATED_CARDS.append(card_id)
         return success
 
-    def migrate_card(
-        self,
-        card_json: dict,
-    ) -> bool:
-        assert (
-            card_json["model"] == "card"
-        ), f"Trying to migrate a card that is NOT actually a card: it is a '{card_json['model']}'"
+    def migrate_card(self, card: Card) -> bool:
         # translate to specific language
         # card_json = _translate_card(card_json, lang=lang)
-        card_id = card_json["id"]
+        #
         # even if I have the 'full' json here, I need to make sure I don't miss any details of this card
         # The way to do that is to get and fetch those details from the API. So:
-        return self.migrate_card_by_id(card_id=card_id)
+        return self.migrate_card_by_id(card_id=card.card_id)
 
     def handle_card(self, card_json):
         """todo: document!"""
@@ -286,12 +288,22 @@ class CardParameters:
                 #         self._replace_field_info_refs(field_info)
         # breakout
         if "breakout" in query_part:
-            for brk in query_part["breakout"]:
+            new_field_ids: set[int] = set()
+            brk_result: list = []
+            for _brk in query_part["breakout"]:
+                brk = copy(_brk)
                 if brk[0] == "field":
                     # reference to a table's column. Replace it.
                     old_field_id = brk[1]
                     if isinstance(old_field_id, int):
-                        brk[1] = self.replace_column_id(column_id=old_field_id)
+                        new_field_id = self.replace_column_id(column_id=old_field_id)
+                        # are fields repeated, now that we have (potentially) replaced fields?
+                        if new_field_id not in new_field_ids:
+                            # 'else' == I already have this field!
+                            brk[1] = new_field_id
+                            new_field_ids.add(new_field_id)
+                            brk_result.append(brk)
+            query_part["breakout"] = brk_result
         if "order-by" in query_part:
             for ob in query_part["order-by"]:
                 # reference to a table's column. Replace it.
