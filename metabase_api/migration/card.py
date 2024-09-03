@@ -303,6 +303,8 @@ class CardParameters:
                             brk[1] = new_field_id
                             new_field_ids.add(new_field_id)
                             brk_result.append(brk)
+                else:
+                    brk_result.append(brk)
             query_part["breakout"] = brk_result
         if "order-by" in query_part:
             for ob in query_part["order-by"]:
