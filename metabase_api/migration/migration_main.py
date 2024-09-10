@@ -149,17 +149,32 @@ def migrate_collection(
                         dash["param_values"]
                     ).items():
                         field_id = int(field_id_as_str)
-                        new_field_id = card_params.replace_column_id(column_id=field_id)
-                        # new_field_id = table_equivalencies.column_equivalent_for(
-                        #     column_id=field_id
-                        # )
-                        new_field_id_as_str = str(new_field_id)
-                        param_values[new_field_id_as_str] = param_values.pop(
-                            field_id_as_str
-                        )
-                        param_values[new_field_id_as_str]["field_id"] = new_field_id
-                        param_values[new_field_id_as_str]["values"] = list()
-                    # dash["param_values"] = param_values
+                        # was it already migrated?
+                        if (
+                            card_params.table_equivalencies.target_table_for_column(
+                                column_id=field_id
+                            )
+                            is None
+                        ):
+                            new_field_id = card_params.replace_column_id(
+                                column_id=field_id
+                            )
+                            # by any chance, is this column _already_ on a target table?
+                            if (
+                                card_params.table_equivalencies.target_table_for_column(
+                                    column_id=new_field_id
+                                )
+                                is None
+                            ):
+                                # no, it's not already migrated. Carry on!
+                                new_field_id_as_str = str(new_field_id)
+                                param_values[new_field_id_as_str] = param_values.pop(
+                                    field_id_as_str
+                                )
+                                param_values[new_field_id_as_str][
+                                    "field_id"
+                                ] = new_field_id
+                                param_values[new_field_id_as_str]["values"] = list()
             elif k == "param_fields":
                 # param fields
                 old_param_fields = deepcopy(dash["param_fields"])
@@ -167,25 +182,34 @@ def migrate_collection(
                     for field_id_as_str, field_info in old_param_fields.items():
                         try:
                             field_id = int(field_id_as_str)
-                            src_table_id = field_info["table_id"]
-                            field_name = table_equivalencies.get_src_table(
-                                table_id=src_table_id
-                            ).get_column_name(column_id=field_id)
-                            dst_table_id = table_equivalencies[src_table_id].unique_id
-                            new_field_id = table_equivalencies.get_dst_table(
-                                dst_table_id
-                            ).get_column_id(field_name)
-                            # ok. Let's now change:
-                            new_field_id_as_str = str(new_field_id)
-                            dash["param_fields"][new_field_id_as_str] = dash[
-                                "param_fields"
-                            ].pop(field_id_as_str)
-                            dash["param_fields"][new_field_id_as_str][
-                                "id"
-                            ] = new_field_id_as_str
-                            dash["param_fields"][new_field_id_as_str][
-                                "table_id"
-                            ] = dst_table_id
+                            # if this field is _already_ on the target tables, no need to migrate it:
+                            if (
+                                table_equivalencies.target_table_for_column(
+                                    column_id=field_id
+                                )
+                                is None
+                            ):
+                                src_table_id = field_info["table_id"]
+                                field_name = table_equivalencies.get_src_table(
+                                    table_id=src_table_id
+                                ).get_column_name(column_id=field_id)
+                                dst_table_id = table_equivalencies[
+                                    src_table_id
+                                ].unique_id
+                                new_field_id = table_equivalencies.get_dst_table(
+                                    dst_table_id
+                                ).get_column_id(field_name)
+                                # ok. Let's now change:
+                                new_field_id_as_str = str(new_field_id)
+                                dash["param_fields"][new_field_id_as_str] = dash[
+                                    "param_fields"
+                                ].pop(field_id_as_str)
+                                dash["param_fields"][new_field_id_as_str][
+                                    "id"
+                                ] = new_field_id_as_str
+                                dash["param_fields"][new_field_id_as_str][
+                                    "table_id"
+                                ] = dst_table_id
                         except ValueError as ve:
                             # apparently one of the param fields is not an int...?
                             pass
