@@ -314,6 +314,8 @@ class CardParameters:
                 if isinstance(old_field_id, int) and (desc != "aggregation"):
                     ob[1][1] = self.replace_column_id(column_id=old_field_id)
 
+        if "fields" in query_part:
+            query_part["fields"] = self._replace_field_info_refs(query_part["fields"])
         return query_part  # todo: get rid of this return, as I think no-one uses it!
 
     def _replace_field_info_refs(
@@ -324,7 +326,14 @@ class CardParameters:
             # reference to a table's column. Replace it.
             old_field_id = field_info[1]
             if isinstance(old_field_id, int):
-                field_info[1] = self.replace_column_id(column_id=old_field_id)
+                # if it's already migrated, then don't try to redo it.
+                if (
+                    self.table_equivalencies.target_table_for_column(
+                        column_id=old_field_id
+                    )
+                    is None
+                ):
+                    field_info[1] = self.replace_column_id(column_id=old_field_id)
             else:
                 # here: is old_field_id actually the NAME of a field we are replacing
                 # (through perso_options)?
@@ -367,6 +376,16 @@ class CardParameters:
             elif k == "table.columns":
                 for table_column in viz_settings["table.columns"]:
                     self._update_table_cols_info(table_column)
+                new_table_columns: list[dict[str, str]] = []
+                names_visited: set[str] = set()
+                for d in viz_settings["table.columns"]:
+                    if "name" in d:
+                        if d["name"] not in names_visited:
+                            new_table_columns.append(d)
+                            names_visited.add(d["name"])
+                    else:
+                        new_table_columns.append(d)
+                viz_settings["table.columns"] = new_table_columns
             elif k == "column_settings":
                 # first, let's change keys (if needed)
                 for _k in deepcopy(viz_settings["column_settings"]).keys():
@@ -376,7 +395,12 @@ class CardParameters:
                         field_info = l[1]
                         if field_info[0] == "field":
                             field_info[1] = self.replace_column_id(field_info[1])
-                            new_k = str(l).replace("None", "null").replace("'", '"')
+                            new_k = (
+                                str(l)
+                                .replace("None", "null")
+                                .replace("'", '"')
+                                .replace(" ", "")
+                            )
                             viz_settings["column_settings"][new_k] = viz_settings[
                                 "column_settings"
                             ].pop(_k)
@@ -540,8 +564,13 @@ class CardParameters:
                             .replace(" ", "")
                         )
             elif key == "name":
+                if value in self.personalization_options.fields_replacements:
+                    table_column[
+                        key
+                    ] = self.personalization_options.fields_replacements[value]
+            elif key == "enabled":
                 _logger.debug(
-                    f"WARNING [replacement] Do I have to do something with 'name'??????? (currently = '{value}')"
+                    f"WARNING [replacement] Do I have to do something with '{key}'??????? (currently = '{value}')"
                 )
             else:
                 _logger.debug(

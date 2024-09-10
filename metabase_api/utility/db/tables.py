@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass, field
+from typing import Optional
 
 from metabase_api import Metabase_API
 from metabase_api._helper_methods import ItemType
@@ -211,6 +212,21 @@ class TablesEquivalencies:
             )
         return d[table_id]
 
+    def target_table_for_column(self, column_id: int) -> Optional[Table]:
+        """Tries to find a column id in target tables - on success, returns the Table where it's found."""
+        if len(self._src2dst) == 0:
+            raise ValueError("No tables have been defined as equivalent.")
+        for _, table_dst in self._src2dst.items():
+            try:
+                column_name = table_dst.get_column_name(column_id=column_id)
+            except ValueError:
+                # no problemo - column is not on this table. Carry on...
+                continue
+            # found it! (if I am here I didn't get short-circuited by the 'continue' above)
+            return table_dst
+        # if I got here it's because I couldn't find the field anywhere!
+        return None
+
     def column_equivalent_and_details_for(
         self, column_id: int
     ) -> tuple[int, Table, Table]:
@@ -224,8 +240,17 @@ class TablesEquivalencies:
             try:
                 column_name = table_src.get_column_name(column_id=column_id)
             except ValueError:
-                # no problemo - column is not on this table. Carry on...
-                continue
+                # no problemo - column is not on this table.
+                # since we are here... is this column on the target table, by any chance...?
+                try:
+                    _ = table_dst.get_column_name(column_id=column_id)
+                    # oops!!
+                    raise ValueError(
+                        f"Field '{column_id}' appears on a TARGET table! ({table_dst})"
+                    )
+                except ValueError:
+                    # Carry on...
+                    continue
             # found it! (if I am here I didn't get short-circuited by the 'continue' above
             return (
                 table_dst.get_column_id(column_name=column_name),
