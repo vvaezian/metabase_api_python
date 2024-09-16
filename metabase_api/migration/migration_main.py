@@ -113,7 +113,10 @@ def migrate_collection(
             #     for card_json in dash["dashcards"]:
             #         card_params.handle_card(card_json=card_json)
             if k == "description":
-                dash["description"] = Translators[lang].translate(dash["description"])
+                if dash["description"] is not None:
+                    dash["description"] = Translators[lang].translate(
+                        dash["description"]
+                    )
             elif k == "tabs":
                 # tabs in dashboard
                 tabs = v
