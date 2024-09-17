@@ -1,4 +1,14 @@
 {
   "language": "FR",
-  "fields_replacements": {}
+  "fields_replacements": {
+    "l_name": "person_pk",
+    "name_en": "name_fr",
+    "type_desc_en": "type_desc_fr",
+    "cat_type_desc_en": "cat_type_desc_fr",
+    "canonical_name_en": "canonical_name_fr",
+    "procedure_en": "procedure_fr",
+    "proc_name_en": "proc_name_fr",
+    "technique_name_en": "technique_name_fr",
+    "position_name_en": "position_name_fr"
+  }
 }
