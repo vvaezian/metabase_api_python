@@ -12,7 +12,9 @@
 "Captured Procedures":
     FR: "Procédures Capturées"
 "Captured Procedure ID":
-    FR: "ID de la Procédure"
+    FR: "Identifiant de la procédure"
+"Categories' Proportions":
+    FR: "Distribution par catégories"
 #"Captured Products":
 #    FR: "Produits Captures"
 #"Category":
@@ -39,6 +41,8 @@
     FR: "Nombre d'implants"
 "Implant Cost":
     FR: "Coût des implants"
+"ID":
+    FR: "Identifiant"
 # --------------------------- M
 "Manufacturer":
     FR: "Fabricant"
@@ -60,9 +64,9 @@
 #"Procedure Types":
 #    FR: "Types de Procédures"
 "Physician":
-    FR: "Docteur"
+    FR: "Médecin"
 "Physicians":
-    FR: "Docteurs"
+    FR: "Médecins"
 #"Procedure Cost":
 #    FR: "Coût de la Procédure"
 #"Product":
@@ -72,7 +76,7 @@
 #"Procedure":
 #    FR: "Procédure"
 "Product ID":
-    FR: "ID du Produit"
+    FR: "Identifiant du Produit"
 "Products Not in the Hospital Database":
     FR: "Produits absents des bases de données de l'hôpital"
 # --------------------------- Q
@@ -80,9 +84,9 @@
 #    FR: "Quantité"
 # --------------------------- R
 "Room":
-    FR: "Chambre"
+    FR: "Salle"
 "Rooms":
-    FR: "Chambres"
+    FR: "Salles"
 # --------------------------- S
 "Service Line":
     FR: "Groupe"
