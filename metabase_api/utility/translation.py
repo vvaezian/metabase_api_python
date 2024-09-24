@@ -139,7 +139,15 @@ class Translator:
                 else:
                     t = self._translation_dict[case_sentence]
         # let's re-add the white spaces
-        return " " * lblanks + t + " " * rblanks
+        t = " " * lblanks + t + " " * rblanks
+        if self.to_lang == Language.FR:
+            # only first word of a sentence is capitalized (if any!)
+            # do we have more than 1 word?
+            as_array = t.split()
+            if len(as_array) > 1:
+                # I don't do _anything_ with first word but I un-capitalize the rest
+                t = " ".join([as_array[0]] + [s.lower() for s in as_array[1:]])
+        return t
 
 
 """Structure with a translator for each language we handle."""
