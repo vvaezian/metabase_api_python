@@ -8,7 +8,7 @@
     FR: "Coût moyen de la procédure"
 # --------------------------- C
 "Capture Analytics":
-    FR: "Analytiques de capture"
+    FR: "Analyse des sessions capturées"
 "Captured Procedures":
     FR: "Procédures Capturées"
 "Captured Procedure ID":
@@ -67,10 +67,16 @@
     FR: "Médecin"
 "Physicians":
     FR: "Médecins"
+"Physician Analytics":
+    FR: "Analyse des médecins"
 #"Procedure Cost":
 #    FR: "Coût de la Procédure"
 #"Product":
 #    FR: "Produit"
+"Procedure Analytics":
+    FR: "Analyse des procédures capturées"
+"Product Analytics":
+    FR: "Analyse des produits capturés"
 "Products":
     FR: "Produits"
 #"Procedure":
