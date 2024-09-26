@@ -360,6 +360,27 @@ class CardParameters:
         self,
         viz_settings: dict,
     ):
+        def _formatting_settings_from(d: dict) -> dict:
+            """Builds the dictionary for number formatting."""
+            sep = ", "
+            number_style = "decimal"
+            if self.lang == Language.FR:
+                is_currency = ("prefix" in d) and (d["prefix"] == "$")
+                r = {
+                    "number_style": number_style,
+                    "number_separators": sep,
+                    "suffix": " $" if is_currency else d.get("suffix", ""),
+                    "prefix": "" if is_currency else d.get("prefix", ""),
+                }
+            else:
+                r = {
+                    "number_style": number_style,
+                    "number_separators": d.get("number_separators", sep),
+                    "suffix": d.get("suffix", ""),
+                    "prefix": d.get("prefix", ""),
+                }
+            return r
+
         for k, v in viz_settings.items():
             if (
                 (k == "text")
@@ -389,7 +410,6 @@ class CardParameters:
             elif k == "column_settings":
                 # first, let's change keys (if needed)
                 for _k in deepcopy(viz_settings["column_settings"]).keys():
-                    # continue
                     l = eval(_k.replace("null", "None"))
                     if l[0] == "ref":
                         field_info = l[1]
@@ -404,9 +424,28 @@ class CardParameters:
                             viz_settings["column_settings"][new_k] = viz_settings[
                                 "column_settings"
                             ].pop(_k)
-                for _, d in viz_settings["column_settings"].items():
-                    if "click_behavior" in d:
-                        self._handle_click_behavior(d["click_behavior"])
+                # ok. Let's visit all other settings now
+                for _col_set_k, _a_dict in viz_settings["column_settings"].items():
+                    # sanity check. Probably not needed.
+                    assert isinstance(_a_dict, dict)
+                    # let's take care of the formatting elements on one side, and the rest on another
+                    formatting_d = _formatting_settings_from(_a_dict)
+                    rest_of_d = deepcopy(
+                        {
+                            k: v
+                            for (k, v) in _a_dict.items()
+                            if k not in formatting_d.keys()
+                        }
+                    )
+                    for _k, _v in rest_of_d.items():
+                        if _k == "click_behavior":
+                            self._handle_click_behavior(_v)
+                        # else:
+                        #     print("not interesting, I guess...?")
+                    # and now I combine both
+                    viz_settings["column_settings"][_col_set_k] = (
+                        formatting_d | rest_of_d
+                    )
             elif k == "click_behavior":
                 self._handle_click_behavior(viz_settings["click_behavior"])
             elif k == "pivot_table.column_split":
