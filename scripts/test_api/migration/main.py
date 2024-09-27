@@ -4,7 +4,6 @@ Migrates a collection.
 import argparse
 import logging
 import os
-import re
 from pathlib import Path
 
 from metabase_api._helper_methods import ItemType
@@ -12,17 +11,15 @@ from metabase_api.metabase_api import Metabase_API
 from metabase_api.migration.migration_main import migrate_collection
 from metabase_api.utility import logger
 from metabase_api.utility.db.tables import TablesEquivalencies
-from metabase_api.utility.translation import Language
 from metabase_api.utility.options import Options
+from metabase_api.utility.translation import Language
+from metabase_api.utility.util import email_type
 
 _logger = logging.getLogger(__name__)
 
 
-RE_EMAIL = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
-
-
-def email_type(value):
-    if not RE_EMAIL.match(value):
+def _email_type(value):
+    if not email_type(value):
         raise argparse.ArgumentTypeError(f"'{value}' is not a valid email")
     return value
 
@@ -36,7 +33,7 @@ if __name__ == "__main__":
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
-        "-u", "--user", required=False, type=email_type, help="email address of user"
+        "-u", "--user", required=False, type=_email_type, help="email address of user"
     )
     parser.add_argument(
         "-f", "--from", required=True, type=str, help="collection name to migrate"

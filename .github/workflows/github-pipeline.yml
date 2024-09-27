@@ -51,3 +51,10 @@ jobs:
       run: |
         export PYTHONPATH=$PWD:$PYTHONPATH
         pre-commit run --all-files
+    - name: Test with pytest, gather coverage data
+      shell: bash -l {0}
+      run: |
+        export PYTHONPATH=$PWD/src:$PYTHONPATH
+        # https://stackoverflow.com/questions/75580886/open-cv-importerror-lib-x86-64-linux-gnu-libwayland-client-so-0-undefined-sym
+        export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libffi.so.7
+        coverage run -m pytest tests/metabase_api/utility
