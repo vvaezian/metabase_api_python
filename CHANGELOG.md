@@ -1,3 +1,7 @@
+## 3.4.3
+### Changed
+- PR [#56](https://github.com/vvaezian/metabase_api_python/pull/56) 
+
 ## 3.4.2
 ### Changed
 - Added 'return_card' argument to the `copy_card` function.
