@@ -208,7 +208,7 @@ class Metabase_API():
             
             # find column IDs
             import re
-            res = re.findall("\['field', .*?\]", query_data_str)
+            res = re.findall(r"\['field', .*?\]", query_data_str)
             source_column_IDs = [ eval(i)[1] for i in res ]
             
             # replace column IDs from old table with the column IDs from new table
