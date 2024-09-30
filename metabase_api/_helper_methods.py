@@ -84,7 +84,7 @@ def get_item_info_from_name(
     if item_type in [ItemType.CARD, ItemType.DASHBOARD, ItemType.PULSE]:
         if not collection_id:
             if not collection_name:
-                # Collection name/id is not provided. Searching in all collections
+                # collection name/id is not provided. Searching in all collections
                 return [
                     i
                     for i in self.get(f"/api/{str(item_type)}/")

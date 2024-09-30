@@ -29,7 +29,7 @@ if __name__ == "__main__":
     _logger = logging.getLogger(__name__)
 
     parser = argparse.ArgumentParser(
-        description="Collection migration",
+        description="collection migration",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             item_name=destination_collection_name,
             collection_name=destination_collection_name,
         )
-        raise RuntimeError(f"Collection '{destination_collection_name}' exists")
+        raise RuntimeError(f"collection '{destination_collection_name}' exists")
     except ValueError as ve:
         # if I am here it's because the collection doesn't exist - which is exactly what I want
         pass
