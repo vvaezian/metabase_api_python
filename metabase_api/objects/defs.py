@@ -107,7 +107,6 @@ class CollectionObject(abc.ABC):
 class CardParameters:
     """Encapsulates logic for migration of a card."""
 
-    lang: Language
     metabase_api: Metabase_API
     db_target: int
     transformations: dict

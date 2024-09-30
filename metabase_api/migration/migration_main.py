@@ -23,14 +23,10 @@ def migrate_collection(
     parent_collection_id: int,
     destination_collection_name: str,
     table_equivalencies: TablesEquivalencies,
-    personalization_options: Options,
+    user_options: Options,
     new_dashboard_description: Optional[str] = None,
     new_dashboard_name: Optional[str] = None,
 ):
-    # translating to a language other than English?
-    lang = personalization_options.language
-    if lang != Language.EN:
-        _logger.info(f"Translating to {lang.name}")
     source_collection_name = metabase_api.get_item_name(
         item_type="collection", item_id=source_collection_id
     )
@@ -81,12 +77,11 @@ def migrate_collection(
 
     # first we migrate cards
     card_params = CardParameters(
-        lang=lang,
         metabase_api=metabase_api,
         db_target=db_target,
         transformations=transformations,
         table_equivalencies=table_equivalencies,
-        personalization_options=personalization_options,
+        personalization_options=user_options,
     )
     card_items = [item for item in items if item["model"] == "card"]
     for item in card_items:
@@ -117,7 +112,7 @@ def migrate_collection(
         for k, v in dash.items():
             if k == "description":
                 if dash["description"] is not None:
-                    dash["description"] = Translators[lang].translate(
+                    dash["description"] = user_options.maybe_replace_label(
                         dash["description"]
                     )
             elif k == "tabs":
@@ -125,12 +120,12 @@ def migrate_collection(
                 tabs = v
                 for a_tab in tabs:
                     # let's translate the name
-                    a_tab["name"] = Translators[lang].translate(a_tab["name"])
+                    a_tab["name"] = user_options.maybe_replace_label(a_tab["name"])
             elif k == "parameters":
                 parameters = v
                 for params_dict in parameters:
                     # let's translate the name
-                    params_dict["name"] = Translators[lang].translate(
+                    params_dict["name"] = user_options.maybe_replace_label(
                         params_dict["name"]
                     )
                     # and now let's update all references

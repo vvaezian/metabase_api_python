@@ -1,20 +1,29 @@
+import json
 import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
-import json
 from typing import Optional
 
 import fastjsonschema
 
 from metabase_api.utility.db.tables import Table
-from metabase_api.utility.translation import Language
 
 _logger = logging.getLogger(__name__)
 
 
 THIS_FILE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
-JSON_SCHEMA_LOC = (THIS_FILE_PATH / "personalization_json_schema.json").resolve()
+JSON_SCHEMA_LOC = (THIS_FILE_PATH / "number_options_json_schema.json").resolve()
+
+
+@dataclass
+class NumberFormat:
+    number_style: str
+    number_separators: str
+    number_currency_prefix: str
+    number_currency_suffix: str
+    number_other_prefix: str
+    number_other_suffix: str
 
 
 @dataclass
@@ -22,33 +31,57 @@ class Options:
     """Migration options."""
 
     fields_replacements: dict[str, str]
-    language: Language
+    labels_replacements: dict[str, str]
+    number_format: NumberFormat
 
     @classmethod
-    def from_json_file(cls, p: Path) -> "Options":
-        if not p.exists():
-            raise FileNotFoundError(p)
-        if p.suffix != ".json":
-            raise ValueError(f"Personalization file must be a json (got '{str(p)}')")
-        _logger.info(f"Reading personalization options from '{str(p)}'...")
-        with open(p) as f:
-            personalization_dict = json.load(f)
-        _logger.debug(
-            f"Parsing personalization options using '{str(JSON_SCHEMA_LOC)}'..."
-        )
+    def from_json_files(
+        cls,
+        p_otheroptions_opt: Path,
+        p_fields_opt: Optional[Path] = None,
+        p_labels_opt: Optional[Path] = None,
+    ) -> "Options":
+        def _read_json(p: Path) -> dict:
+            if not p.exists():
+                raise FileNotFoundError(p)
+            if p.suffix != ".json":
+                raise ValueError(f"File must be a json (got '{str(p)}')")
+            _logger.info(f"Reading from '{str(p)}'...")
+            with open(p) as f:
+                return json.load(f)
+
+        number_options = _read_json(p_otheroptions_opt)
+        _logger.debug(f"Parsing number options using '{str(JSON_SCHEMA_LOC)}'...")
         with open(JSON_SCHEMA_LOC) as f:
             json_schema = json.load(f)
         validate = fastjsonschema.compile(json_schema)
         try:
-            validate(personalization_dict)
+            validate(number_options)
         except fastjsonschema.exceptions.JsonSchemaValueException as json_exc:
             raise ValueError(
-                f"Structure in '{str(p)}' does not look like a personalisation file"
+                f"Structure in '{str(p_otheroptions_opt)}' does not look like a number's personalisation file"
             ) from json_exc
+
         return Options(
-            fields_replacements=personalization_dict["fields_replacements"],
-            language=Language[personalization_dict["language"]],
+            fields_replacements=_read_json(p_fields_opt)
+            if p_fields_opt is not None
+            else {},
+            labels_replacements=_read_json(p_labels_opt)
+            if p_labels_opt is not None
+            else {},
+            number_format=NumberFormat(
+                number_style=number_options["numbers"]["number_style"],
+                number_separators=number_options["numbers"]["number_separators"],
+                number_currency_prefix=number_options["numbers"]["currency"]["prefix"],
+                number_currency_suffix=number_options["numbers"]["currency"]["suffix"],
+                number_other_prefix=number_options["numbers"]["other"]["prefix"],
+                number_other_suffix=number_options["numbers"]["other"]["suffix"],
+            ),
         )
+
+    def maybe_replace_label(self, a_label: str) -> str:
+        """Either it replaces the label or it returns the same."""
+        return self.labels_replacements.get(a_label, a_label)
 
     def replacement_column_id_for(self, column_id: int, t: Table) -> Optional[int]:
         """Finds id of column replacement, if mentioned on these options."""
