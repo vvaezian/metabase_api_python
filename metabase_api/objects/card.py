@@ -3,6 +3,7 @@ from typing import Any
 import logging
 
 from metabase_api import Metabase_API
+from metabase_api.objects.defs import CollectionObject
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.options import Options
 from metabase_api.utility.translation import Language, Translators
@@ -17,7 +18,7 @@ _logger = logging.getLogger(__name__)
 
 
 @dataclass(init=False)
-class Card:
+class Card(CollectionObject):
     """A Card! :-)"""
 
     card_json: dict
@@ -28,6 +29,8 @@ class Card:
                 card_json["model"] == "card"
             ), f"json structure does not contain a card; it contains '{card_json['model']}'"
         self.card_json = card_json
+        self._labels: set[str] = set()
+        super().__init__()
 
     @classmethod
     def from_id(cls, card_id: int, metabase_api: Metabase_API) -> "Card":
@@ -37,6 +40,34 @@ class Card:
     @property
     def card_id(self) -> int:
         return self.card_json["id"]
+
+    @property
+    def labels(self) -> set[str]:
+        if len(self._labels) == 0:
+            for k, v in self.card_json.items():
+                if (k == "description") or (k == "name"):
+                    if v is not None:
+                        self._labels.add(v)
+                elif k == "visualization_settings":
+                    viz_set = v
+                    for k, v in viz_set.items():
+                        if k.endswith("title_text"):
+                            self._labels.add(v)
+                        elif "text" in k:
+                            self._labels.add(v)
+                        elif k == "column_settings":
+                            cols_set = viz_set["column_settings"]
+                            for _, d in cols_set.items():
+                                for k, v in d.items():
+                                    if k == "column_title":
+                                        self._labels.add(v)
+                        elif k == "series_settings":
+                            series_set = viz_set["series_settings"]
+                            for _, d in series_set.items():
+                                for k, v in d.items():
+                                    if k == "title":
+                                        self._labels.add(v)
+        return self.clean_labels(self._labels)
 
     def push(self, metabase_api: Metabase_API) -> bool:
         success = (

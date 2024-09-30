@@ -4,7 +4,7 @@ from typing import Optional
 
 from metabase_api import Metabase_API
 from metabase_api._helper_methods import ItemType
-from metabase_api.migration.card import CardParameters, Card
+from metabase_api.objects.card import CardParameters, Card
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.options import Options
 from metabase_api.utility.translation import (

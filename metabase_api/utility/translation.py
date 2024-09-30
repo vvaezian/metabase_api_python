@@ -43,7 +43,9 @@ class Translator:
         _logger.info("Firing up Google Translator")
         self._google_translator: GoogleTranslator = _start_google_translator()
         # Reads translation terms from a YAML file
-        with open(TRANSLATION_CONFIG_LOC / "translation_from_en.yml", "r") as stream:
+        with open(
+            TRANSLATION_CONFIG_LOC / "translation_user_defined_from_en.yml", "r"
+        ) as stream:
             self._translation_dict = yaml.safe_load(stream)
         if not self.case_sensitive:
             self._translation_dict = {
