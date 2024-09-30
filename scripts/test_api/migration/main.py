@@ -18,7 +18,7 @@ from metabase_api.utility.util import email_type
 _logger = logging.getLogger(__name__)
 
 
-def _email_type(value):
+def _email_type(value: str) -> str:
     if not email_type(value):
         raise argparse.ArgumentTypeError(f"'{value}' is not a valid email")
     return value
