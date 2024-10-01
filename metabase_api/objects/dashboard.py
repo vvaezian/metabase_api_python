@@ -1,8 +1,9 @@
 import logging
 from dataclasses import dataclass
+from typing import Callable, Optional
 
 from metabase_api.objects.card import Card
-from metabase_api.objects.defs import CollectionObject
+from metabase_api.objects.defs import CollectionObject, ReturnValue
 
 _logger = logging.getLogger(__name__)
 
@@ -16,6 +17,13 @@ class Dashboard(CollectionObject):
         self.as_json = as_json
         self._labels: set[str] = set()
         super().__init__()
+
+    def traverse(
+        self,
+        f: Callable[[dict, list[str]], ReturnValue],
+        call_stack: Optional[list[str]] = None,
+    ) -> ReturnValue:
+        raise NotImplementedError()
 
     @property
     def labels(self) -> set[str]:

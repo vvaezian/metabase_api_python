@@ -4,7 +4,8 @@ from typing import Optional
 
 from metabase_api import Metabase_API
 from metabase_api._helper_methods import ItemType
-from metabase_api.objects.card import CardParameters, Card
+from metabase_api.objects.card import Card
+from metabase_api.objects.defs import CardParameters
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.options import Options
 from metabase_api.utility.translation import (
@@ -89,7 +90,12 @@ def migrate_collection(
     )
     card_items = [item for item in items if item["model"] == "card"]
     for item in card_items:
-        r = card_params.migrate_card(Card(card_json=item))
+        # nb: I can't do this
+        # r = Card(card_json=item).migrate(card_params)
+        # because not _all_ info is there. Need to fetch it again:
+        r = Card.from_id(card_id=item["id"], metabase_api=metabase_api).migrate(
+            params=card_params
+        )
         if not r:
             raise RuntimeError(f"Impossible to migrate card '{item['id']}'")
     # and now we migrate dashboards
@@ -107,11 +113,8 @@ def migrate_collection(
         _logger.info(f"Migrating dashboard {dashboard_id}...")
         # let's visit all of its parts - to translate or to update references
         for card_json in dash["dashcards"]:
-            card_params.handle_card(card_json=card_json)
+            Card(card_json).migrate(card_params, push=False)
         for k, v in dash.items():
-            # elif k == "dashcards":
-            #     for card_json in dash["dashcards"]:
-            #         card_params.handle_card(card_json=card_json)
             if k == "description":
                 if dash["description"] is not None:
                     dash["description"] = Translators[lang].translate(
