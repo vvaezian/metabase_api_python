@@ -1,4 +1,4 @@
-from metabase_api import Metabase_API
+from metabase_api.metabase_api import Metabase_API
 
 import logging
 
