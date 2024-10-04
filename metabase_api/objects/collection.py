@@ -1,13 +1,11 @@
 from typing import Any, Callable, Optional
 
 from metabase_api.metabase_api import Metabase_API
-from metabase_api.objects.card import Card
-from metabase_api.objects.dashboard import Dashboard
 from metabase_api.objects.defs import (
     CollectionObject,
-    clean_labels,
     TraverseStack,
     ReturnValue,
+    CardParameters,
 )
 
 
@@ -15,11 +13,9 @@ class Collection(CollectionObject):
 
     as_json: dict[Any, Any]
 
-    def __init__(self, as_json: dict[Any, Any], metabase_api: Metabase_API) -> None:
-        self.as_json = as_json
-        self._labels: set[str] = set()
+    def __init__(self, as_json: dict[Any, Any], metabase_api: Metabase_API):
         self.metabase_api = metabase_api
-        super().__init__()
+        super().__init__(as_json=as_json)
 
     @classmethod
     def from_id(cls, coll_id: int, metabase_api: Metabase_API) -> "Collection":
@@ -44,25 +40,31 @@ class Collection(CollectionObject):
     ) -> ReturnValue:
         raise NotImplementedError()
 
-    @property
-    def labels(self) -> set[str]:
-        """Scans the collection and returns its labels."""
-        if len(self._labels) == 0:
-            # scans all items of collection
-            for item in self.items:
-                if item["model"] == "card":
-                    self._labels = self._labels.union(Card(item).labels)
-                elif item["model"] == "collection":
-                    self._labels = self._labels.union(
-                        Collection(item, metabase_api=self.metabase_api).labels
-                    )
-                elif item["model"] == "dashboard":
-                    self._labels = self._labels.union(Dashboard(item).labels)
-                # copy a pulse
-                elif item["model"] == "pulse":
-                    continue
-                else:
-                    raise ValueError(
-                        f"We are not copying objects of type '{item['model']}'; specifically the one named '{item['name']}'!!!"
-                    )
-        return clean_labels(self._labels)
+    def migrate(self, params: CardParameters, push: bool) -> bool:
+        raise NotImplementedError()
+
+    def push(self, metabase_api: Metabase_API) -> bool:
+        raise NotImplementedError()
+
+    # @property
+    # def labels(self) -> set[str]:
+    #     """Scans the collection and returns its labels."""
+    #     if len(self._labels) == 0:
+    #         # scans all items of collection
+    #         for item in self.items:
+    #             if item["model"] == "card":
+    #                 self._labels = self._labels.union(Card(item).labels)
+    #             elif item["model"] == "collection":
+    #                 self._labels = self._labels.union(
+    #                     Collection(item, metabase_api=self.metabase_api).labels
+    #                 )
+    #             elif item["model"] == "dashboard":
+    #                 self._labels = self._labels.union(Dashboard(item).labels)
+    #             # copy a pulse
+    #             elif item["model"] == "pulse":
+    #                 continue
+    #             else:
+    #                 raise ValueError(
+    #                     f"We are not copying objects of type '{item['model']}'; specifically the one named '{item['name']}'!!!"
+    #                 )
+    #     return clean_labels(self._labels)

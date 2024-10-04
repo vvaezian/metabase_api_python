@@ -89,6 +89,83 @@ def migration_function(
                         )
                         if _r is not None:
                             t[1][1] = _r
+    elif top_of_stack == TraverseStackElement.PARAMETER:
+        params_dict = caller_json
+        # let's update all references
+        if params_dict.get("values_source_type", "nothing") == "card":
+            src_config = params_dict["values_source_config"]
+            src_config["card_id"] = params.transformations["cards"][
+                src_config["card_id"]
+            ]
+            if "value_field" in src_config:
+                value_field = src_config["value_field"]
+                if value_field[0] == "field":
+                    if isinstance(value_field[1], int):
+                        value_field[
+                            1
+                        ] = params.table_equivalencies.column_equivalent_for(
+                            column_id=value_field[1]
+                        )
+    elif top_of_stack == TraverseStackElement.PARAM_VALUES:
+        param_values = caller_json
+        for field_id_as_str, field_info in deepcopy(param_values).items():
+            field_id = int(field_id_as_str)
+            # was it already migrated?
+            if (
+                params.table_equivalencies.target_table_for_column(column_id=field_id)
+                is None
+            ):
+                new_field_id = params.replace_column_id(column_id=field_id)
+                # by any chance, is this column _already_ on a target table?
+                if (
+                    params.table_equivalencies.target_table_for_column(
+                        column_id=new_field_id
+                    )
+                    is None
+                ):
+                    # no, it's not already migrated. Carry on!
+                    new_field_id_as_str = str(new_field_id)
+                    param_values[new_field_id_as_str] = param_values.pop(
+                        field_id_as_str
+                    )
+                    param_values[new_field_id_as_str]["field_id"] = new_field_id
+                    param_values[new_field_id_as_str]["values"] = list()
+    elif top_of_stack == TraverseStackElement.PARAM_FIELDS:
+        old_param_fields = caller_json
+        new_ks: dict[str, str] = {}
+        for field_id_as_str, field_info in old_param_fields.items():
+            try:
+                field_id = int(field_id_as_str)
+                # if this field is _already_ on the target tables, no need to migrate it:
+                field_on_target = (
+                    params.table_equivalencies.target_table_for_column(
+                        column_id=field_id
+                    )
+                    is not None
+                )
+                if not field_on_target:
+                    src_table_id = field_info["table_id"]
+                    field_name = params.table_equivalencies.get_src_table(
+                        table_id=src_table_id
+                    ).get_column_name(column_id=field_id)
+                    dst_table_id = params.table_equivalencies[src_table_id].unique_id
+                    new_field_id = params.table_equivalencies.get_dst_table(
+                        dst_table_id
+                    ).get_column_id(field_name)
+                    # ok. Let's now change:
+                    field_info["table_id"] = dst_table_id
+                    field_info["id"] = new_field_id
+                    # and remember to change the key of the overlaying dictionary
+                    new_ks[field_id_as_str] = str(new_field_id)
+            except ValueError as ve:
+                raise RuntimeError(
+                    "apparently one of the param fields is not an int...?"
+                ) from ve
+        # ok, time to replace keys:
+        for old_key, new_key in new_ks.items():
+            old_param_fields[new_key] = old_param_fields[old_key]
+            del old_param_fields[old_key]
+
     elif top_of_stack == TraverseStackElement.QUERY_PART:
         query_part = caller_json
         # table
@@ -125,7 +202,7 @@ def migration_function(
                 _logger.debug(f"=---- migrating referenced card '{new_card_id}'")
                 Card.from_id(
                     card_id=new_card_id, metabase_api=params.metabase_api
-                ).migrate(params=params)
+                ).migrate(params=params, push=True)
                 query_part["source-table"] = f"card__{new_card_id}"
             else:
                 raise ValueError(

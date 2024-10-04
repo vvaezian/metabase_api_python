@@ -76,6 +76,18 @@ def label_fetcher(
             if (k == "description") or (k == "name"):
                 if v is not None:
                     _labels.add(v)
+    elif top_of_stack == TraverseStackElement.DASHBOARD:
+        dash = caller_json
+        for k, v in dash.items():
+            if k in {"description", "name"}:
+                _labels.add(v)
+    elif top_of_stack == TraverseStackElement.TABS:
+        tabs = caller_json
+        for a_tab in tabs:
+            _labels.add(a_tab["name"])
+    elif top_of_stack == TraverseStackElement.PARAMETER:
+        params_dict = caller_json
+        _labels.add(params_dict["name"])
     elif top_of_stack == TraverseStackElement.VISUALIZATION_SETTINGS:
         viz_set = caller_json
         for k, v in viz_set.items():
@@ -117,6 +129,18 @@ def label_replacer(
             if (k == "description") or (k == "name"):
                 if v is not None:
                     card_json[k] = labels_repl.get(v, v)
+    if top_of_stack == TraverseStackElement.DASHBOARD:
+        dash = caller_json
+        for k, v in dash.items():
+            if k in {"description", "name"}:
+                dash[k] = labels_repl.get(v, v)
+    elif top_of_stack == TraverseStackElement.TABS:
+        tabs = caller_json
+        for a_tab in tabs:
+            a_tab["name"] = labels_repl.get(a_tab["name"], a_tab["name"])
+    elif top_of_stack == TraverseStackElement.PARAMETER:
+        params_dict = caller_json
+        params_dict["name"] = labels_repl.get(params_dict["name"], params_dict["name"])
     elif top_of_stack == TraverseStackElement.VISUALIZATION_SETTINGS:
         viz_set = caller_json
         for k, v in viz_set.items():
