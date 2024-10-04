@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/weird_product.schema.json",
+  "title": "Numeric Options",
+  "description": "Format of the numerical values",
+  "type": "object",
+  "properties": {
+    "numbers": {
+      "$ref": "#/definitions/numbers"
+    }
+  },
+  "definitions": {
+    "numbers": {
+      "type": "object",
+      "description": "Definitions of replacements for fields",
+      "properties": {
+        "number_style": {
+          "type": "string",
+          "description": "Name of style of numbers",
+          "minLength": 2
+        },
+        "number_separators": {
+          "type": "string",
+          "description": "Separators in numbers",
+          "minLength": 2
+        },
+        "currency": {
+          "$ref": "#/definitions/numbers_prefix_suffix"
+        },
+        "other": {
+          "$ref": "#/definitions/numbers_prefix_suffix"
+        }
+      },
+      "required": [
+        "number_style",
+        "number_separators",
+        "currency",
+        "other"
+      ]
+    },
+    "numbers_prefix_suffix": {
+      "type": "object",
+      "description": "Prefix and suffix for numbers",
+      "properties": {
+        "prefix": {
+          "type": "string",
+          "description": "Prefix for numbers",
+          "minLength": 0
+        },
+        "suffix": {
+          "type": "string",
+          "description": "Suffix for numbers",
+          "minLength": 0
+        }
+      },
+      "required": [
+        "prefix",
+        "suffix"
+      ]
+    }
+  },
+  "required": [
+    "numbers"
+  ],
+  "additionalProperties": false
+}

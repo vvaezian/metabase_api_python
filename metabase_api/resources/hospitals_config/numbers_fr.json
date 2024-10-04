@@ -1,0 +1,14 @@
+{
+  "numbers": {
+    "number_style": "decimal",
+    "number_separators": ", ",
+    "currency": {
+      "suffix": " $",
+      "prefix": ""
+    },
+    "other": {
+      "suffix": "",
+      "prefix": ""
+    }
+  }
+}

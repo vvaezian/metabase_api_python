@@ -53,21 +53,33 @@ if __name__ == "__main__":
         "--about", required=False, type=str, help="new dashboard 'about' section"
     )
     parser.add_argument(
-        "--personalization",
-        "-p",
+        "--fields",
         required=False,
         type=Path,
-        help="File (json) with personalization options",
+        help="File (json) with fields replacements",
+    )
+    parser.add_argument(
+        "--labels",
+        required=False,
+        type=Path,
+        help="File (json) with labels replacements",
+    )
+    parser.add_argument(
+        "--numbers",
+        required=True,
+        type=Path,
+        help="File (json) with number formatting",
     )
 
     args = parser.parse_args()
     config = vars(args)
 
     # did I just get personalization options?
-    perso_options: Options = Options(fields_replacements=dict(), language=Language.EN)
-    if config["personalization"] is not None:
-        perso_options = Options.from_json_file(p=Path(config["personalization"]))
-
+    perso_options: Options = Options.from_json_files(
+        p_otheroptions_opt=config["numbers"],
+        p_fields_opt=config["fields"],
+        p_labels_opt=config["labels"],
+    )
     # if user's email wasn't specified, I need to find it as an env variable
     if not config["user"]:
         config["user"] = os.environ.get("METABASE_LOGIN")
@@ -118,7 +130,7 @@ if __name__ == "__main__":
     _logger.info(f"Starting migration of collection {src_collection_id}")
     migrate_collection(
         metabase_api=metabase_api,
-        personalization_options=perso_options,
+        user_options=perso_options,
         source_collection_id=src_collection_id,
         db_target=db_target_id,
         parent_collection_id=config["to_parent"],
