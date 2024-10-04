@@ -1,7 +1,7 @@
 from metabase_api import Metabase_API
 from metabase_api.objects.card import Card
 from metabase_api.objects.dashboard import Dashboard
-from metabase_api.objects.defs import CollectionObject
+from metabase_api.objects.defs import CollectionObject, clean_labels
 
 
 class Collection(CollectionObject):
@@ -51,4 +51,4 @@ class Collection(CollectionObject):
                     raise ValueError(
                         f"We are not copying objects of type '{item['model']}'; specifically the one named '{item['name']}'!!!"
                     )
-        return self.clean_labels(self._labels)
+        return clean_labels(self._labels)

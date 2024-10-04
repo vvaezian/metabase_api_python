@@ -9,6 +9,7 @@ from metabase_api.objects.defs import (
     TraverseStackElement,
     TraverseStack,
     CardParameters,
+    clean_labels,
 )
 from metabase_api.objects.visitors.defs import (
     number_formatter,
@@ -152,7 +153,7 @@ class Card(CollectionObject):
     @property
     def labels(self) -> set[str]:
         if len(self._labels) == 0:
-            self._labels = self.clean_labels(set(self.traverse(f=label_fetcher).v))
+            self._labels = clean_labels(set(self.traverse(f=label_fetcher).v))
         return self._labels
 
     def translate(self, translation_dict: dict[str, str]):

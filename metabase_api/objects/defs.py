@@ -12,6 +12,11 @@ from metabase_api.utility.translation import Language
 _logger = logging.getLogger(__name__)
 
 
+def clean_labels(labels: set[str]) -> set[str]:
+    """Does a minimal clean-up of labels."""
+    return {l.strip() for l in labels if len(l.strip()) > 0}
+
+
 class TraverseStackElement(Enum):
     """All the elements I can visit when I am traversing an object."""
 
@@ -98,9 +103,6 @@ class CollectionObject(abc.ABC):
             The same value as 'f'
         """
         pass
-
-    def clean_labels(self, labels: set[str]) -> set[str]:
-        return {l.strip() for l in labels if len(l.strip()) > 0}
 
 
 @dataclass
