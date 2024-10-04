@@ -1,8 +1,8 @@
 import logging
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Callable, Optional, Any
 
-from metabase_api import Metabase_API
+from metabase_api.metabase_api import Metabase_API
 from metabase_api.objects.defs import (
     CollectionObject,
     ReturnValue,
@@ -27,9 +27,7 @@ _logger = logging.getLogger(__name__)
 class Card(CollectionObject):
     """A Card! :-)"""
 
-    card_json: dict
-
-    def __init__(self, card_json: dict):
+    def __init__(self, card_json: dict[str, Any]) -> None:
         if "model" in card_json:  # field not always there. Depends on provenance.
             assert (
                 card_json["model"] == "card"
@@ -45,14 +43,15 @@ class Card(CollectionObject):
 
     @property
     def card_id(self) -> int:
-        return self.card_json["id"]
+        return int(self.card_json["id"])
 
     def traverse(
         self,
-        f: Callable[[dict, TraverseStack], ReturnValue],
+        f: Callable[[dict[Any, Any], TraverseStack], ReturnValue],
         call_stack: Optional[TraverseStack] = None,
     ) -> ReturnValue:
-        def _traverse_query_part(query_part: dict) -> ReturnValue:
+        def _traverse_query_part(query_part: dict[Any, Any]) -> ReturnValue:
+            assert call_stack is not None
             with call_stack.add(TraverseStackElement.QUERY_PART):
                 r = f(query_part, call_stack)
                 if "source-query" in query_part:
@@ -60,7 +59,8 @@ class Card(CollectionObject):
                     r = r.union(r1)
             return r
 
-        def _visualization_settings(viz_settings: dict) -> ReturnValue:
+        def _visualization_settings(viz_settings: dict[Any, Any]) -> ReturnValue:
+            assert call_stack is not None
             with call_stack.add(TraverseStackElement.VISUALIZATION_SETTINGS):
                 r = f(viz_settings, call_stack)
                 for k, v in viz_settings.items():
@@ -156,7 +156,7 @@ class Card(CollectionObject):
             self._labels = clean_labels(set(self.traverse(f=label_fetcher).v))
         return self._labels
 
-    def translate(self, translation_dict: dict[str, str]):
+    def translate(self, translation_dict: dict[str, str]) -> None:
         self.traverse(
             f=lambda a_json, a_stack: label_replacer(
                 caller_json=a_json, call_stack=a_stack, labels_repl=translation_dict
@@ -164,4 +164,6 @@ class Card(CollectionObject):
         )
 
     def push(self, metabase_api: Metabase_API) -> bool:
-        return metabase_api.put(f"/api/card/{self.card_id}", json=self.card_json) == 200
+        return bool(
+            metabase_api.put(f"/api/card/{self.card_id}", json=self.card_json) == 200
+        )

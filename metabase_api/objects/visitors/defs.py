@@ -8,9 +8,11 @@ _logger = logging.getLogger(__name__)
 
 
 def number_formatter(
-    caller_json: dict, number_format: NumberFormat, call_stack: TraverseStack
+    caller_json: dict,  # type:ignore
+    number_format: NumberFormat,
+    call_stack: TraverseStack,
 ) -> ReturnValue:
-    def _formatting_settings_from(d: dict) -> dict:
+    def _formatting_settings_from(d: dict[str, str]) -> dict[str, str]:
         """Builds the dictionary for number formatting."""
         CURRENCY_HINTS = {"cost", "price", "money", "income"}
         title_looks_like_currency = (
@@ -58,7 +60,10 @@ def number_formatter(
     return ReturnValue(None)
 
 
-def label_fetcher(caller_json: dict, call_stack: TraverseStack) -> ReturnValue:
+def label_fetcher(
+    caller_json: dict,  # type:ignore
+    call_stack: TraverseStack,
+) -> ReturnValue:
     """Fetches labels from a structure."""
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
@@ -97,7 +102,9 @@ def label_fetcher(caller_json: dict, call_stack: TraverseStack) -> ReturnValue:
 
 
 def label_replacer(
-    caller_json: dict, call_stack: TraverseStack, labels_repl: dict[str, str]
+    caller_json: dict,  # type:ignore
+    call_stack: TraverseStack,
+    labels_repl: dict[str, str],
 ) -> ReturnValue:
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
