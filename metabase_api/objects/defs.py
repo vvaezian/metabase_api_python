@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import Callable, Any, Optional
 
-from metabase_api import Metabase_API
+from metabase_api.metabase_api import Metabase_API
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.options import Options
 
@@ -34,7 +34,7 @@ class TraverseStackElement(Enum):
 class TraverseStack(list[TraverseStackElement]):
     """A stack containing the elements we visit."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
     def add(self, elt: TraverseStackElement) -> "TraverseStack":
@@ -45,10 +45,10 @@ class TraverseStack(list[TraverseStackElement]):
     def empty(self) -> bool:
         return len(self) == 0
 
-    def __enter__(self):
+    def __enter__(self):  # type:ignore
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # type:ignore
         _ = self.pop()
 
 
@@ -77,7 +77,7 @@ class ReturnValue:
 class CollectionObject(abc.ABC):
     """Any object that can appear on a collection."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         pass
 
     @property
@@ -89,7 +89,7 @@ class CollectionObject(abc.ABC):
     @abc.abstractmethod
     def traverse(
         self,
-        f: Callable[[dict, TraverseStack], ReturnValue],
+        f: Callable[[dict[Any, Any], TraverseStack], ReturnValue],
         call_stack: Optional[TraverseStack] = None,
     ) -> ReturnValue:
         """
@@ -110,7 +110,7 @@ class CardParameters:
 
     metabase_api: Metabase_API
     db_target: int
-    transformations: dict
+    transformations: dict  # type:ignore
     table_equivalencies: TablesEquivalencies
     personalization_options: Options
 
@@ -132,7 +132,7 @@ class CardParameters:
         else:
             return new_field_id
 
-    def _handle_condition_filter(self, filter_parts: Any):
+    def _handle_condition_filter(self, filter_parts: Any) -> None:
         # todo: do I need to return anything....?
         def _is_cmp_op(op: str) -> bool:
             # cmp operator (like '>', '=', ...)
@@ -156,10 +156,7 @@ class CardParameters:
             else:
                 raise RuntimeError(f"Luis, this should be a constant: '{op}'... is it?")
 
-    def _replace_field_info_refs(
-        self,
-        field_info: list,
-    ) -> list:
+    def _replace_field_info_refs(self, field_info: list[Any]) -> list[Any]:
         if field_info[0] == "field":
             # reference to a table's column. Replace it.
             old_field_id = field_info[1]

@@ -1,14 +1,21 @@
-from metabase_api import Metabase_API
+from typing import Any, Callable, Optional
+
+from metabase_api.metabase_api import Metabase_API
 from metabase_api.objects.card import Card
 from metabase_api.objects.dashboard import Dashboard
-from metabase_api.objects.defs import CollectionObject, clean_labels
+from metabase_api.objects.defs import (
+    CollectionObject,
+    clean_labels,
+    TraverseStack,
+    ReturnValue,
+)
 
 
 class Collection(CollectionObject):
 
-    as_json: dict
+    as_json: dict[Any, Any]
 
-    def __init__(self, as_json: dict, metabase_api: Metabase_API):
+    def __init__(self, as_json: dict[Any, Any], metabase_api: Metabase_API) -> None:
         self.as_json = as_json
         self._labels: set[str] = set()
         self.metabase_api = metabase_api
@@ -21,14 +28,21 @@ class Collection(CollectionObject):
 
     @property
     def object_id(self) -> int:
-        return self.as_json["id"]
+        return int(self.as_json["id"])
 
     @property
-    def items(self) -> dict:
+    def items(self) -> list[dict[Any, Any]]:
         collection_details = self.metabase_api.get(
             f"/api/collection/{self.object_id}/items"
         )
-        return collection_details["data"]
+        return list(collection_details["data"])
+
+    def traverse(
+        self,
+        f: Callable[[dict[Any, Any], TraverseStack], ReturnValue],
+        call_stack: Optional[TraverseStack] = None,
+    ) -> ReturnValue:
+        raise NotImplementedError()
 
     @property
     def labels(self) -> set[str]:
