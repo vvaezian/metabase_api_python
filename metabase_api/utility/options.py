@@ -41,14 +41,14 @@ class Options:
         p_fields_opt: Optional[Path] = None,
         p_labels_opt: Optional[Path] = None,
     ) -> "Options":
-        def _read_json(p: Path) -> dict:
+        def _read_json(p: Path) -> dict:  # type:ignore
             if not p.exists():
                 raise FileNotFoundError(p)
             if p.suffix != ".json":
                 raise ValueError(f"File must be a json (got '{str(p)}')")
             _logger.info(f"Reading from '{str(p)}'...")
             with open(p) as f:
-                return json.load(f)
+                return json.load(f)  # type:ignore
 
         number_options = _read_json(p_otheroptions_opt)
         _logger.debug(f"Parsing number options using '{str(JSON_SCHEMA_LOC)}'...")

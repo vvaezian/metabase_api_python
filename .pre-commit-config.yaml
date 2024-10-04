@@ -47,10 +47,28 @@ repos:
 - repo: local
   hooks:
     - id: mypy
-      name: mypy
+      name: mypy-scripts
       entry: mypy
       language: system
       files: ^scripts/
+      types: [python]
+      args:
+        [
+          "--config-file=mypy.ini",
+          "--namespace-packages",
+          "--explicit-package-bases",
+        ]
+      # print the number of files as a sanity-check
+      verbose: true
+      # check this out: https://stackoverflow.com/a/75447331
+      exclude: "(docs/.*\\.py|sandbox/)"
+- repo: local
+  hooks:
+    - id: mypy
+      name: mypy-some-utils
+      entry: mypy
+      language: system
+      files: ^metabase_api/utility/
       types: [python]
       args:
         [

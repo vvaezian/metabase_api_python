@@ -2,7 +2,7 @@ import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
-from metabase_api import Metabase_API
+from metabase_api.metabase_api import Metabase_API
 from metabase_api._helper_methods import ItemType
 from metabase_api.utility.db.columns import ColumnReferences
 
@@ -84,7 +84,7 @@ class TablesEquivalencies:
         self.dst_bd_id = dst_bd_id
         self._src2dst = dict()
 
-    def add(self, src2dst: dict[int, int]):
+    def add(self, src2dst: dict[int, int]) -> None:
         src_dbs: set[str] = set()
         for table_src_id, table_dst_id in src2dst.items():
             if table_dst_id in self.src_tables_ids:
