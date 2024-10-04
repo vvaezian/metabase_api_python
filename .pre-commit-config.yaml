@@ -80,3 +80,21 @@ repos:
       verbose: true
       # check this out: https://stackoverflow.com/a/75447331
       exclude: "(docs/.*\\.py|sandbox/)"
+- repo: local
+  hooks:
+    - id: mypy
+      name: mypy-objects
+      entry: mypy
+      language: system
+      files: ^metabase_api/objects/
+      types: [python]
+      args:
+        [
+          "--config-file=mypy.ini",
+          "--namespace-packages",
+          "--explicit-package-bases",
+        ]
+      # print the number of files as a sanity-check
+      verbose: true
+      # check this out: https://stackoverflow.com/a/75447331
+      exclude: "(docs/.*\\.py|sandbox/)"

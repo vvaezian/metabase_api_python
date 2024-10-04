@@ -7,7 +7,7 @@ dependencies:
   - hypothesis=6.111.0
   - pre-commit=2.20.0
   - pylint=2.16.2
-  - mypy=1.8.0
+  - mypy=1.11.2
   - pytest=7.1.2
   - pandas-stubs=2.0.0.230412
   - pyyaml=6.0.0
