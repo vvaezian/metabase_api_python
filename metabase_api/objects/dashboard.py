@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from typing import Callable, Optional
 
 from metabase_api.objects.card import Card
-from metabase_api.objects.defs import CollectionObject, ReturnValue
+from metabase_api.objects.defs import CollectionObject, ReturnValue, clean_labels
 
 _logger = logging.getLogger(__name__)
 
@@ -58,4 +58,4 @@ class Dashboard(CollectionObject):
                         dash["description"] != ""
                     ):
                         self._labels.add(dash["description"])
-        return self.clean_labels(self._labels)
+        return clean_labels(self._labels)

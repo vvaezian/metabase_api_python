@@ -7,9 +7,13 @@ from typing import Callable, Any, Optional
 from metabase_api import Metabase_API
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.options import Options
-from metabase_api.utility.translation import Language
 
 _logger = logging.getLogger(__name__)
+
+
+def clean_labels(labels: set[str]) -> set[str]:
+    """Does a minimal clean-up of labels."""
+    return {l.strip() for l in labels if len(l.strip()) > 0}
 
 
 class TraverseStackElement(Enum):
@@ -98,9 +102,6 @@ class CollectionObject(abc.ABC):
             The same value as 'f'
         """
         pass
-
-    def clean_labels(self, labels: set[str]) -> set[str]:
-        return {l.strip() for l in labels if len(l.strip()) > 0}
 
 
 @dataclass
