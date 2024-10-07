@@ -9,11 +9,9 @@ from metabase_api.objects.defs import (
     TraverseStackElement,
     TraverseStack,
     CardParameters,
-    clean_labels,
 )
 from metabase_api.objects.visitors.defs import (
     number_formatter,
-    label_fetcher,
     label_replacer,
 )
 
@@ -32,9 +30,7 @@ class Card(CollectionObject):
             assert (
                 card_json["model"] == "card"
             ), f"json structure does not contain a card; it contains '{card_json['model']}'"
-        self.card_json = card_json
-        self._labels: set[str] = set()
-        super().__init__()
+        super().__init__(as_json=card_json)
 
     @classmethod
     def from_id(cls, card_id: int, metabase_api: Metabase_API) -> "Card":
@@ -42,8 +38,8 @@ class Card(CollectionObject):
         return Card(card_json=card_json)
 
     @property
-    def card_id(self) -> int:
-        return int(self.card_json["id"])
+    def card_id(self) -> int:  # todo: deprecate and use 'object_id' directly.
+        return self.object_id
 
     def traverse(
         self,
@@ -104,27 +100,27 @@ class Card(CollectionObject):
                             f(series_settings, call_stack)
             return r
 
-        # nb: I am using here self.card_json, which means that it will have to be
+        # nb: I am using here self.as_json, which means that it will have to be
         # put up-to-date before making this call.
         _logger.info(f"Visiting card id '{self.card_id}'")
         if call_stack is None:
             call_stack = TraverseStack()
         with call_stack.add(TraverseStackElement.CARD):
             # let's first apply the function to the card itself
-            r = f(self.card_json, call_stack)
+            r = f(self.as_json, call_stack)
             # ...and then let's go on each of its sub-parts
-            if "dataset_query" in self.card_json:
-                if "query" in self.card_json["dataset_query"]:
+            if "dataset_query" in self.as_json:
+                if "query" in self.as_json["dataset_query"]:
                     r1 = _traverse_query_part(
-                        query_part=self.card_json["dataset_query"]["query"]
+                        query_part=self.as_json["dataset_query"]["query"]
                     )
                     r = r.union(r1)
-            if "visualization_settings" in self.card_json:
-                r1 = _visualization_settings(self.card_json["visualization_settings"])
+            if "visualization_settings" in self.as_json:
+                r1 = _visualization_settings(self.as_json["visualization_settings"])
                 r = r.union(r1)
         return r
 
-    def migrate(self, params: CardParameters, push: bool = True) -> bool:
+    def migrate(self, params: CardParameters, push: bool) -> bool:
         """Migrates a card, based on a set of parameters. Pushes if flag is True."""
         from metabase_api.migration.defs import migration_function
 
@@ -150,12 +146,12 @@ class Card(CollectionObject):
             MIGRATED_CARDS.append(self.card_id)
         return success
 
-    @property
-    def labels(self) -> set[str]:
-        if len(self._labels) == 0:
-            self._labels = clean_labels(set(self.traverse(f=label_fetcher).v))
-        return self._labels
-
+    # @property
+    # def labels(self) -> set[str]:
+    #     if len(self._labels) == 0:
+    #         self._labels = clean_labels(set(self.traverse(f=label_fetcher).v))
+    #     return self._labels
+    #
     def translate(self, translation_dict: dict[str, str]) -> None:
         self.traverse(
             f=lambda a_json, a_stack: label_replacer(
@@ -165,5 +161,5 @@ class Card(CollectionObject):
 
     def push(self, metabase_api: Metabase_API) -> bool:
         return bool(
-            metabase_api.put(f"/api/card/{self.card_id}", json=self.card_json) == 200
+            metabase_api.put(f"/api/card/{self.card_id}", json=self.as_json) == 200
         )

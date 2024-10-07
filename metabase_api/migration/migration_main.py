@@ -1,10 +1,10 @@
 import logging
-from copy import deepcopy
 from typing import Optional
 
 from metabase_api import Metabase_API
 from metabase_api._helper_methods import ItemType
 from metabase_api.objects.card import Card
+from metabase_api.objects.dashboard import Dashboard
 from metabase_api.objects.defs import CardParameters
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.options import Options
@@ -89,7 +89,7 @@ def migrate_collection(
         # r = Card(card_json=item).migrate(card_params)
         # because not _all_ info is there. Need to fetch it again:
         r = Card.from_id(card_id=item["id"], metabase_api=metabase_api).migrate(
-            params=card_params
+            params=card_params, push=True
         )
         if not r:
             raise RuntimeError(f"Impossible to migrate card '{item['id']}'")
@@ -106,130 +106,12 @@ def migrate_collection(
         if dash["archived"]:
             _logger.info(f"Dashboard {dashboard_id} is archived. Will migrate anyways.")
         _logger.info(f"Migrating dashboard {dashboard_id}...")
-        # let's visit all of its parts - to translate or to update references
-        for card_json in dash["dashcards"]:
-            Card(card_json).migrate(card_params, push=False)
-        for k, v in dash.items():
-            if k == "description":
-                if dash["description"] is not None:
-                    dash["description"] = user_options.maybe_replace_label(
-                        dash["description"]
-                    )
-            elif k == "tabs":
-                # tabs in dashboard
-                tabs = v
-                for a_tab in tabs:
-                    # let's translate the name
-                    a_tab["name"] = user_options.maybe_replace_label(a_tab["name"])
-            elif k == "parameters":
-                parameters = v
-                for params_dict in parameters:
-                    # let's translate the name
-                    params_dict["name"] = user_options.maybe_replace_label(
-                        params_dict["name"]
-                    )
-                    # and now let's update all references
-                    if params_dict.get("values_source_type", "nothing") == "card":
-                        src_config = params_dict["values_source_config"]
-                        src_config["card_id"] = transformations["cards"][
-                            src_config["card_id"]
-                        ]
-                        if "value_field" in src_config:
-                            value_field = src_config["value_field"]
-                            if value_field[0] == "field":
-                                if isinstance(value_field[1], int):
-                                    value_field[
-                                        1
-                                    ] = table_equivalencies.column_equivalent_for(
-                                        column_id=value_field[1]
-                                    )
-            elif k == "param_values":
-                param_values = v
-                if param_values is not None:
-                    for field_id_as_str, field_info in deepcopy(
-                        dash["param_values"]
-                    ).items():
-                        field_id = int(field_id_as_str)
-                        # was it already migrated?
-                        if (
-                            card_params.table_equivalencies.target_table_for_column(
-                                column_id=field_id
-                            )
-                            is None
-                        ):
-                            new_field_id = card_params.replace_column_id(
-                                column_id=field_id
-                            )
-                            # by any chance, is this column _already_ on a target table?
-                            if (
-                                card_params.table_equivalencies.target_table_for_column(
-                                    column_id=new_field_id
-                                )
-                                is None
-                            ):
-                                # no, it's not already migrated. Carry on!
-                                new_field_id_as_str = str(new_field_id)
-                                param_values[new_field_id_as_str] = param_values.pop(
-                                    field_id_as_str
-                                )
-                                param_values[new_field_id_as_str][
-                                    "field_id"
-                                ] = new_field_id
-                                param_values[new_field_id_as_str]["values"] = list()
-            elif k == "param_fields":
-                # param fields
-                old_param_fields = deepcopy(dash["param_fields"])
-                if old_param_fields is not None:
-                    for field_id_as_str, field_info in old_param_fields.items():
-                        try:
-                            field_id = int(field_id_as_str)
-                            # if this field is _already_ on the target tables, no need to migrate it:
-                            if (
-                                table_equivalencies.target_table_for_column(
-                                    column_id=field_id
-                                )
-                                is None
-                            ):
-                                src_table_id = field_info["table_id"]
-                                field_name = table_equivalencies.get_src_table(
-                                    table_id=src_table_id
-                                ).get_column_name(column_id=field_id)
-                                dst_table_id = table_equivalencies[
-                                    src_table_id
-                                ].unique_id
-                                new_field_id = table_equivalencies.get_dst_table(
-                                    dst_table_id
-                                ).get_column_id(field_name)
-                                # ok. Let's now change:
-                                new_field_id_as_str = str(new_field_id)
-                                dash["param_fields"][new_field_id_as_str] = dash[
-                                    "param_fields"
-                                ].pop(field_id_as_str)
-                                dash["param_fields"][new_field_id_as_str][
-                                    "id"
-                                ] = new_field_id_as_str
-                                dash["param_fields"][new_field_id_as_str][
-                                    "table_id"
-                                ] = dst_table_id
-                        except ValueError as ve:
-                            # apparently one of the param fields is not an int...?
-                            pass
-            elif k == "name":
-                # change name, tag it, and go!
-                dash["name"] = (
-                    new_dashboard_name
-                    if new_dashboard_name is not None
-                    else dash["name"]
-                )
-            elif k == "description":
-                # change description
-                dash["description"] = (
-                    new_dashboard_description
-                    if new_dashboard_description is not None
-                    else dash["description"]
-                )
-        _logger.info(f"Using API to update dashboard '{dashboard_id}'...")
-        r = metabase_api.put(f"/api/dashboard/{dashboard_id}", json=dash)
-        # sanity check
-        assert r == 200, f"Problems updating dashboard '{dashboard_id}'; code {r}"
+        dashboard = Dashboard(dash)
+        dashboard.migrate(params=card_params, push=False)
+        dashboard.translate(
+            translation_dict=card_params.personalization_options.labels_replacements
+        )
+        assert dashboard.push(
+            metabase_api
+        ), f"Problems updating dashboard '{dashboard_id}'"
     _logger.info("Migration terminated")

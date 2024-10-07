@@ -20,15 +20,22 @@ class TraverseStackElement(Enum):
     """All the elements I can visit when I am traversing an object."""
 
     CARD = auto()
-    VISUALIZATION_SETTINGS = auto()
+    CLICK_BEHAVIOR = auto()
+    COLLECTION = auto()
+    COLUMN_SETTINGS = auto()
+    DASHBOARD = auto()
+    GRAPH_DIMENSIONS = auto()
+    PARAMETER_MAPPING = auto()
+    PARAMETER = auto()
+    PARAM_FIELDS = auto()
+    PARAM_VALUES = auto()
+    PULSE = auto()
     QUERY_PART = auto()
+    SERIES_SETTINGS = auto()
     TABLE_COLUMN = auto()
     TABLE_COLUMNS = auto()
-    CLICK_BEHAVIOR = auto()
-    PARAMETER_MAPPING = auto()
-    GRAPH_DIMENSIONS = auto()
-    COLUMN_SETTINGS = auto()
-    SERIES_SETTINGS = auto()
+    TABS = auto()
+    VISUALIZATION_SETTINGS = auto()
 
 
 class TraverseStack(list[TraverseStackElement]):
@@ -58,12 +65,18 @@ class ReturnValue:
     def __init__(self, v: Any):
         self.v = v
 
+    @classmethod
+    def empty(cls) -> "ReturnValue":
+        return ReturnValue(None)
+
     def union(self, v: Any) -> "ReturnValue":
         if isinstance(v, ReturnValue):
             v = v.v
         # union-ing with None always works:
         if self.v is None:
             return ReturnValue(v)
+        if v is None:
+            return ReturnValue(self.v)
         # two values need to be the same type
         if not isinstance(v, type(self.v)):
             raise TypeError("Impossible to union")
@@ -72,36 +85,6 @@ class ReturnValue:
         if isinstance(self.v, list):
             return ReturnValue(self.v + v)
         raise NotImplementedError("not sure what happened here")
-
-
-class CollectionObject(abc.ABC):
-    """Any object that can appear on a collection."""
-
-    def __init__(self) -> None:
-        pass
-
-    @property
-    @abc.abstractmethod
-    def labels(self) -> set[str]:
-        """Returns all labels found in this object."""
-        pass
-
-    @abc.abstractmethod
-    def traverse(
-        self,
-        f: Callable[[dict[Any, Any], TraverseStack], ReturnValue],
-        call_stack: Optional[TraverseStack] = None,
-    ) -> ReturnValue:
-        """
-        Traverses the object, applying a function to the visited place.
-        Args:
-            f: function to apply
-            call_stack: stack to know where these calls originated from.
-
-        Returns:
-            The same value as 'f'
-        """
-        pass
 
 
 @dataclass
@@ -190,3 +173,65 @@ class CardParameters:
                         item,
                     )
         return field_info
+
+
+class CollectionObject(abc.ABC):
+    """Any object that can appear on a collection."""
+
+    def __init__(self, as_json: dict[Any, Any]):
+        self.as_json = as_json
+        self._labels: set[str] = set()
+
+    @property
+    def object_id(self) -> int:
+        return int(self.as_json["id"])
+
+    @property
+    def labels(self) -> set[str]:
+        from metabase_api.objects.visitors.defs import label_fetcher
+
+        if len(self._labels) == 0:
+            self._labels = clean_labels(set(self.traverse(f=label_fetcher).v))
+        return self._labels
+
+    @abc.abstractmethod
+    def traverse(
+        self,
+        f: Callable[[dict[Any, Any], TraverseStack], ReturnValue],
+        call_stack: Optional[TraverseStack] = None,
+    ) -> ReturnValue:
+        """
+        Traverses the object, applying a function to the visited place.
+        Args:
+            f: function to apply
+            call_stack: stack to know where these calls originated from.
+
+        Returns:
+            The same value as 'f'
+        """
+        pass
+
+    @abc.abstractmethod
+    def push(self, metabase_api: Metabase_API) -> bool:
+        pass
+
+    def migrate(self, params: CardParameters, push: bool) -> bool:
+        """Migrates the object, based on a set of parameters. Pushes if flag is True."""
+        from metabase_api.migration.defs import migration_function
+
+        self.traverse(
+            f=lambda a_json, a_stack: migration_function(
+                caller_json=a_json, params=params, call_stack=a_stack
+            ),
+        )
+        return self.push(metabase_api=params.metabase_api) if push else True
+
+    def translate(self, translation_dict: dict[str, str]) -> None:
+        """Changes labels in the object - aka, 'translates' it."""
+        from metabase_api.objects.visitors.defs import label_replacer
+
+        self.traverse(
+            f=lambda a_json, a_stack: label_replacer(
+                caller_json=a_json, call_stack=a_stack, labels_repl=translation_dict
+            ),
+        )

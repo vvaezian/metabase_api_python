@@ -1,34 +1,29 @@
+import logging
 from typing import Any, Callable, Optional
 
 from metabase_api.metabase_api import Metabase_API
-from metabase_api.objects.card import Card
-from metabase_api.objects.dashboard import Dashboard
 from metabase_api.objects.defs import (
     CollectionObject,
-    clean_labels,
     TraverseStack,
     ReturnValue,
+    TraverseStackElement,
 )
+
+_logger = logging.getLogger(__name__)
 
 
 class Collection(CollectionObject):
 
     as_json: dict[Any, Any]
 
-    def __init__(self, as_json: dict[Any, Any], metabase_api: Metabase_API) -> None:
-        self.as_json = as_json
-        self._labels: set[str] = set()
+    def __init__(self, as_json: dict[Any, Any], metabase_api: Metabase_API):
         self.metabase_api = metabase_api
-        super().__init__()
+        super().__init__(as_json=as_json)
 
     @classmethod
     def from_id(cls, coll_id: int, metabase_api: Metabase_API) -> "Collection":
         as_json = metabase_api.get(f"/api/card/{coll_id}")
         return Collection(as_json, metabase_api=metabase_api)
-
-    @property
-    def object_id(self) -> int:
-        return int(self.as_json["id"])
 
     @property
     def items(self) -> list[dict[Any, Any]]:
@@ -42,27 +37,29 @@ class Collection(CollectionObject):
         f: Callable[[dict[Any, Any], TraverseStack], ReturnValue],
         call_stack: Optional[TraverseStack] = None,
     ) -> ReturnValue:
-        raise NotImplementedError()
+        _logger.info(f"Visiting collection id '{self.object_id}'")
+        if call_stack is None:
+            call_stack = TraverseStack()
+        r: ReturnValue = ReturnValue.empty()
+        for item in self.items:
+            if item["model"] == "card":
+                with call_stack.add(TraverseStackElement.CARD):
+                    r = r.union(f(self.as_json, call_stack))
+            elif item["model"] == "collection":
+                with call_stack.add(TraverseStackElement.COLLECTION):
+                    r = r.union(f(self.as_json, call_stack))
+            elif item["model"] == "dashboard":
+                with call_stack.add(TraverseStackElement.DASHBOARD):
+                    r = r.union(f(self.as_json, call_stack))
+            # copy a pulse
+            elif item["model"] == "pulse":
+                with call_stack.add(TraverseStackElement.PULSE):
+                    r = r.union(f(self.as_json, call_stack))
+            else:
+                raise ValueError(
+                    f"We are not copying objects of type '{item['model']}'; specifically the one named '{item['name']}'!!!"
+                )
+        return r
 
-    @property
-    def labels(self) -> set[str]:
-        """Scans the collection and returns its labels."""
-        if len(self._labels) == 0:
-            # scans all items of collection
-            for item in self.items:
-                if item["model"] == "card":
-                    self._labels = self._labels.union(Card(item).labels)
-                elif item["model"] == "collection":
-                    self._labels = self._labels.union(
-                        Collection(item, metabase_api=self.metabase_api).labels
-                    )
-                elif item["model"] == "dashboard":
-                    self._labels = self._labels.union(Dashboard(item).labels)
-                # copy a pulse
-                elif item["model"] == "pulse":
-                    continue
-                else:
-                    raise ValueError(
-                        f"We are not copying objects of type '{item['model']}'; specifically the one named '{item['name']}'!!!"
-                    )
-        return clean_labels(self._labels)
+    def push(self, metabase_api: Metabase_API) -> bool:
+        raise NotImplementedError()
