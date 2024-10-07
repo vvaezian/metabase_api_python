@@ -21,6 +21,7 @@ class TraverseStackElement(Enum):
 
     CARD = auto()
     CLICK_BEHAVIOR = auto()
+    COLLECTION = auto()
     COLUMN_SETTINGS = auto()
     DASHBOARD = auto()
     GRAPH_DIMENSIONS = auto()
@@ -28,6 +29,7 @@ class TraverseStackElement(Enum):
     PARAMETER = auto()
     PARAM_FIELDS = auto()
     PARAM_VALUES = auto()
+    PULSE = auto()
     QUERY_PART = auto()
     SERIES_SETTINGS = auto()
     TABLE_COLUMN = auto()
@@ -62,6 +64,10 @@ class ReturnValue:
 
     def __init__(self, v: Any):
         self.v = v
+
+    @classmethod
+    def empty(cls) -> "ReturnValue":
+        return ReturnValue(None)
 
     def union(self, v: Any) -> "ReturnValue":
         if isinstance(v, ReturnValue):
@@ -177,6 +183,10 @@ class CollectionObject(abc.ABC):
         self._labels: set[str] = set()
 
     @property
+    def object_id(self) -> int:
+        return int(self.as_json["id"])
+
+    @property
     def labels(self) -> set[str]:
         from metabase_api.objects.visitors.defs import label_fetcher
 
@@ -205,10 +215,16 @@ class CollectionObject(abc.ABC):
     def push(self, metabase_api: Metabase_API) -> bool:
         pass
 
-    @abc.abstractmethod
     def migrate(self, params: CardParameters, push: bool) -> bool:
         """Migrates the object, based on a set of parameters. Pushes if flag is True."""
-        pass
+        from metabase_api.migration.defs import migration_function
+
+        self.traverse(
+            f=lambda a_json, a_stack: migration_function(
+                caller_json=a_json, params=params, call_stack=a_stack
+            ),
+        )
+        return self.push(metabase_api=params.metabase_api) if push else True
 
     def translate(self, translation_dict: dict[str, str]) -> None:
         """Changes labels in the object - aka, 'translates' it."""

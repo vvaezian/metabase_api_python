@@ -11,7 +11,6 @@ from metabase_api.objects.defs import (
     TraverseStack,
     TraverseStackElement,
     CardParameters,
-    clean_labels,
 )
 
 _logger = logging.getLogger(__name__)
@@ -26,8 +25,8 @@ class Dashboard(CollectionObject):
         super().__init__(as_json=as_json)
 
     @property
-    def dashboard_id(self) -> int:
-        return int(self.as_json["id"])
+    def dashboard_id(self) -> int:  # todo: deprecate and use 'object_id' directly.
+        return self.object_id
 
     def traverse(
         self,
@@ -81,41 +80,6 @@ class Dashboard(CollectionObject):
         #     ),
         # )
         return self.push(metabase_api=params.metabase_api) if push else True
-
-    @property
-    def labels(self) -> set[str]:
-        if len(self._labels) == 0:
-            dash = self.as_json
-            for card_json in self.as_json.get("dashcards", list()):
-                self._labels = self._labels.union(Card(card_json).labels)
-            for k, v in dash.items():
-                if k == "description":
-                    if dash["description"] is not None:
-                        self._labels.add(dash["description"])
-                elif k == "tabs":
-                    # tabs in dashboard
-                    tabs = v
-                    for a_tab in tabs:
-                        # let's translate the name
-                        self._labels.add(a_tab["name"])
-                elif k == "parameters":
-                    parameters = v
-                    for params_dict in parameters:
-                        # let's translate the name
-                        self._labels.add(params_dict["name"])
-                # elif k == "name":
-                #     # change name, tag it, and go!
-                #     dash["name"] = (
-                #         new_dashboard_name
-                #         if new_dashboard_name is not None
-                #         else dash["name"]
-                #     )
-                elif k == "description":
-                    if (dash["description"] is not None) and (
-                        dash["description"] != ""
-                    ):
-                        self._labels.add(dash["description"])
-        return clean_labels(self._labels)
 
     def push(self, metabase_api: Metabase_API) -> bool:
         _logger.info(f"Using API to update dashboard '{self.dashboard_id}'...")

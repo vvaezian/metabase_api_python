@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Callable, Optional
 
 from metabase_api.metabase_api import Metabase_API
@@ -5,8 +6,10 @@ from metabase_api.objects.defs import (
     CollectionObject,
     TraverseStack,
     ReturnValue,
-    CardParameters,
+    TraverseStackElement,
 )
+
+_logger = logging.getLogger(__name__)
 
 
 class Collection(CollectionObject):
@@ -23,10 +26,6 @@ class Collection(CollectionObject):
         return Collection(as_json, metabase_api=metabase_api)
 
     @property
-    def object_id(self) -> int:
-        return int(self.as_json["id"])
-
-    @property
     def items(self) -> list[dict[Any, Any]]:
         collection_details = self.metabase_api.get(
             f"/api/collection/{self.object_id}/items"
@@ -38,33 +37,29 @@ class Collection(CollectionObject):
         f: Callable[[dict[Any, Any], TraverseStack], ReturnValue],
         call_stack: Optional[TraverseStack] = None,
     ) -> ReturnValue:
-        raise NotImplementedError()
-
-    def migrate(self, params: CardParameters, push: bool) -> bool:
-        raise NotImplementedError()
+        _logger.info(f"Visiting collection id '{self.object_id}'")
+        if call_stack is None:
+            call_stack = TraverseStack()
+        r: ReturnValue = ReturnValue.empty()
+        for item in self.items:
+            if item["model"] == "card":
+                with call_stack.add(TraverseStackElement.CARD):
+                    r = r.union(f(self.as_json, call_stack))
+            elif item["model"] == "collection":
+                with call_stack.add(TraverseStackElement.COLLECTION):
+                    r = r.union(f(self.as_json, call_stack))
+            elif item["model"] == "dashboard":
+                with call_stack.add(TraverseStackElement.DASHBOARD):
+                    r = r.union(f(self.as_json, call_stack))
+            # copy a pulse
+            elif item["model"] == "pulse":
+                with call_stack.add(TraverseStackElement.PULSE):
+                    r = r.union(f(self.as_json, call_stack))
+            else:
+                raise ValueError(
+                    f"We are not copying objects of type '{item['model']}'; specifically the one named '{item['name']}'!!!"
+                )
+        return r
 
     def push(self, metabase_api: Metabase_API) -> bool:
         raise NotImplementedError()
-
-    # @property
-    # def labels(self) -> set[str]:
-    #     """Scans the collection and returns its labels."""
-    #     if len(self._labels) == 0:
-    #         # scans all items of collection
-    #         for item in self.items:
-    #             if item["model"] == "card":
-    #                 self._labels = self._labels.union(Card(item).labels)
-    #             elif item["model"] == "collection":
-    #                 self._labels = self._labels.union(
-    #                     Collection(item, metabase_api=self.metabase_api).labels
-    #                 )
-    #             elif item["model"] == "dashboard":
-    #                 self._labels = self._labels.union(Dashboard(item).labels)
-    #             # copy a pulse
-    #             elif item["model"] == "pulse":
-    #                 continue
-    #             else:
-    #                 raise ValueError(
-    #                     f"We are not copying objects of type '{item['model']}'; specifically the one named '{item['name']}'!!!"
-    #                 )
-    #     return clean_labels(self._labels)

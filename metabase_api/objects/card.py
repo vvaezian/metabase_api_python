@@ -38,8 +38,8 @@ class Card(CollectionObject):
         return Card(card_json=card_json)
 
     @property
-    def card_id(self) -> int:
-        return int(self.as_json["id"])
+    def card_id(self) -> int:  # todo: deprecate and use 'object_id' directly.
+        return self.object_id
 
     def traverse(
         self,
