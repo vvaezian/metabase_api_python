@@ -38,8 +38,9 @@ class Dashboard(CollectionObject):
         if call_stack is None:
             call_stack = TraverseStack()
         with call_stack.add(TraverseStackElement.DASHBOARD):
-            for card_json in self.as_json["dashcards"]:
-                r = r.union(Card(card_json).traverse(f, call_stack))
+            if "dashcards" in self.as_json:
+                for card_json in self.as_json["dashcards"]:
+                    r = r.union(Card(card_json).traverse(f, call_stack))
             r = r.union(f(self.as_json, call_stack))
             for k, v in self.as_json.items():
                 if k == "tabs":  # tabs in dashboard
