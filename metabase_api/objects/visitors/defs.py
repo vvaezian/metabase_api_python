@@ -70,25 +70,31 @@ def label_fetcher(
     top_of_stack = call_stack[-1]
     _logger.debug(f"[label fetcher] on: {top_of_stack.name}")
     _labels: set[str] = set()
+    modified = False
     if top_of_stack == TraverseStackElement.CARD:
+        modified = True
         card_json = caller_json
         for k, v in card_json.items():
             if (k == "description") or (k == "name"):
                 if v is not None:
                     _labels.add(v)
     elif top_of_stack == TraverseStackElement.DASHBOARD:
+        modified = True
         dash = caller_json
         for k, v in dash.items():
             if k in {"description", "name"}:
                 _labels.add(v)
     elif top_of_stack == TraverseStackElement.TABS:
+        modified = True
         tabs = caller_json
         for a_tab in tabs:
             _labels.add(a_tab["name"])
     elif top_of_stack == TraverseStackElement.PARAMETER:
+        modified = True
         params_dict = caller_json
         _labels.add(params_dict["name"])
     elif top_of_stack == TraverseStackElement.VISUALIZATION_SETTINGS:
+        modified = True
         viz_set = caller_json
         for k, v in viz_set.items():
             if (
@@ -99,17 +105,22 @@ def label_fetcher(
             ):
                 _labels.add(v)
     elif top_of_stack == TraverseStackElement.COLUMN_SETTINGS:
+        modified = True
         cols_set = caller_json
         for _, d in cols_set.items():
             for k, v in d.items():
                 if k == "column_title":
                     _labels.add(v)
     elif top_of_stack == TraverseStackElement.SERIES_SETTINGS:
+        modified = True
         series_set = caller_json
         for _, d in series_set.items():
             for k, v in d.items():
                 if k == "title":
                     _labels.add(v)
+    if modified:
+        _logger.debug(f"[label fetcher] stack: {call_stack}")
+        _logger.debug(f"[label fetcher] modified on: {top_of_stack.name}")
     return ReturnValue(_labels)
 
 
@@ -121,27 +132,32 @@ def label_replacer(
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
     top_of_stack = call_stack[-1]
-    _logger.debug(f"[label fetcher] on: {top_of_stack.name}")
     _labels: set[str] = set()
+    modified: bool = False
     if top_of_stack == TraverseStackElement.CARD:
+        modified = True
         card_json = caller_json
         for k, v in card_json.items():
             if (k == "description") or (k == "name"):
                 if v is not None:
                     card_json[k] = labels_repl.get(v, v)
-    if top_of_stack == TraverseStackElement.DASHBOARD:
+    elif top_of_stack == TraverseStackElement.DASHBOARD:
+        modified = True
         dash = caller_json
         for k, v in dash.items():
             if k in {"description", "name"}:
                 dash[k] = labels_repl.get(v, v)
     elif top_of_stack == TraverseStackElement.TABS:
+        modified = True
         tabs = caller_json
         for a_tab in tabs:
             a_tab["name"] = labels_repl.get(a_tab["name"], a_tab["name"])
     elif top_of_stack == TraverseStackElement.PARAMETER:
+        modified = True
         params_dict = caller_json
         params_dict["name"] = labels_repl.get(params_dict["name"], params_dict["name"])
     elif top_of_stack == TraverseStackElement.VISUALIZATION_SETTINGS:
+        modified = True
         viz_set = caller_json
         for k, v in viz_set.items():
             if (
@@ -152,15 +168,20 @@ def label_replacer(
             ):
                 viz_set[k] = labels_repl.get(v, v)
     elif top_of_stack == TraverseStackElement.COLUMN_SETTINGS:
+        modified = True
         cols_set = caller_json
         for _, d in cols_set.items():
             for k, v in d.items():
                 if k == "column_title":
                     d[k] = labels_repl.get(v, v)
     elif top_of_stack == TraverseStackElement.SERIES_SETTINGS:
+        modified = True
         series_set = caller_json
         for _, d in series_set.items():
             for k, v in d.items():
                 if k == "title":
                     d[k] = labels_repl.get(v, v)
+    if modified:
+        _logger.debug(f"[label replacer] stack: {call_stack}")
+        _logger.debug(f"[label replacer] modified on: {top_of_stack.name}")
     return ReturnValue(None)
