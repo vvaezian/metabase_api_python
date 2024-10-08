@@ -58,6 +58,9 @@ class TraverseStack(list[TraverseStackElement]):
     def __exit__(self, exc_type, exc_val, exc_tb):  # type:ignore
         _ = self.pop()
 
+    def __str__(self) -> str:
+        return "--[bottom]--" + " | ".join([str(v) for v in self]) + "--[top]--"
+
 
 class ReturnValue:
     """todo: document."""
