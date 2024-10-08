@@ -69,6 +69,14 @@
     FR: "Médecins"
 "Physician Analytics":
     FR: "Analyse des médecins"
+"Physician Analytics Detail":
+    FR: "Analyse détaillée des médecins"
+"Physician Data Overview":
+    FR: "Détails des données des médecins"
+"Physician Practice Comparison":
+    FR: "Comparaison des pratiques médicales"
+"Physicians Overview":
+    FR: "Sommaire des Médecins"
 #"Procedure Cost":
 #    FR: "Coût de la Procédure"
 #"Product":
@@ -109,9 +117,13 @@
 "Unit Cost":
     FR: "Coût Unitaire"
 "Unused Reason":
-    FR: "Raison pour non-utilisation"
+    FR: "Raison du gaspillage"
 # --------------------------- W
 "Waste Category":
     FR: "Catégorie du déchet"
+"Waste Cost":
+    FR: "Coût gaspillé"
 "Waste Details":
     FR: "Détails du déchet"
+"Waste Quantity":
+    FR: "Quantité Gaspillée"
