@@ -37,6 +37,9 @@ class TraverseStackElement(Enum):
     TABS = auto()
     VISUALIZATION_SETTINGS = auto()
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class TraverseStack(list[TraverseStackElement]):
     """A stack containing the elements we visit."""
@@ -212,7 +215,7 @@ class CollectionObject(abc.ABC):
         Returns:
             The same value as 'f'
         """
-        pass
+        raise NotImplementedError()
 
     @abc.abstractmethod
     def push(self, metabase_api: Metabase_API) -> bool:

@@ -68,7 +68,6 @@ def label_fetcher(
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
     top_of_stack = call_stack[-1]
-    _logger.debug(f"[label fetcher] on: {top_of_stack.name}")
     _labels: set[str] = set()
     modified = False
     if top_of_stack == TraverseStackElement.CARD:
@@ -119,8 +118,9 @@ def label_fetcher(
                 if k == "title":
                     _labels.add(v)
     if modified:
-        _logger.debug(f"[label fetcher] stack: {call_stack}")
-        _logger.debug(f"[label fetcher] modified on: {top_of_stack.name}")
+        _logger.debug(
+            f"[label fetcher] modified on: {top_of_stack.name} (stack: {call_stack})"
+        )
     return ReturnValue(_labels)
 
 
@@ -182,6 +182,7 @@ def label_replacer(
                 if k == "title":
                     d[k] = labels_repl.get(v, v)
     if modified:
-        _logger.debug(f"[label replacer] stack: {call_stack}")
-        _logger.debug(f"[label replacer] modified on: {top_of_stack.name}")
+        _logger.debug(
+            f"[label replacer] modified on: {top_of_stack.name} (stack: {call_stack})"
+        )
     return ReturnValue(None)
