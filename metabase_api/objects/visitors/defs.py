@@ -44,7 +44,7 @@ def number_formatter(
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
     top_of_stack = call_stack[-1]
-    _logger.debug(f"[number formatter] on: {top_of_stack.name}")
+    modified: bool = False
     if top_of_stack == TraverseStackElement.COLUMN_SETTINGS:
         column_settings = caller_json
         for _col_set_k, _a_dict in column_settings.items():
@@ -57,6 +57,11 @@ def number_formatter(
             )
             # and now I combine both
             column_settings[_col_set_k] = formatting_d | rest_of_d
+            modified = True
+    if modified:
+        _logger.debug(
+            f"[number formatter] worked on {top_of_stack.name} (stack: {call_stack})"
+        )
     return ReturnValue(None)
 
 
