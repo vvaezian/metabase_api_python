@@ -94,8 +94,8 @@ class ReturnValue:
 
 
 @dataclass
-class CardParameters:
-    """Encapsulates logic for migration of a card."""
+class MigrationParameters:
+    """Encapsulates logic for migration of a (metabase) object."""
 
     metabase_api: Metabase_API
     db_target: int
@@ -221,7 +221,7 @@ class CollectionObject(abc.ABC):
     def push(self, metabase_api: Metabase_API) -> bool:
         pass
 
-    def migrate(self, params: CardParameters, push: bool) -> bool:
+    def migrate(self, params: MigrationParameters, push: bool) -> bool:
         """Migrates the object, based on a set of parameters. Pushes if flag is True."""
         from metabase_api.migration.defs import migration_function
 

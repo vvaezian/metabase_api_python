@@ -6,14 +6,14 @@ from metabase_api.objects.defs import (
     TraverseStack,
     ReturnValue,
     TraverseStackElement,
-    CardParameters,
+    MigrationParameters,
 )
 
 _logger = logging.getLogger(__name__)
 
 
 def migration_function(
-    caller_json: dict, params: CardParameters, call_stack: TraverseStack
+    caller_json: dict, params: MigrationParameters, call_stack: TraverseStack
 ) -> ReturnValue:
     # todo: caller_json: change the name, since this can be a json or a list
     if call_stack.empty:
