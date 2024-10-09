@@ -19,20 +19,24 @@ def migration_function(
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
     top_of_stack = call_stack[-1]
-    _logger.debug(f"[migration] on: '{top_of_stack}'")
+    r = ReturnValue.empty()
+    modified: bool = False
     if top_of_stack == TraverseStackElement.CARD:
         card_json = caller_json
         if "database_id" in card_json:
             card_json["database_id"] = (
                 params.db_target if card_json["database_id"] is not None else None
             )
+            modified = True
         if "dataset_query" in card_json:
             card_json["dataset_query"]["database"] = params.db_target
+            modified = True
         # table
         table_id = card_json.get("table_id", None)
         if table_id is not None:
             try:
                 card_json["table_id"] = params.table_equivalencies[table_id].unique_id
+                modified = True
             except KeyError as ke:
                 # mmmh... by any chance is this table_id already in target?
                 # (in which case it would mean that it had already been replaced)
@@ -56,8 +60,10 @@ def migration_function(
                         new_field_id = params.replace_column_id(column_id=old_field_id)
                         md["field_ref"][1] = new_field_id
                         md["id"] = new_field_id
+                        modified = True
                 if "table_id" in md:
                     md["table_id"] = params.table_equivalencies[table_id].unique_id
+                    modified = True
         """this is handle_card() -- it replaces self.handle_card(card_json, action=action)"""
         # card itself
         if "card" in card_json:
@@ -71,9 +77,11 @@ def migration_function(
                         card["table_id"] = params.table_equivalencies[
                             card["table_id"]
                         ].unique_id
+                        modified = True
             if "database_id" in card:
                 if card["database_id"] != params.db_target:
                     card["database_id"] = params.db_target
+                    modified = True
         # mappings to filters
         for mapping in card_json.get("parameter_mappings", []):
             if "card_id" in mapping:
@@ -83,12 +91,14 @@ def migration_function(
                 if (t[0] == "dimension") and (t[1][0] == "field"):
                     if isinstance(t[1][1], int):  # is this a column ID?
                         t[1][1] = params.replace_column_id(column_id=t[1][1])
+                        modified = True
                     else:  # no, no column ID - then maybe column NAME?
                         _r = params.personalization_options.fields_replacements.get(
                             t[1][1], None
                         )
                         if _r is not None:
                             t[1][1] = _r
+                            modified = True
     elif top_of_stack == TraverseStackElement.PARAMETER:
         params_dict = caller_json
         # let's update all references
@@ -106,6 +116,7 @@ def migration_function(
                         ] = params.table_equivalencies.column_equivalent_for(
                             column_id=value_field[1]
                         )
+                        modified = True
     elif top_of_stack == TraverseStackElement.PARAM_VALUES:
         param_values = caller_json
         for field_id_as_str, field_info in deepcopy(param_values).items():
@@ -130,6 +141,7 @@ def migration_function(
                     )
                     param_values[new_field_id_as_str]["field_id"] = new_field_id
                     param_values[new_field_id_as_str]["values"] = list()
+                    modified = True
     elif top_of_stack == TraverseStackElement.PARAM_FIELDS:
         old_param_fields = caller_json
         new_ks: dict[str, str] = {}
@@ -165,7 +177,7 @@ def migration_function(
         for old_key, new_key in new_ks.items():
             old_param_fields[new_key] = old_param_fields[old_key]
             del old_param_fields[old_key]
-
+        modified = True
     elif top_of_stack == TraverseStackElement.QUERY_PART:
         query_part = caller_json
         # table
@@ -178,6 +190,7 @@ def migration_function(
                     query_part["source-table"] = params.table_equivalencies[
                         src_table_in_query
                     ].unique_id
+                    modified = True
                 except KeyError as ke:
                     msg = ""
                     # msg = f"[re-writing references on card '{card_id}']"
@@ -204,22 +217,26 @@ def migration_function(
                     card_id=new_card_id, metabase_api=params.metabase_api
                 ).migrate(params=params, push=True)
                 query_part["source-table"] = f"card__{new_card_id}"
+                modified = True
             else:
                 raise ValueError(
                     f"I don't know what this reference is: {src_table_in_query}"
                 )
         if "filter" in query_part:
             params._handle_condition_filter(filter_parts=query_part["filter"])
+            modified = True
         if "aggregation" in query_part:
             for agg_details_as_list in query_part["aggregation"]:
                 params._replace_field_info_refs(
                     field_info=agg_details_as_list,
                 )
+                modified = True
         if "expressions" in query_part:
             assert isinstance(query_part["expressions"], dict)
             for key, expr_as_list in query_part["expressions"].items():
                 try:
                     params._replace_field_info_refs(expr_as_list)
+                    modified = True
                 except Exception as e:
                     raise e
         # breakout
@@ -242,6 +259,7 @@ def migration_function(
                 else:
                     brk_result.append(brk)
             query_part["breakout"] = brk_result
+            modified = True
         if "order-by" in query_part:
             for ob in query_part["order-by"]:
                 # reference to a table's column. Replace it.
@@ -249,9 +267,10 @@ def migration_function(
                 old_field_id = ob[1][1]
                 if isinstance(old_field_id, int) and (desc != "aggregation"):
                     ob[1][1] = params.replace_column_id(column_id=old_field_id)
-
+                    modified = True
         if "fields" in query_part:
             query_part["fields"] = params._replace_field_info_refs(query_part["fields"])
+            modified = True
     elif top_of_stack == TraverseStackElement.TABLE_COLUMNS:
         all_table_columns = caller_json  # it is a list
         new_table_columns: list[dict[str, str]] = []
@@ -263,7 +282,8 @@ def migration_function(
                     names_visited.add(d["name"])
             else:
                 new_table_columns.append(d)
-        return ReturnValue(new_table_columns)
+                modified = True
+        r = r.union(ReturnValue(new_table_columns))
     elif top_of_stack == TraverseStackElement.TABLE_COLUMN:
         table_column = caller_json
         for key, value in table_column.items():
@@ -273,6 +293,7 @@ def migration_function(
                     old_field_id = field_ref[1]
                     if isinstance(old_field_id, int):
                         field_ref[1] = params.replace_column_id(column_id=old_field_id)
+                        modified = True
             elif key == "key":
                 l = eval(value.replace("null", "None"))
                 if l[0] == "ref":
@@ -287,11 +308,13 @@ def migration_function(
                             .replace("'", '"')
                             .replace(" ", "")
                         )
+                        modified = True
             elif key == "name":
                 if value in params.personalization_options.fields_replacements:
                     table_column[
                         key
                     ] = params.personalization_options.fields_replacements[value]
+                    modified = True
             elif key == "enabled":
                 _logger.debug(
                     f"WARNING [replacement] Do I have to do something with '{key}'??????? (currently = '{value}')"
@@ -311,6 +334,7 @@ def migration_function(
                 _logger.error(msg)
                 raise RuntimeError(msg)
             click_behavior["targetId"] = new_targetid
+            modified = True
     elif top_of_stack == TraverseStackElement.PARAMETER_MAPPING:
         param_mapping = caller_json
         for mapping_name, mapping in deepcopy(param_mapping).items():
@@ -330,6 +354,7 @@ def migration_function(
                         mapping["id"] = map_target["id"]
                         param_mapping.pop(old_id)
                         param_mapping[mapping["id"]] = mapping
+                        modified = True
     elif top_of_stack == TraverseStackElement.GRAPH_DIMENSIONS:
         graph_dimensions = caller_json
         _l = []
@@ -337,7 +362,8 @@ def migration_function(
             # do I have to replace it?
             _r = params.personalization_options.fields_replacements.get(_v, None)
             _l.append(_r if _r is not None else _v)
-        return ReturnValue(_l)
+            modified = True
+        r = r.union(ReturnValue(_l))
     elif top_of_stack == TraverseStackElement.COLUMN_SETTINGS:
         column_settings = caller_json
         # let's change keys (if needed)
@@ -354,4 +380,9 @@ def migration_function(
                         .replace(" ", "")
                     )
                     column_settings[new_k] = column_settings.pop(_k)
-    return ReturnValue(None)
+                    modified = True
+    if modified:
+        _logger.debug(
+            f"[migration] worked on {top_of_stack.name} (stack: {call_stack})"
+        )
+    return r
