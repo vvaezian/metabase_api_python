@@ -71,29 +71,28 @@ def label_fetcher(
     _labels: set[str] = set()
     modified = False
     if top_of_stack == TraverseStackElement.CARD:
-        modified = True
         card_json = caller_json
         for k, v in card_json.items():
             if (k == "description") or (k == "name"):
                 if v is not None:
                     _labels.add(v)
+                    modified = True
     elif top_of_stack == TraverseStackElement.DASHBOARD:
-        modified = True
         dash = caller_json
         for k, v in dash.items():
             if k in {"description", "name"}:
                 _labels.add(v)
+                modified = True
     elif top_of_stack == TraverseStackElement.TABS:
-        modified = True
         tabs = caller_json
         for a_tab in tabs:
             _labels.add(a_tab["name"])
+            modified = True
     elif top_of_stack == TraverseStackElement.PARAMETER:
-        modified = True
         params_dict = caller_json
         _labels.add(params_dict["name"])
-    elif top_of_stack == TraverseStackElement.VISUALIZATION_SETTINGS:
         modified = True
+    elif top_of_stack == TraverseStackElement.VISUALIZATION_SETTINGS:
         viz_set = caller_json
         for k, v in viz_set.items():
             if (
@@ -103,23 +102,24 @@ def label_fetcher(
                 or k.endswith("title_text")
             ):
                 _labels.add(v)
+                modified = True
     elif top_of_stack == TraverseStackElement.COLUMN_SETTINGS:
-        modified = True
         cols_set = caller_json
         for _, d in cols_set.items():
             for k, v in d.items():
                 if k == "column_title":
                     _labels.add(v)
+                    modified = True
     elif top_of_stack == TraverseStackElement.SERIES_SETTINGS:
-        modified = True
         series_set = caller_json
         for _, d in series_set.items():
             for k, v in d.items():
                 if k == "title":
                     _labels.add(v)
+                    modified = True
     if modified:
         _logger.debug(
-            f"[label fetcher] modified on: {top_of_stack.name} (stack: {call_stack})"
+            f"[label fetcher] grabbed label(s) from {top_of_stack.name} (stack: {call_stack})"
         )
     return ReturnValue(_labels)
 
