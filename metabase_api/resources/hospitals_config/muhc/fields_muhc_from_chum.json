@@ -1,0 +1,11 @@
+{
+  "person_pk": "l_name",
+  "name_fr": "name_en",
+  "type_desc_fr": "type_desc_en",
+  "cat_type_desc_fr": "cat_type_desc_en",
+  "canonical_name_fr": "canonical_name_en",
+  "procedure_fr": "procedure_en",
+  "proc_name_fr": "proc_name_en",
+  "technique_name_fr": "technique_name_en",
+  "position_name_fr": "position_name_en"
+}
