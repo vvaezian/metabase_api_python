@@ -4,7 +4,7 @@ from typing import Optional, Collection
 from metabase_api import Metabase_API
 from metabase_api._helper_methods import ItemType
 from metabase_api.objects.collection import Collection
-from metabase_api.objects.defs import CardParameters
+from metabase_api.objects.defs import MigrationParameters
 from metabase_api.utility.db.tables import TablesEquivalencies
 from metabase_api.utility.options import Options
 
@@ -60,7 +60,7 @@ def migrate_collection(
         destination_collection_name=destination_collection_name,
     )
     _logger.info(f"'{source_collection_id}' duplicated - now starts the migration")
-    card_params = CardParameters(
+    card_params = MigrationParameters(
         metabase_api=metabase_api,
         db_target=db_target,
         transformations=transformations,

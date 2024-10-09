@@ -9,7 +9,7 @@ from metabase_api.objects.defs import (
     TraverseStack,
     ReturnValue,
     TraverseStackElement,
-    CardParameters,
+    MigrationParameters,
 )
 
 _logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class Collection(CollectionObject):
         )
         return list(collection_details["data"])
 
-    def migrate_orig(self, params: CardParameters, push: bool) -> bool:
+    def migrate_orig(self, params: MigrationParameters, push: bool) -> bool:
         """[Overrides from 'object'] Migrates the object, based on a set of parameters. Pushes if flag is True."""
         # get all collection items
         dst_collection_id = self.object_id

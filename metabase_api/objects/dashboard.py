@@ -10,7 +10,7 @@ from metabase_api.objects.defs import (
     ReturnValue,
     TraverseStack,
     TraverseStackElement,
-    CardParameters,
+    MigrationParameters,
 )
 
 _logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class Dashboard(CollectionObject):
                             r = r.union(f(old_param_fields, call_stack))
         return r
 
-    def migrate(self, params: CardParameters, push: bool) -> bool:
+    def migrate(self, params: MigrationParameters, push: bool) -> bool:
         from metabase_api.migration.defs import migration_function
 
         self.traverse(

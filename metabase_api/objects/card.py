@@ -8,7 +8,7 @@ from metabase_api.objects.defs import (
     ReturnValue,
     TraverseStackElement,
     TraverseStack,
-    CardParameters,
+    MigrationParameters,
 )
 from metabase_api.objects.visitors.defs import (
     number_formatter,
@@ -120,7 +120,7 @@ class Card(CollectionObject):
                 r = r.union(r1)
         return r
 
-    def migrate(self, params: CardParameters, push: bool) -> bool:
+    def migrate(self, params: MigrationParameters, push: bool) -> bool:
         """Migrates a card, based on a set of parameters. Pushes if flag is True."""
         from metabase_api.migration.defs import migration_function
 
