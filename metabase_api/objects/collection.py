@@ -35,6 +35,16 @@ class Collection(CollectionObject):
         )
         return list(collection_details["data"])
 
+    @property
+    def dashboard_name_and_id(self) -> tuple[str, int]:
+        """Expects only 1 dashboard!"""
+        for i in self.items:
+            if i["model"] == "dashboard":
+                return i["name"], i["id"]
+        raise ValueError(
+            f"Collection '{self.object_id}' does not seem to have a dashboard"
+        )
+
     def migrate_orig(self, params: MigrationParameters, push: bool) -> bool:
         """[Overrides from 'object'] Migrates the object, based on a set of parameters. Pushes if flag is True."""
         # get all collection items

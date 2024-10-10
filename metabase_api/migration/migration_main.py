@@ -77,6 +77,13 @@ def migrate_collection(
     )
     assert dst_collection.migrate(params=card_params, push=False)
 
+    # make sure to change the name!
+    if (new_dashboard_name is not None) and (len(new_dashboard_name) > 0):
+        dashname, dashid = dst_collection.dashboard_name_and_id
+        card_params.personalization_options.labels_replacements[
+            dashname
+        ] = new_dashboard_name
+
     if len(card_params.personalization_options.labels_replacements) > 0:
         _logger.info(f"Replacing collection {dst_collection_id}'s labels ...")
         dst_collection.translate(
