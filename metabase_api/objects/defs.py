@@ -150,28 +150,26 @@ class MigrationParameters:
             # reference to a table's column. Replace it.
             old_field_id = field_info[1]
             if isinstance(old_field_id, int):
-                # if it's already migrated, then don't try to redo it.
-                if (
-                    self.table_equivalencies.target_table_for_column(
-                        column_id=old_field_id
-                    )
-                    is None
-                ):
+                try:
                     field_info[1] = self.replace_column_id(column_id=old_field_id)
+                except ValueError as ve:
+                    # it couldn't replace it - if it happens that we're _already_ migrated, all good
+                    # So only fail if there looks like a problem
+                    if (
+                        self.table_equivalencies.target_table_for_column(
+                            column_id=old_field_id
+                        )
+                        is None
+                    ):
+                        raise ve
             else:
-                # here: is old_field_id actually the NAME of a field we are replacing
-                # (through perso_options)?
+                # do we actually have the NAME of a field we are replacing?
                 # if so: replace
-                # otherwise: leave it alone.
                 _r = self.personalization_options.fields_replacements.get(
                     old_field_id, None
                 )
                 if _r is not None:
                     field_info[1] = _r
-                else:
-                    _logger.warning(
-                        f"All good here????? I don't have to replace '{old_field_id}'...?"
-                    )
         else:
             for idx, item in enumerate(field_info):
                 if isinstance(item, list):
