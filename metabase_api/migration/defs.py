@@ -99,6 +99,20 @@ def migration_function(
                         if _r is not None:
                             t[1][1] = _r
                             modified = True
+    elif top_of_stack == TraverseStackElement.VISUALIZATION_SETTINGS:
+        viz_settings = caller_json
+        for k, v in viz_settings.items():
+            if k == "graph.dimensions":
+                graph_dimensions = v
+                _l = []
+                for _v in graph_dimensions:
+                    # do I have to replace it?
+                    _r = params.personalization_options.fields_replacements.get(
+                        _v, None
+                    )
+                    _l.append(_r if _r is not None else _v)
+                    modified = True
+                viz_settings["graph.dimensions"] = _l
     elif top_of_stack == TraverseStackElement.PARAMETER:
         params_dict = caller_json
         # let's update all references

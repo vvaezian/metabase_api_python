@@ -57,47 +57,38 @@ class Card(CollectionObject):
 
         def _visualization_settings(viz_settings: dict[Any, Any]) -> ReturnValue:
             assert call_stack is not None
+            r = ReturnValue.empty()
             with call_stack.add(TraverseStackElement.VISUALIZATION_SETTINGS):
-                r = f(viz_settings, call_stack)
+                r = r.union(f(viz_settings, call_stack))
                 for k, v in viz_settings.items():
                     if k == "table.columns":
                         all_table_columns = v
                         for table_column in all_table_columns:
                             with call_stack.add(TraverseStackElement.TABLE_COLUMN):
-                                f(table_column, call_stack)
-                        with call_stack.add(TraverseStackElement.TABLE_COLUMNS):
-                            r = f(all_table_columns, call_stack)
-                            if r.v is not None:
-                                new_table_columns = list(r.v)
-                                viz_settings["table.columns"] = new_table_columns
+                                r = r.union(f(table_column, call_stack))
                     elif k == "click_behavior":
                         click_behavior = v
                         with call_stack.add(TraverseStackElement.CLICK_BEHAVIOR):
-                            f(click_behavior, call_stack)
+                            r = r.union(f(click_behavior, call_stack))
                         if "parameterMapping" in click_behavior:
                             with call_stack.add(TraverseStackElement.PARAMETER_MAPPING):
-                                f(click_behavior["parameterMapping"], call_stack)
-                    elif k == "graph.dimensions":
-                        graph_dimensions = v
-                        with call_stack.add(TraverseStackElement.GRAPH_DIMENSIONS):
-                            r = f(graph_dimensions, call_stack)
-                            if r.v is not None:
-                                _l = list(r.v)
-                                viz_settings["graph.dimensions"] = _l
+                                r = r.union(
+                                    f(click_behavior["parameterMapping"], call_stack)
+                                )
                     elif k == "column_settings":
                         column_settings = v
                         with call_stack.add(TraverseStackElement.COLUMN_SETTINGS):
-                            r = f(column_settings, call_stack)
+                            r = r.union(f(column_settings, call_stack))
                             for _col_set_k, _a_dict in column_settings.items():
                                 if _col_set_k == "click_behavior":
                                     with call_stack.add(
                                         TraverseStackElement.CLICK_BEHAVIOR
                                     ):
-                                        f(_a_dict, call_stack)
+                                        r = r.union(f(_a_dict, call_stack))
                     elif k == "series_settings":
                         series_settings = v
                         with call_stack.add(TraverseStackElement.SERIES_SETTINGS):
-                            f(series_settings, call_stack)
+                            r = r.union(f(series_settings, call_stack))
             return r
 
         # nb: I am using here self.as_json, which means that it will have to be

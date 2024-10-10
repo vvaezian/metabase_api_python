@@ -25,7 +25,7 @@ class Collection(CollectionObject):
 
     @classmethod
     def from_id(cls, coll_id: int, metabase_api: Metabase_API) -> "Collection":
-        as_json = metabase_api.get(f"/api/card/{coll_id}")
+        as_json = metabase_api.get(f"/api/collection/{coll_id}")
         return Collection(as_json, metabase_api=metabase_api)
 
     @property

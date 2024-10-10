@@ -4,9 +4,11 @@ import time
 from enum import Enum, auto
 from pathlib import Path
 from typing import Callable
-
+from copy import copy
 import yaml
 from googletrans import Translator as GoogleTranslator
+
+from metabase_api.utility.util import case_expand
 
 THIS_FILE_PATH = Path(os.path.dirname(os.path.realpath(__file__)))
 TRANSLATION_CONFIG_LOC = (THIS_FILE_PATH / ".." / "resources").resolve()
@@ -35,29 +37,46 @@ class Translator:
     """Translator from English."""
 
     def __init__(
-        self, to: Language, on_miss: TranslationPolicyOnMiss, case_sensitive: bool
+        self,
+        to: Language,
+        on_miss: TranslationPolicyOnMiss,
+        case_expand_user_terms: bool,
     ):
+        """
+
+        Args:
+            to: to what language will be translate
+            on_miss: what is the action taken when there is a miss on term-matching
+            case_expand_user_terms:
+        """
         self.to_lang = to
         self.on_miss = on_miss
-        self.case_sensitive = case_sensitive
         _logger.info("Firing up Google Translator")
         self._google_translator: GoogleTranslator = _start_google_translator()
         # Reads translation terms from a YAML file
         with open(
             TRANSLATION_CONFIG_LOC / "translation_user_defined_from_en.yml", "r"
         ) as stream:
-            self._translation_dict = yaml.safe_load(stream)
-        if not self.case_sensitive:
-            self._translation_dict = {
-                k.lower(): v for (k, v) in self._translation_dict.items()
-            }
+            _user_labels = yaml.safe_load(stream)
         # since we know the specific language, let's get rid of a level of this dict:
         _logger.info(f"Flattening translation dict for {self.to_lang.name}")
-        self._translation_dict = {
+        self._user_terms: dict[str, str] = {
             k: v[self.to_lang.name]
-            for (k, v) in self._translation_dict.items()
+            for (k, v) in _user_labels.items()
             if self.to_lang.name in v
         }
+        if case_expand_user_terms:
+            _d: dict[str, str] = dict()
+            for s, t in self._user_terms.items():
+                combs = case_expand(s)
+                for c in combs:
+                    _d[c] = t
+            self._user_terms = self._user_terms | _d
+        # we also keep a copy of these initial values in case we get asked
+        _logger.info(
+            f"Seeding translation structure for {self.to_lang.name} with {len(self._user_terms)} terms"
+        )
+        self._translation_dict = copy(self._user_terms)
 
     def _use_google_translate(self, s: str) -> str:
         def _with_retry(f: Callable[[str], str], s: str) -> str:
@@ -95,6 +114,10 @@ class Translator:
             self._translation_dict[s] = t
         return t
 
+    @property
+    def user_defined_terms(self) -> dict[str, str]:
+        return self._user_terms
+
     def translate(self, sentence: str) -> str:
         """Translates a full expression. Handles pre/post white spaces."""
         if self.to_lang == Language.EN:
@@ -116,10 +139,7 @@ class Translator:
                 )
                 t = sentence
             else:
-                case_sentence = (
-                    sentence.lower() if not self.case_sensitive else sentence
-                )
-                if case_sentence not in self._translation_dict:
+                if sentence not in self._translation_dict:
                     _err_msg = f"No translation found for '{sentence}'"
                     if self.on_miss == TranslationPolicyOnMiss.FAIL:
                         _logger.error(_err_msg)
@@ -139,7 +159,7 @@ class Translator:
                             f"Internal: I don't know what to do with translation policy {self.on_miss}"
                         )
                 else:
-                    t = self._translation_dict[case_sentence]
+                    t = self._translation_dict[sentence]
         # let's re-add the white spaces
         t = " " * lblanks + t + " " * rblanks
         if self.to_lang == Language.FR:
@@ -158,7 +178,7 @@ Translators: dict[Language, Translator] = {
     lang: Translator(
         to=lang,
         on_miss=TranslationPolicyOnMiss.FALLBACK_ON_GOOGLE_TRANSLATE,
-        case_sensitive=False,
+        case_expand_user_terms=True,
     )
     for lang in Language
 }
