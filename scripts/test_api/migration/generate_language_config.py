@@ -95,6 +95,14 @@ if __name__ == "__main__":
     translation_dict: dict[str, str] = {
         in_english: translator.translate(in_english) for in_english in english_labels
     }
+    # and let's also make sure we don't miss any of the user-defined labels
+    # (even if they don't appear in the collection we took as sample)
+    size_bef = len(translation_dict)
+    translation_dict = translation_dict | translator.user_defined_terms
+    _logger.info(
+        f"Added {len(translation_dict) - size_bef} user-defined terms NOT found on source"
+    )
+    #
     _logger.info(f"Saving dictionary to '{config['to']}'...")
     with open(config["to"], "w") as fp:
         json.dump(translation_dict, fp, sort_keys=True, indent=2, ensure_ascii=False)

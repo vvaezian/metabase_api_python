@@ -19,8 +19,8 @@
 #    FR: "Produits Captures"
 #"Category":
 #    FR: "Catégorie"
-#"Cost":
-#    FR: "Coût"
+"Cost":
+    FR: "Coût"
 # --------------------------- D
 "Date":
     FR: "Date"
@@ -94,8 +94,8 @@
 "Products Not in the Hospital Database":
     FR: "Produits absents des bases de données de l'hôpital"
 # --------------------------- Q
-#"Quantity":
-#    FR: "Quantité"
+"Quantity":
+    FR: "Quantité"
 # --------------------------- R
 "Room":
     FR: "Salle"
