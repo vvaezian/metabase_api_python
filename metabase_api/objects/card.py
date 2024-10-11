@@ -137,12 +137,6 @@ class Card(CollectionObject):
             MIGRATED_CARDS.append(self.card_id)
         return success
 
-    # @property
-    # def labels(self) -> set[str]:
-    #     if len(self._labels) == 0:
-    #         self._labels = clean_labels(set(self.traverse(f=label_fetcher).v))
-    #     return self._labels
-    #
     def translate(self, translation_dict: dict[str, str]) -> None:
         self.traverse(
             f=lambda a_json, a_stack: label_replacer(

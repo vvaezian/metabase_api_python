@@ -9,7 +9,6 @@ from metabase_api.objects.defs import (
     TraverseStack,
     ReturnValue,
     TraverseStackElement,
-    MigrationParameters,
 )
 
 _logger = logging.getLogger(__name__)
@@ -44,71 +43,6 @@ class Collection(CollectionObject):
         raise ValueError(
             f"Collection '{self.object_id}' does not seem to have a dashboard"
         )
-
-    def migrate_orig(self, params: MigrationParameters, push: bool) -> bool:
-        """[Overrides from 'object'] Migrates the object, based on a set of parameters. Pushes if flag is True."""
-        # get all collection items
-        dst_collection_id = self.object_id
-        collections_ids_to_visit: list[int] = [dst_collection_id]
-        items: list[dict[Any, Any]] = []
-        while len(collections_ids_to_visit) > 0:
-            coll_id = collections_ids_to_visit[0]
-            collections_ids_to_visit = collections_ids_to_visit[1:]
-            collection_details = self.metabase_api.get(
-                f"/api/collection/{coll_id}/items"
-            )
-            collection_items = collection_details["data"]
-            # are there sub-collections in this collection?
-            if "collection" in collection_details["models"]:
-                # we need to collect the items recursively
-                sub_collections = [
-                    item["id"]
-                    for item in collection_items
-                    if item["model"] == "collection"
-                ]
-                collections_ids_to_visit = collections_ids_to_visit + sub_collections
-            # I won't need to visit the collections themselves anymore:
-            items = items + [
-                item for item in collection_items if item["model"] != "collection"
-            ]
-
-        card_items = [item for item in items if item["model"] == "card"]
-        for item in card_items:
-            # nb: I can't do this
-            # r = Card(card_json=item).migrate(card_params)
-            # because not _all_ info is there. Need to fetch it again:
-            _card = Card.from_id(card_id=item["id"], metabase_api=self.metabase_api)
-            if not _card.migrate(params=params, push=False):
-                raise RuntimeError(f"Impossible to migrate card '{item['id']}'")
-            if not _card.push(self.metabase_api):
-                raise RuntimeError(f"Impossible to push card '{item['id']}'")
-        # and now we migrate dashboards
-        dashboard_items = [item for item in items if item["model"] == "dashboard"]
-        # todo: WHY was I checking this condition below if then I wasn't assigning it anywhere?
-        # if (len(dashboard_items) == 0) and (new_dashboard_description is not None):
-        #     _logger.warning(
-        #         f"Dashboard description specified ('{new_dashboard_description}') but no dashboard present in the collection."
-        #     )
-        for item in dashboard_items:
-            dashboard_id = item["id"]
-            _logger.info(f"Obtaining details of dashboard {dashboard_id}...")
-            dash = self.metabase_api.get(f"/api/dashboard/{dashboard_id}")
-            if dash["archived"]:
-                _logger.info(
-                    f"Dashboard {dashboard_id} is archived. Will migrate anyways."
-                )
-            _logger.info(f"Migrating dashboard {dashboard_id}...")
-            dashboard = Dashboard(dash)
-            dashboard.migrate(params=params, push=False)
-            # if len(params.personalization_options.labels_replacements) > 0:
-            #     _logger.info(f"Replacing dashboard {dashboard_id}'s labels ...")
-            #     dashboard.translate(
-            #         translation_dict=params.personalization_options.labels_replacements
-            #     )
-            assert dashboard.push(
-                self.metabase_api
-            ), f"Problems updating dashboard '{dashboard_id}'"
-        return True
 
     def traverse(
         self,
