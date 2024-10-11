@@ -148,3 +148,6 @@ class Card(CollectionObject):
         return bool(
             metabase_api.put(f"/api/card/{self.card_id}", json=self.as_json) == 200
         )
+
+    def __str__(self) -> str:
+        return "Card " + str(self.as_json.get("name", "no-name-in-json"))

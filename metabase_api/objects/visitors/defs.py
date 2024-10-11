@@ -12,6 +12,20 @@ def number_formatter(
     number_format: NumberFormat,
     call_stack: TraverseStack,
 ) -> ReturnValue:
+    def _is_column_numeric(column_d: dict[str, str]) -> bool:
+        """Based on the definition of the column, tries to determine if it is numeric."""
+        FIELDS_IN_NUMERIC_COLUMN = {
+            "number_style",
+            "number_separators",
+            "suffix",
+            "prefix",
+            "currency_in_header",
+            "decimals",
+        }
+        if len(FIELDS_IN_NUMERIC_COLUMN.intersection(column_d.keys())) > 0:
+            return True
+        return False
+
     def _formatting_settings_from(d: dict[str, str]) -> dict[str, str]:
         """Builds the dictionary for number formatting."""
         CURRENCY_HINTS = {"cost", "price", "money", "income"}
@@ -24,7 +38,9 @@ def number_formatter(
         )
         is_currency = (
             (d.get("prefix", "") == "$")
+            or (d.get("suffix", "") == "$")
             or (d.get("number_style", "") == "currency")
+            or ("currency_in_header" in d)
             or title_looks_like_currency
         )
         common = {
@@ -50,14 +66,15 @@ def number_formatter(
         for _col_set_k, _a_dict in column_settings.items():
             # sanity check. Probably not needed.
             assert isinstance(_a_dict, dict)
-            # let's take care of the formatting elements on one side, and the rest on another
-            formatting_d = _formatting_settings_from(_a_dict)
-            rest_of_d = deepcopy(
-                {k: v for (k, v) in _a_dict.items() if k not in formatting_d.keys()}
-            )
-            # and now I combine both
-            column_settings[_col_set_k] = formatting_d | rest_of_d
-            modified = True
+            if _is_column_numeric(column_d=_a_dict):
+                # let's take care of the formatting elements on one side, and the rest on another
+                formatting_d = _formatting_settings_from(_a_dict)
+                rest_of_d = deepcopy(
+                    {k: v for (k, v) in _a_dict.items() if k not in formatting_d.keys()}
+                )
+                # and now I combine both
+                column_settings[_col_set_k] = formatting_d | rest_of_d
+                modified = True
     if modified:
         _logger.debug(
             f"[number formatter] worked on {top_of_stack.name} (stack: {call_stack})"
