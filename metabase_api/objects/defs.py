@@ -222,10 +222,19 @@ class CollectionObject(abc.ABC):
     def migrate(self, params: MigrationParameters, push: bool) -> bool:
         """Migrates the object, based on a set of parameters. Pushes if flag is True."""
         from metabase_api.migration.defs import migration_function
+        from metabase_api.objects.visitors.defs import number_formatter
 
         self.traverse(
             f=lambda a_json, a_stack: migration_function(
                 caller_json=a_json, params=params, call_stack=a_stack
+            ),
+        )
+        # and also I change the formatting of the numbers
+        self.traverse(
+            f=lambda a_json, a_stack: number_formatter(
+                caller_json=a_json,
+                number_format=params.personalization_options.number_format,
+                call_stack=a_stack,
             ),
         )
         return self.push(metabase_api=params.metabase_api) if push else True
