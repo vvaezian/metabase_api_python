@@ -18,7 +18,7 @@ def migration_function(
     # todo: caller_json: change the name, since this can be a json or a list
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
-    top_of_stack = call_stack[-1]
+    top_of_stack = call_stack.top
     r = ReturnValue.empty()
     modified: bool = False
     if top_of_stack == TraverseStackElement.CARD:

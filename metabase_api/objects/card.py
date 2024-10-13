@@ -77,7 +77,13 @@ class Card(CollectionObject):
                                 )
                     elif k == "column_settings":
                         column_settings = v
-                        with call_stack.add(TraverseStackElement.COLUMN_SETTINGS):
+                        # col_settings_tag = TraverseStackElement.COLUMN_SETTINGS
+                        # col_settings_tag.title = viz_settings.get("card.title", "")
+                        with call_stack.add(
+                            TraverseStackElement.COLUMN_SETTINGS.set_title(
+                                viz_settings.get("card.title", "")
+                            )
+                        ):
                             r = r.union(f(column_settings, call_stack))
                             for _col_set_k, _a_dict in column_settings.items():
                                 if _col_set_k == "click_behavior":
@@ -96,7 +102,9 @@ class Card(CollectionObject):
         _logger.info(f"Visiting card id '{self.card_id}'")
         if call_stack is None:
             call_stack = TraverseStack()
-        with call_stack.add(TraverseStackElement.CARD):
+        with call_stack.add(
+            TraverseStackElement.CARD.set_title(self.as_json.get("name", ""))
+        ):
             # let's first apply the function to the card itself
             r = f(self.as_json, call_stack)
             # ...and then let's go on each of its sub-parts
@@ -150,4 +158,4 @@ class Card(CollectionObject):
         )
 
     def __str__(self) -> str:
-        return "Card " + str(self.as_json.get("name", "no-name-in-json"))
+        return f"Card '{str(self.as_json.get('name', 'no-name-in-json'))}'"

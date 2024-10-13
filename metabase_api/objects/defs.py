@@ -40,15 +40,52 @@ class TraverseStackElement(Enum):
     def __str__(self) -> str:
         return self.name
 
+    def __new__(cls, *args, **kwds):  # type:ignore
+        value = len(cls.__members__) + 1
+        obj = object.__new__(cls)
+        obj._value_ = value
+        return obj
 
-class TraverseStack(list[TraverseStackElement]):
+    def __init__(self, value: int) -> None:
+        self._title: str = ""
+
+    def has_title(self) -> bool:
+        return self.title != ""
+
+    @property
+    def title(self) -> str:
+        return self._title
+
+    @title.setter
+    def title(self, value: str) -> None:
+        self._title = value
+
+    def set_title(self, value: str) -> "TraverseStackElement":
+        self.title = value
+        return self
+
+
+class TraverseStack:
     """A stack containing the elements we visit."""
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, l: Optional[list[TraverseStackElement]] = None) -> None:
+        # super().__init__()
+        self._as_list: list[TraverseStackElement] = l if l else []
+
+    @property
+    def top(self) -> TraverseStackElement:
+        return self._as_list[-1]
+
+    @property
+    def bottom(self) -> "TraverseStack":
+        """Take off the top and return the rest."""
+        return TraverseStack(l=self._as_list[:-1])
+
+    def __len__(self) -> int:
+        return len(self._as_list)
 
     def add(self, elt: TraverseStackElement) -> "TraverseStack":
-        self.append(elt)
+        self._as_list.append(elt)
         return self
 
     @property
@@ -59,10 +96,12 @@ class TraverseStack(list[TraverseStackElement]):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # type:ignore
-        _ = self.pop()
+        _ = self._as_list.pop()
 
     def __str__(self) -> str:
-        return "--[bottom]--" + " | ".join([str(v) for v in self]) + "--[top]--"
+        return (
+            "--[bottom]--" + " | ".join([str(v) for v in self._as_list]) + "--[top]--"
+        )
 
 
 class ReturnValue:
