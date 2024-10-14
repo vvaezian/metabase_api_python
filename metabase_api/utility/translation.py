@@ -110,6 +110,13 @@ class Translator:
                 ).text,
                 s=s,
             )
+            # specific rules for capitalization in different languages
+            if self.to_lang == Language.FR:
+                # in a sentence: only first word is capitalized
+                as_list = t.split()
+                first_word = as_list[0].capitalize()
+                rest_of_words = [s.casefold() for s in as_list[1:]]
+                t = " ".join([first_word] + rest_of_words)
             _logger.debug(f"[Google Translate] '{s}' -> '{t}'; updating dictionary...")
             self._translation_dict[s] = t
         return t
