@@ -33,7 +33,7 @@
     FR: "Étage"
 # --------------------------- H
 "High Procedure Cost":
-    FR: "Coût Maximum de la Procedure"
+    FR: "Coût maximum de la procedure"
 # --------------------------- I
 #"Implants":
 #    FR: "Implants"
@@ -47,7 +47,7 @@
 "Manufacturer":
     FR: "Fabricant"
 "Median Procedure Cost":
-    FR: "Coût Median de la Procedure"
+    FR: "Coût Median de la procedure"
 # --------------------------- N
 'NIH Description':
     FR: "Description dans NIH"
@@ -55,7 +55,7 @@
     FR: "Non-Implants"
 # --------------------------- L
 "Low Procedure Cost":
-    FR: "Coût Minimal de la Procédure"
+    FR: "Coût Minimal de la procédure"
 "Location":
     FR: "Localisation"
 # --------------------------- P
@@ -76,7 +76,7 @@
 "Physician Practice Comparison":
     FR: "Comparaison des pratiques médicales"
 "Physicians Overview":
-    FR: "Sommaire des Médecins"
+    FR: "Sommaire des médecins"
 #"Procedure Cost":
 #    FR: "Coût de la Procédure"
 #"Product":
@@ -90,7 +90,7 @@
 #"Procedure":
 #    FR: "Procédure"
 "Product ID":
-    FR: "Identifiant du Produit"
+    FR: "Identifiant du produit"
 "Products Not in the Hospital Database":
     FR: "Produits absents des bases de données de l'hôpital"
 # --------------------------- Q
@@ -110,7 +110,7 @@
 #"title":
 #    FR: "titre"
 "Total Procedure Cost":
-    FR: "Coût total de la Procédure"
+    FR: "Coût total de la procédure"
 "Total Cost":
     FR: "Coût total"
 # --------------------------- U
@@ -126,4 +126,4 @@
 "Waste Details":
     FR: "Détails du déchet"
 "Waste Quantity":
-    FR: "Quantité Gaspillée"
+    FR: "Quantité gaspillée"
