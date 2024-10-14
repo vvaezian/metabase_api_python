@@ -1,8 +1,10 @@
 import logging
 from copy import deepcopy
+from typing import Optional
 
 from metabase_api.objects.defs import TraverseStack, ReturnValue, TraverseStackElement
 from metabase_api.utility.options import NumberFormat
+from copy import copy
 
 _logger = logging.getLogger(__name__)
 
@@ -26,9 +28,18 @@ def number_formatter(
             return True
         return False
 
-    def _formatting_settings_from(d: dict[str, str]) -> dict[str, str]:
+    def _formatting_settings_from(
+        parent_title: str, d: dict[str, str]
+    ) -> dict[str, str]:
         """Builds the dictionary for number formatting."""
         CURRENCY_HINTS = {"cost", "price", "money", "income"}
+        parent_title_looks_like_currency = (
+            next(
+                (x for x in CURRENCY_HINTS if x in parent_title.lower()),
+                None,
+            )
+            is not None
+        )
         title_looks_like_currency = (
             next(
                 (x for x in CURRENCY_HINTS if x in d.get("column_title", "").lower()),
@@ -42,6 +53,7 @@ def number_formatter(
             or (d.get("number_style", "") == "currency")
             or ("currency_in_header" in d)
             or title_looks_like_currency
+            or parent_title_looks_like_currency
         )
         common = {
             "number_style": number_format.number_style,
@@ -57,9 +69,18 @@ def number_formatter(
         }
         return common | suffix_prefix
 
+    def _enclosing_card_title(_stack_copy: TraverseStack) -> Optional[str]:
+        """Go up in stack until I find a card - and return its name. None if no card."""
+        if len(_stack_copy) == 0:
+            return None
+        top = _stack_copy.top
+        if top == TraverseStackElement.CARD:
+            return top.title
+        return _enclosing_card_title(_stack_copy.bottom)
+
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
-    top_of_stack = call_stack[-1]
+    top_of_stack: TraverseStackElement = call_stack.top
     modified: bool = False
     if top_of_stack == TraverseStackElement.COLUMN_SETTINGS:
         column_settings = caller_json
@@ -68,7 +89,11 @@ def number_formatter(
             assert isinstance(_a_dict, dict)
             if _is_column_numeric(column_d=_a_dict):
                 # let's take care of the formatting elements on one side, and the rest on another
-                formatting_d = _formatting_settings_from(_a_dict)
+                card_title_opt: Optional[str] = _enclosing_card_title(copy(call_stack))
+                formatting_d = _formatting_settings_from(
+                    parent_title="" if card_title_opt is None else card_title_opt,
+                    d=_a_dict,
+                )
                 rest_of_d = deepcopy(
                     {k: v for (k, v) in _a_dict.items() if k not in formatting_d.keys()}
                 )
@@ -89,7 +114,7 @@ def label_fetcher(
     """Fetches labels from a structure."""
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
-    top_of_stack = call_stack[-1]
+    top_of_stack = call_stack.top
     _labels: set[str] = set()
     modified = False
     if top_of_stack == TraverseStackElement.CARD:
@@ -158,7 +183,7 @@ def label_replacer(
 
     if call_stack.empty:
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
-    top_of_stack = call_stack[-1]
+    top_of_stack = call_stack.top
     _labels: set[str] = set()
     modified: bool = False
     if top_of_stack == TraverseStackElement.CARD:
