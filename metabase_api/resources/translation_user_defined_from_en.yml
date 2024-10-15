@@ -85,6 +85,8 @@
     FR: "Analyse des procédures capturées"
 "Product Analytics":
     FR: "Analyse des produits capturés"
+"Procedure Cost by Service Line":
+    FR: "Coût de la procédure par groupe"
 "Products":
     FR: "Produits"
 #"Procedure":
@@ -104,6 +106,8 @@
 # --------------------------- S
 "Service Line":
     FR: "Groupe"
+"Service Line Detail":
+    FR: "Détail par groupe"
 "Service Lines":
     FR: "Groupes"
 # --------------------------- T
