@@ -39,7 +39,8 @@ class Dashboard(CollectionObject):
             call_stack = TraverseStack()
         with call_stack.add(TraverseStackElement.DASHBOARD):
             if "dashcards" in self.as_json:
-                for card_json in self.as_json["dashcards"]:
+                for card_idx, card_json in enumerate(self.as_json["dashcards"]):
+                    # NB: I enumerate to make debugging easier
                     r = r.union(Card(card_json).traverse(f, call_stack))
             r = r.union(f(self.as_json, call_stack))
             for k, v in self.as_json.items():
