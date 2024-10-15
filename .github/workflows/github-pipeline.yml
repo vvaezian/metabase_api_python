@@ -27,13 +27,11 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: "3.9.12"
-    - name: Setup Mambaforge
+    - name: Setup Miniforge
       uses: conda-incubator/setup-miniconda@v3.0.1
       with:
-          miniforge-variant: Mambaforge
           miniforge-version: latest
           activate-environment: metabase_api
-          use-mamba: true
     - name: Set cache date
       run: echo "DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
     - uses: actions/cache@v4
@@ -43,8 +41,8 @@ jobs:
       id: cache
     - name: Update environment
       run: |
-        mamba env update -n metabase_api -f environment.yml
-        mamba env update -n metabase_api -f environment-dev.yml
+        conda env update -n metabase_api -f environment.yml
+        conda env update -n metabase_api -f environment-dev.yml
       if: steps.cache.outputs.cache-hit != 'true'
     - name: pre-commit all things
       shell: bash -l {0}
