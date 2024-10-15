@@ -178,7 +178,21 @@ def label_replacer(
 ) -> ReturnValue:
     def _try_replace_str(v: str) -> tuple[bool, str]:
         """Searches for a replacement for the input string; returns it along with a flag (True if replaced)."""
+        changed: bool
+        # we'll handle the string as-is first, but also we'll look at the case were the string
+        # is surrounded by white-spaces
         repl = labels_repl.get(v, v)
+        changed = repl != v
+        if changed:
+            return changed, repl
+        # ok, then let's handle whitespaces
+        # how many at the left? And at the right?
+        lblanks = len(v) - len(v.lstrip())
+        rblanks = len(v) - len(v.rstrip())
+        v = v.strip()
+        repl = labels_repl.get(v, v)
+        # let's re-add the white spaces
+        repl = " " * lblanks + repl + " " * rblanks
         return repl != v, repl
 
     if call_stack.empty:

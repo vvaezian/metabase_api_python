@@ -38,7 +38,7 @@ class TraverseStackElement(Enum):
     VISUALIZATION_SETTINGS = auto()
 
     def __str__(self) -> str:
-        return self.name
+        return self.name + (f" (title: {self.title})" if self.has_title() else "")
 
     def __new__(cls, *args, **kwds):  # type:ignore
         value = len(cls.__members__) + 1
