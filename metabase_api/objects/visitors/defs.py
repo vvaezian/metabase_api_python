@@ -28,9 +28,7 @@ def number_formatter(
             return True
         return False
 
-    def _formatting_settings_from(
-        parent_title: str, d: dict[str, str]
-    ) -> dict[str, str]:
+    def _is_currency(parent_title: str, d: dict[str, str]) -> bool:
         """Builds the dictionary for number formatting."""
         CURRENCY_HINTS = {"cost", "price", "money", "income"}
         parent_title_looks_like_currency = (
@@ -47,14 +45,18 @@ def number_formatter(
             )
             is not None
         )
-        is_currency = (
+        return (
             (d.get("prefix", "") == "$")
             or (d.get("suffix", "") == "$")
             or (d.get("number_style", "") == "currency")
-            or ("currency_in_header" in d)
+            or (d.get("number_style", "") == "devise")  # :shrug:
+            # or ("currency_in_header" in d)
             or title_looks_like_currency
             or parent_title_looks_like_currency
         )
+
+    def _formatting_settings_from(is_currency: bool) -> dict[str, str]:
+        """Builds the dictionary for number formatting."""
         common = {
             "number_style": number_format.number_style,
             "number_separators": number_format.number_separators,
@@ -82,18 +84,30 @@ def number_formatter(
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
     top_of_stack: TraverseStackElement = call_stack.top
     modified: bool = False
+    card_title_opt: Optional[str]
+    # todo: get rid of this
+    if top_of_stack == TraverseStackElement.CARD:
+        card_title_opt = _enclosing_card_title(copy(call_stack))
+        _logger.debug(f"==== card_title_opt: {card_title_opt}")
+    # todo: get rid of this ^
     if top_of_stack == TraverseStackElement.COLUMN_SETTINGS:
+        card_title_opt = _enclosing_card_title(copy(call_stack))
+        # print(f"card_title_opt: {card_title_opt}")
         column_settings = caller_json
         for _col_set_k, _a_dict in column_settings.items():
             # sanity check. Probably not needed.
             assert isinstance(_a_dict, dict)
             if _is_column_numeric(column_d=_a_dict):
                 # let's take care of the formatting elements on one side, and the rest on another
-                card_title_opt: Optional[str] = _enclosing_card_title(copy(call_stack))
-                formatting_d = _formatting_settings_from(
-                    parent_title="" if card_title_opt is None else card_title_opt,
+                # we only use the title of the card as an indicator for currency is in the case
+                # of having only ONE value in the card
+                is_currency = _is_currency(
+                    parent_title=card_title_opt
+                    if (card_title_opt is not None) and (len(column_settings) == 1)
+                    else "",
                     d=_a_dict,
                 )
+                formatting_d = _formatting_settings_from(is_currency)
                 rest_of_d = deepcopy(
                     {k: v for (k, v) in _a_dict.items() if k not in formatting_d.keys()}
                 )
@@ -189,8 +203,8 @@ def label_replacer(
         # how many at the left? And at the right?
         lblanks = len(v) - len(v.lstrip())
         rblanks = len(v) - len(v.rstrip())
-        v = v.strip()
-        repl = labels_repl.get(v, v)
+        v_stripped = v.strip()
+        repl = labels_repl.get(v_stripped, v_stripped)
         # let's re-add the white spaces
         repl = " " * lblanks + repl + " " * rblanks
         return repl != v, repl

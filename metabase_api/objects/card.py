@@ -41,6 +41,14 @@ class Card(CollectionObject):
     def card_id(self) -> int:  # todo: deprecate and use 'object_id' directly.
         return self.object_id
 
+    @property
+    def name(self) -> str:
+        if "name" in self.as_json:
+            return str(self.as_json["name"])
+        if ("card" in self.as_json) and ("name" in self.as_json["card"]):
+            return str(self.as_json["card"]["name"])
+        return "__no_name_for_card__"  # special 'no name'
+
     def traverse(
         self,
         f: Callable[[dict[Any, Any], TraverseStack], ReturnValue],
@@ -102,12 +110,11 @@ class Card(CollectionObject):
         _logger.info(f"Visiting card id '{self.card_id}'")
         if call_stack is None:
             call_stack = TraverseStack()
-        with call_stack.add(
-            TraverseStackElement.CARD.set_title(self.as_json.get("name", ""))
-        ):
+        with call_stack.add(TraverseStackElement.CARD.set_title(self.name)):
             # let's first apply the function to the card itself
             r = f(self.as_json, call_stack)
             # ...and then let's go on each of its sub-parts
+            # todo: when we come DASHBOARD -> CARD there is a sub-section called 'card' - that we don't handle today. Should we...?
             if "dataset_query" in self.as_json:
                 if "query" in self.as_json["dataset_query"]:
                     r1 = _traverse_query_part(
