@@ -84,8 +84,15 @@ def number_formatter(
         raise RuntimeError("Call stack is empty - this shouldn't happen!")
     top_of_stack: TraverseStackElement = call_stack.top
     modified: bool = False
+    card_title_opt: Optional[str]
+    # todo: get rid of this
+    if top_of_stack == TraverseStackElement.CARD:
+        card_title_opt = _enclosing_card_title(copy(call_stack))
+        _logger.debug(f"==== card_title_opt: {card_title_opt}")
+    # todo: get rid of this ^
     if top_of_stack == TraverseStackElement.COLUMN_SETTINGS:
-        card_title_opt: Optional[str] = _enclosing_card_title(copy(call_stack))
+        card_title_opt = _enclosing_card_title(copy(call_stack))
+        # print(f"card_title_opt: {card_title_opt}")
         column_settings = caller_json
         for _col_set_k, _a_dict in column_settings.items():
             # sanity check. Probably not needed.
@@ -196,8 +203,8 @@ def label_replacer(
         # how many at the left? And at the right?
         lblanks = len(v) - len(v.lstrip())
         rblanks = len(v) - len(v.rstrip())
-        v = v.strip()
-        repl = labels_repl.get(v, v)
+        v_stripped = v.strip()
+        repl = labels_repl.get(v_stripped, v_stripped)
         # let's re-add the white spaces
         repl = " " * lblanks + repl + " " * rblanks
         return repl != v, repl
