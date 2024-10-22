@@ -395,6 +395,21 @@ def migration_function(
                     )
                     column_settings[new_k] = column_settings.pop(_k)
                     modified = True
+            elif l[0] == "name":
+                _old_value = l[1]
+                # do I have to replace it?
+                l[1] = params.personalization_options.fields_replacements.get(
+                    l[1], l[1]
+                )
+                modified = l[1] != _old_value
+                if modified:
+                    new_k = (
+                        str(l)
+                        .replace("None", "null")
+                        .replace("'", '"')
+                        .replace(" ", "")
+                    )
+                    column_settings[new_k] = column_settings.pop(_k)
     if modified:
         _logger.debug(
             f"[migration] worked on {top_of_stack.name} (stack: {call_stack})"
