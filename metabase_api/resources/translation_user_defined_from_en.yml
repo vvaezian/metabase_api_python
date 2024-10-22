@@ -2,10 +2,14 @@
 # --------------------------- A
 "Average Procedure Cost":
     FR: "Coût moyen de la procédure"
+"Average Procedure Cost ($)":
+    FR: "Coût moyen de la procédure ($)"
 "Avg. Captured Products":
     FR: "Produits capturés (moyenne)"
 "Avg. Procedure Cost":
     FR: "Coût moyen de la procédure"
+"Avg. Procedure Cost ($)":
+    FR: "Coût moyen de la procédure ($)"
 # --------------------------- C
 "Capture Analytics":
     FR: "Analyse des sessions capturées"
@@ -33,7 +37,7 @@
     FR: "Étage"
 # --------------------------- H
 "High Procedure Cost":
-    FR: "Coût maximum de la procedure"
+    FR: "Coût maximum de la procédure"
 # --------------------------- I
 #"Implants":
 #    FR: "Implants"
@@ -47,7 +51,7 @@
 "Manufacturer":
     FR: "Fabricant"
 "Median Procedure Cost":
-    FR: "Coût Median de la procedure"
+    FR: "Coût median de la procédure"
 # --------------------------- N
 'NIH Description':
     FR: "Description dans NIH"
@@ -55,7 +59,7 @@
     FR: "Non-Implants"
 # --------------------------- L
 "Low Procedure Cost":
-    FR: "Coût Minimal de la procédure"
+    FR: "Coût minimal de la procédure"
 "Location":
     FR: "Localisation"
 # --------------------------- P
@@ -77,8 +81,10 @@
     FR: "Comparaison des pratiques médicales"
 "Physicians Overview":
     FR: "Sommaire des médecins"
-#"Procedure Cost":
-#    FR: "Coût de la Procédure"
+"Procedure Cost":
+    FR: "Coût de la procédure"
+"Procedure Cost ($)":
+    FR: "Coût de la procédure ($)"
 #"Product":
 #    FR: "Produit"
 "Procedure Analytics":
@@ -87,6 +93,8 @@
     FR: "Analyse des produits capturés"
 "Procedure Cost by Service Line":
     FR: "Coût de la procédure par groupe"
+"Procedure Cost by Service Line ($)":
+    FR: "Coût de la procédure par groupe ($)"
 "Products":
     FR: "Produits"
 #"Procedure":
@@ -110,6 +118,8 @@
     FR: "Détail par groupe"
 "Service Lines":
     FR: "Groupes"
+"Summary by Service Line":
+    FR: "Résumé par groupe"
 # --------------------------- T
 #"title":
 #    FR: "titre"
