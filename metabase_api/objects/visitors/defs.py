@@ -85,11 +85,6 @@ def number_formatter(
     top_of_stack: TraverseStackElement = call_stack.top
     modified: bool = False
     card_title_opt: Optional[str]
-    # todo: get rid of this
-    if top_of_stack == TraverseStackElement.CARD:
-        card_title_opt = _enclosing_card_title(copy(call_stack))
-        _logger.debug(f"==== card_title_opt: {card_title_opt}")
-    # todo: get rid of this ^
     if top_of_stack == TraverseStackElement.COLUMN_SETTINGS:
         card_title_opt = _enclosing_card_title(copy(call_stack))
         # print(f"card_title_opt: {card_title_opt}")
