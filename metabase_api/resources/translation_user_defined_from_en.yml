@@ -26,6 +26,8 @@
 "Cost":
     FR: "Coût"
 # --------------------------- D
+"Data Analytics Overview":
+    FR: "Sommaire de l'analyse des données"
 "Date":
     FR: "Date"
 "Department":
@@ -91,8 +93,12 @@
 #    FR: "Produit"
 "Procedure Analytics":
     FR: "Analyse des procédures capturées"
+"Procedures Overview":
+    FR: "Sommaire des procédures"
 "Product Analytics":
     FR: "Analyse des produits capturés"
+"Products Overview":
+    FR: "Sommaire des produits"
 "Procedure Cost by Service Line":
     FR: "Coût de la procédure par groupe"
 "Procedure Cost by Service Line ($)":
