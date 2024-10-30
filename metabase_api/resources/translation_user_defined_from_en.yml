@@ -38,6 +38,8 @@
 # --------------------------- H
 "High Procedure Cost":
     FR: "Coût maximum de la procédure"
+"Hospital Identifier":
+    FR: "Identifiant de l'hôpital"
 # --------------------------- I
 #"Implants":
 #    FR: "Implants"
