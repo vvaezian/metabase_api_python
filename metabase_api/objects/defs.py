@@ -164,11 +164,17 @@ class MigrationParameters:
         # todo: do I need to return anything....?
         def _is_cmp_op(op: str) -> bool:
             # cmp operator (like '>', '=', ...)
-            return (op == ">") or (op == "=") or (op == "<=>")
+            return (op == ">") or (op == "!=") or (op == "=") or (op == "<=>")
 
         def _is_logical_op(op: str) -> bool:
             # logical operator
             return (op == "or") or (op == "and")
+
+        def _is_binary(op: str) -> bool:
+            return _is_logical_op(op) or _is_cmp_op(op) or (op == "starts-with")
+
+        def _is_unary(op: str) -> bool:
+            return op == "not-empty"
 
         if isinstance(filter_parts, list):
             op = filter_parts[0].strip()
@@ -178,7 +184,9 @@ class MigrationParameters:
                 old_field_id = field_info[1]
                 if isinstance(old_field_id, int):
                     field_info[1] = self.replace_column_id(old_field_id)
-            elif _is_cmp_op(op) or _is_logical_op(op) or (op.strip() == "starts-with"):
+            elif _is_unary(op):  # equiv: len(filter_parts) == 2
+                self._handle_condition_filter(filter_parts=filter_parts[1])
+            elif _is_binary(op):
                 self._handle_condition_filter(filter_parts=filter_parts[1])
                 self._handle_condition_filter(filter_parts=filter_parts[2])
             else:
