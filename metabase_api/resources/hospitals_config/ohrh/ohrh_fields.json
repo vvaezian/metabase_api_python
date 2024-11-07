@@ -1,0 +1,4 @@
+{
+  "patient_id": "case_id",
+  "start_ts": "scheduled_time"
+}
