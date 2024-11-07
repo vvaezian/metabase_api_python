@@ -258,6 +258,7 @@ def migration_function(
             new_field_ids: set[int] = set()
             brk_result: list = []
             for _brk in query_part["breakout"]:
+                changed = False
                 brk = copy(_brk)
                 if brk[0] == "field":
                     # reference to a table's column. Replace it.
@@ -270,7 +271,8 @@ def migration_function(
                             brk[1] = new_field_id
                             new_field_ids.add(new_field_id)
                             brk_result.append(brk)
-                else:
+                            changed = True
+                if not changed:
                     brk_result.append(brk)
             query_part["breakout"] = brk_result
             modified = True
