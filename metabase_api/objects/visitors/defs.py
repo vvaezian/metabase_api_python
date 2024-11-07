@@ -219,7 +219,8 @@ def label_replacer(
         dash = caller_json
         for k, v in dash.items():
             if k in {"description", "name"}:
-                modified, dash[k] = _try_replace_str(v)
+                if v is not None:
+                    modified, dash[k] = _try_replace_str(v)
     elif top_of_stack == TraverseStackElement.TABS:
         tabs = caller_json
         for a_tab in tabs:
