@@ -1,3 +1,7 @@
+## 3.4.4
+### Changed
+- Make sure the provided API key is correct.
+
 ## 3.4.3
 ### Changed
 - PR [#56](https://github.com/vvaezian/metabase_api_python/pull/56) 

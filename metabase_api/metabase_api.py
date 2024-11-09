@@ -19,7 +19,7 @@ class Metabase_API():
             self.header = {"X-API-KEY": api_key}
             # make sure the provided api key is correct
             res = requests.get(self.domain + '/api/database/1', headers=self.header)
-            if res.status_code == 401:
+            if res.status_code == 401:  # unauthenticated
                 raise ValueError('The provided API key is not correct.')
             
         self.is_admin = is_admin
