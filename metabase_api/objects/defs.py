@@ -174,7 +174,7 @@ class MigrationParameters:
             return _is_logical_op(op) or _is_cmp_op(op) or (op == "starts-with")
 
         def _is_unary(op: str) -> bool:
-            return op == "not-empty"
+            return (op == "not-empty") or (op == "is-null")
 
         if isinstance(filter_parts, list):
             op = filter_parts[0].strip()
