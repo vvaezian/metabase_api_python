@@ -38,29 +38,73 @@ Main script is
 
 `python scripts/test_api/migration/main.py`
 
+
+
+--numbers
+/Users/luis/dev/metabase_api_python/metabase_api/resources/hospitals_config/numbers_fr.json
+
 ##### Parameters
 * `--from` name of the dashboard to migrate
 * `--db_target`: name of the target DB, as identified in metabase's sources (eg, `dev-chum`)
 * `--to_parent`: _id_ (**not** _name_) of parent collection where to migrate
 * `--to`: collection of resulting migrated dashboard
 * `--name`: name of resulting migrated dashboard
-* `--personalization`: (Optional) json file with personalization options
+* `--fields`: (Optional) json file with fields' replacements
+* `--labels`: (Optional) json file with labels' replacements
+* `--numbers`: json file with number personalization options
 
-##### Personalization options
-A json structure with 2 fields: `language` and `fields_replacements`.
+##### Fields
+
+A json structure specifying which field to replace with
+which other one. It consists of a list of pairs `column_src`: `column_target`
+
 Let's see an example:
 ```commandline
 {
-  "language": "FR",
-  "fields_replacements": {
     "l_name": "_dr_id",
     "name_en": "name_fr",
     "procedure_en": "procedure_fr"
+}
+```
+
+##### Labels
+
+Like `fields` above, a json structure specifying
+which label to replace with
+which other one.
+It consists of a list of pairs `label_src`: `label_target`
+
+Example:
+```commandline
+{
+    Active Physicians": "Médecins actifs",
+    "All Categories": "Toutes les catégories"
+}
+```
+#### Numbers
+
+Specification of how we want the numbers to be formatted.
+You can see an example on `metabase_api/resources/hospitals_config/numbers_en.json`
+
+Example:
+```commandline
+{
+  "numbers": {
+    "number_style": "decimal",
+    "number_separators": ", ",
+    "currency": {
+      "suffix": "",
+      "prefix": "$"
+    },
+    "other": {
+      "suffix": "",
+      "prefix": ""
+    }
   }
 }
 ```
-* `language` is a two-letter identification for target language. Above, it is set to French.
-* `fields_replacements` consistents of a list of pairs `column_src`: `column_target`
+
+
 
 ## Contact
 AssistIQ team, specifically Luis Da Costa.
