@@ -1,4 +1,5 @@
 {
   "patient_id": "case_id",
-  "start_ts": "scheduled_time"
+  "start_ts": "scheduled_time",
+  "hospital_category": "type_desc_en"
 }
