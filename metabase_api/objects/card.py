@@ -99,6 +99,24 @@ class Card(CollectionObject):
                                         TraverseStackElement.CLICK_BEHAVIOR
                                     ):
                                         r = r.union(f(_a_dict, call_stack))
+                                elif "click_behavior" in _a_dict:
+                                    click_behavior = _a_dict["click_behavior"]
+                                    with call_stack.add(
+                                        TraverseStackElement.CLICK_BEHAVIOR
+                                    ):
+                                        r = r.union(f(click_behavior, call_stack))
+                                        if "parameterMapping" in click_behavior:
+                                            with call_stack.add(
+                                                TraverseStackElement.PARAMETER_MAPPING
+                                            ):
+                                                r = r.union(
+                                                    f(
+                                                        click_behavior[
+                                                            "parameterMapping"
+                                                        ],
+                                                        call_stack,
+                                                    )
+                                                )
                     elif k == "series_settings":
                         series_settings = v
                         with call_stack.add(TraverseStackElement.SERIES_SETTINGS):

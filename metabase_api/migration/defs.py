@@ -371,6 +371,42 @@ def migration_function(
                         param_mapping.pop(old_id)
                         param_mapping[mapping["id"]] = mapping
                         modified = True
+                elif map_target["type"] != "parameter":
+                    print(f"what do I do with '{map_target['type']}'?")
+        for mapping_name, mapping in param_mapping.items():
+            if "source" in mapping:
+                map_src = mapping["source"]
+                if map_src["type"] == "column":
+                    if "id" in map_src:
+                        if isinstance(map_src["id"], int):
+                            map_src["id"] = params.replace_column_id(map_src["id"])
+                            modified = True  # todo
+                        else:
+                            if (
+                                map_src["id"]
+                                in params.personalization_options.fields_replacements
+                            ):
+                                map_src[
+                                    "id"
+                                ] = params.personalization_options.fields_replacements[
+                                    map_src["id"]
+                                ]
+                                modified = True
+                    if "name" in map_src:
+                        if (
+                            map_src["name"]
+                            in params.personalization_options.fields_replacements
+                        ):
+                            map_src[
+                                "name"
+                            ] = params.personalization_options.fields_replacements[
+                                map_src["name"]
+                            ]
+                            modified = True
+                # elif map_src['type'] != 'parameter':
+                else:
+                    print(f"what do I do with '{map_src['type']}'?")
+
     elif top_of_stack == TraverseStackElement.GRAPH_DIMENSIONS:
         graph_dimensions = caller_json
         _l = []
