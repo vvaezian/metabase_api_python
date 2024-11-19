@@ -3,5 +3,6 @@
   "start_ts": "scheduled_time",
   "hospital_category": "type_desc_en",
   "dept_id": "department_name_en",
-  "proc_team": "proc_team_name_en"
+  "proc_team": "proc_team_name_en",
+  "l_name": "doctor_name"
 }
