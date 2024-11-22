@@ -1,7 +1,7 @@
 {
   "numbers": {
     "number_style": "decimal",
-    "number_separators": ", ",
+    "number_separators": ".,",
     "currency": {
       "suffix": "",
       "prefix": "$"
