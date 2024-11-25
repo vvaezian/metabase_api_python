@@ -7,5 +7,6 @@
   "procedure_en": "procedure_fr",
   "proc_name_en": "proc_name_fr",
   "technique_name_en": "technique_name_fr",
-  "position_name_en": "position_name_fr"
+  "position_name_en": "position_name_fr",
+  "hospital_category": "type_desc_fr"
 }
