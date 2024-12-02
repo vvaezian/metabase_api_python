@@ -189,6 +189,10 @@ class MigrationParameters:
             elif _is_binary(op):
                 self._handle_condition_filter(filter_parts=filter_parts[1])
                 self._handle_condition_filter(filter_parts=filter_parts[2])
+            elif op == "contains":
+                self._handle_condition_filter(filter_parts=filter_parts[1])
+                self._handle_condition_filter(filter_parts=filter_parts[2])
+                self._handle_condition_filter(filter_parts=filter_parts[3])
             else:
                 raise RuntimeError(f"Luis, this should be a constant: '{op}'... is it?")
 
