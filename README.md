@@ -4,10 +4,35 @@
 This is an AssistIQ-maintained clone of the original package;
 see [the original README](./README_ORIG.md) for further details.
 
+--------
+
+Developer's guide
+------------
+
 ## Installation
 `git clone` this repo
 
-## Invocation
+## Python environment
+We use [conda](https://docs.conda.io/en/latest/miniconda.html) to manage our environments.
+To install the `data-science` environment do
+```
+conda env create
+```
+or, to update your existing environment:
+```
+conda env update -f environment.yml
+```
+and then
+```commandline
+conda env update -f environment-dev.yml
+```
+Then `conda activate data-science`
+
+
+--------
+
+Invocation
+------------
 
 ### Setup
 For authentification, 2 environment variables need to be set:
