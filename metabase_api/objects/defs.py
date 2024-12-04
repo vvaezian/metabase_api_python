@@ -176,6 +176,9 @@ class MigrationParameters:
         def _is_unary(op: str) -> bool:
             return (op == "not-empty") or (op == "is-null")
 
+        def _is_tertiary(op: str) -> bool:
+            return (op == "contains") or (op == "does-not-contain")
+
         if isinstance(filter_parts, list):
             op = filter_parts[0].strip()
             if op == "field":
@@ -184,12 +187,12 @@ class MigrationParameters:
                 old_field_id = field_info[1]
                 if isinstance(old_field_id, int):
                     field_info[1] = self.replace_column_id(old_field_id)
-            elif _is_unary(op):  # equiv: len(filter_parts) == 2
+            elif _is_unary(op):
                 self._handle_condition_filter(filter_parts=filter_parts[1])
             elif _is_binary(op):
                 self._handle_condition_filter(filter_parts=filter_parts[1])
                 self._handle_condition_filter(filter_parts=filter_parts[2])
-            elif op == "contains":
+            elif _is_tertiary(op):
                 self._handle_condition_filter(filter_parts=filter_parts[1])
                 self._handle_condition_filter(filter_parts=filter_parts[2])
                 self._handle_condition_filter(filter_parts=filter_parts[3])
