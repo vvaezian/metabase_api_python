@@ -341,14 +341,32 @@ def migration_function(
                 )
     elif top_of_stack == TraverseStackElement.CLICK_BEHAVIOR:
         click_behavior = caller_json  # it is a dictionary
-        if "targetId" in click_behavior:
-            old_targetid = click_behavior["targetId"]
+        if "tabId" in click_behavior:
+            old_targetid = click_behavior["tabId"]
+            new_targetid: int
             try:
-                new_targetid = params.transformations["cards"][old_targetid]
+                new_targetid = params.transformations["tabs"][old_targetid]
             except KeyError:
-                msg = f"Target '{old_targetid}' is referenced at source, but no replacement is specified."
+                msg = f"Tab '{old_targetid}' is referenced at source, but no replacement is specified."
                 _logger.error(msg)
                 raise RuntimeError(msg)
+            click_behavior["tabId"] = new_targetid
+            modified = True
+        if "targetId" in click_behavior:
+            old_targetid = click_behavior["targetId"]
+            new_targetid: int
+            try:
+                # is it a card?
+                new_targetid = params.transformations["cards"][old_targetid]
+            except KeyError:
+                try:
+                    # is it a dashboard?
+                    new_targetid = params.transformations["dashboards"][old_targetid]
+                except KeyError:
+                    msg = f"Target '{old_targetid}' is referenced at source, "
+                    msg += "but no replacement is specified (as a card nor as a dashboard)."
+                    _logger.error(msg)
+                    raise RuntimeError(msg)
             click_behavior["targetId"] = new_targetid
             modified = True
     elif top_of_stack == TraverseStackElement.PARAMETER_MAPPING:
