@@ -209,6 +209,8 @@ def copy_dashboard(
             )
         destination_dashboard_name = source_dashboard_name + postfix
 
+    # tabs
+    tabs_equiv: dict[int, int] = {}
     # shallow-copy
     shallow_copy_json = {
         "collection_id": destination_collection_id,
@@ -218,10 +220,16 @@ def copy_dashboard(
         "/api/dashboard/{}/copy".format(source_dashboard_id), json=shallow_copy_json
     )
     dup_dashboard_id = shallow_dashboard["id"]
-
+    dup_dashboard = self.get("/api/dashboard/{}".format(dup_dashboard_id))
+    # tabs' equivalence generation
+    src_dashboard = self.get("/api/dashboard/{}".format(source_dashboard_id))
+    for dup_tab in dup_dashboard.get("tabs", list()):
+        # equiv in src
+        src_tab = [t for t in src_dashboard["tabs"] if t["name"] == dup_tab["name"]][0]
+        tabs_equiv[src_tab["id"]] = dup_tab["id"]
     # do we need to re-map?
+    # cards
     if card_id_mapping is not None:
-        dup_dashboard = self.get("/api/dashboard/{}".format(dup_dashboard_id))
         for card in dup_dashboard["dashcards"]:
             # ignore text boxes. These get copied in the shallow-copy stage.
             if card["card_id"] is None:
@@ -241,7 +249,7 @@ def copy_dashboard(
             card["id"] = 100 * card["id"] + 1
         assert self.put(f"/api/dashboard/{dup_dashboard_id}", json=dup_dashboard) == 200
 
-    return dup_dashboard_id
+    return dup_dashboard_id, tabs_equiv
 
 
 def copy_collection(
@@ -335,11 +343,7 @@ def copy_collection(
     destination_collection_id = res["id"]
 
     # get the items to copy
-    items = self.get("/api/collection/{}/items".format(source_collection_id))
-    if (
-        type(items) == dict
-    ):  # in Metabase version *.40.0 the format of the returned result for this endpoint changed
-        items = items["data"]
+    items = self.get("/api/collection/{}/items".format(source_collection_id))["data"]
 
     # copy the items of the source collection to the new collection
     # first thing we want to do is copy the cards:
@@ -378,6 +382,8 @@ def copy_collection(
         for k in set(transf.keys()).union(int_transf.keys()):
             transf[k] = transf.get(k, {}) | int_transf.get(k, {})
     # let's now create all other items
+    transf["dashboards"]: dict[int, int] = dict()
+    transf["tabs"]: dict[int, int] = dict()
     for item in items:
         if item["model"] == "dashboard":  # copy a dashboard
             dashboard_id = item["id"]
@@ -386,12 +392,14 @@ def copy_collection(
             self.verbose_print(
                 verbose, 'Copying the dashboard "{}" ...'.format(dashboard_name)
             )
-            self.copy_dashboard(
+            dup_dashboard_id, tabs_equiv = self.copy_dashboard(
                 source_dashboard_id=dashboard_id,
                 destination_collection_id=destination_collection_id,
                 destination_dashboard_name=destination_dashboard_name,
                 card_id_mapping=transf["cards"] if deepcopy_dashboards else None,
             )
+            transf["dashboards"][dashboard_id] = dup_dashboard_id
+            transf["tabs"] = transf["tabs"] | tabs_equiv
         # copy a pulse
         elif item["model"] == "pulse":
             pulse_id = item["id"]
