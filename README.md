@@ -14,7 +14,7 @@ Developer's guide
 
 ## Python environment
 We use [conda](https://docs.conda.io/en/latest/miniconda.html) to manage our environments.
-To install the `data-science` environment do
+To install the `metabase_api` environment do
 ```
 conda env create
 ```
@@ -26,7 +26,7 @@ and then
 ```commandline
 conda env update -f environment-dev.yml
 ```
-Then `conda activate data-science`
+Then `conda activate metabase_api`
 
 
 --------
