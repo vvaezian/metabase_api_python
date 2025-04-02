@@ -162,9 +162,10 @@ def copy_dashboard(self, source_dashboard_name=None, source_dashboard_id=None,
         'collection_position': collection_position,
         'description': description
     }
-    res = self.post('/api/dashboard/{}/copy'.format(source_dashboard_id), json=parameters)
-    dup_dashboard_id = res['id']
-
+    res = self.post('/api/dashboard/{}/copy'.format(source_dashboard_id), 'raw', json=parameters)
+    if res.status_code != 200:
+        raise ValueError('Error copying the dashboard: {}'.format(res.text))
+    dup_dashboard_id = res.json()['id']
     return dup_dashboard_id
 
 

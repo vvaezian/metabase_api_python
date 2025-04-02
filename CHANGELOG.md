@@ -1,4 +1,4 @@
-## 3.4.5
+## 3.4.5.1
 ### Changed
 - Fix [#59](https://github.com/vvaezian/metabase_api_python/issues/59)
 - Improve docs styling
