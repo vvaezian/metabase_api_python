@@ -130,6 +130,28 @@ This comes in handy when you want to create similar cards with the same filters 
 mb.clone_card(card_id=123, source_table_id=456, target_table_id=789, new_card_name='test clone', new_card_collection_id=1)
 ```
 
+- #### `clone_collection_new_database`
+Similar to `copy_collection` but a different database is used as the source for all cards used in the collection.  
+This comes in handy when you want to duplicate your whole collection to another one while changing datasource for all its cards.
+```python
+mb.clone_collection_new_database(source_collection_id=14, destination_parent_collection_name="Root", target_database_id=7, destination_collection_name="Staging Collection")
+```
+
+- #### `clone_dashboard_new_database`
+Similar to `copy_dashboard` but a different database is used as the source for all cards used in the dashboard.  
+This comes in handy when you want to duplicate your dashboard (and its cards) to another collection while changing datasource (e.g. multi-tenant application or different environments)
+```python
+mb.clone_dashboard_new_database(source_dashboard_id=10, target_collection_id=23, target_database_id=7)
+```
+
+- #### `clone_card_new_database`
+Similar to `clone_card` but a different database is used as the source for all cards used in the dashboard.  
+Used by `clone_dashboard_new_database`, it clone recursively clone linked cards (i.e. when your question reference another one) to a destination collection while changing their data source
+```python
+cloned_card_mapping = {}
+mb.clone_card_new_database(card_id=63, target_database_id=7, destination_collection_id=23, cloned_card_mapping=cloned_card_mapping)
+```
+
 - #### `update_column`
 Update the column in Data Model by providing the relevant parameter (list of all parameters can be found [here](https://www.metabase.com/docs/latest/api-documentation.html#put-apifieldid)).  
 For example to change the column type to 'Category', we can use:

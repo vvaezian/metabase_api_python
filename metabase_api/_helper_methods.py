@@ -243,6 +243,29 @@ def get_table_metadata(self, table_name=None, table_id=None, db_name=None, db_id
 
 
 
+def get_database_name_id(self, db_id=None, db_name=None, column_id_name=False):
+    if not db_id:
+        if not db_name:
+            raise ValueError(
+                "Either the name or id of the target database needs to be provided."
+            )
+        else:
+            db_id = self.get_item_id("database", db_name)
+
+    db_info = self.get_item_info("database", db_id, params={"include": "tables"})
+    if column_id_name:
+        db_table_name_id = {
+            table["id"]: {"name": table["name"], "columns": {}}
+            for table in db_info["tables"]
+        }
+    else:
+        db_table_name_id = {
+            table["name"]: {"id": table["id"], "columns": {}}
+            for table in db_info["tables"]
+        }
+
+    return db_table_name_id
+
 def get_columns_name_id(self, table_name=None, db_name=None, table_id=None, db_id=None, verbose=False, column_id_name=False):
     '''
     Return a dictionary with col_name key and col_id value, for the given table_id/table_name in the given db_id/db_name.
