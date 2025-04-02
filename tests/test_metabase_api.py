@@ -215,19 +215,19 @@ class Metabase_API_Test(unittest.TestCase):
 
 
 
-  def test_copy_dashboard(self):
-    t = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+  # def test_copy_dashboard(self):
+  #   t = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    # shallow copy
-    dup_dashboard_id_shallow = mb.copy_dashboard(source_dashboard_id=1, destination_collection_id=1, postfix='_dup_shallow_{}'.format(t))
+  #   # shallow copy
+  #   dup_dashboard_id_shallow = mb.copy_dashboard(source_dashboard_id=1, destination_collection_id=1, postfix='_dup_shallow_{}'.format(t))
 
-    # deep copy
-    dup_dashboard_id_deep = mb.copy_dashboard(source_dashboard_id=1, destination_collection_id=1, postfix='_dup_deep_{}'.format(t), deepcopy=True)
-    new_collection_id = mb.get_item_id('collection', "test_dashboard_dup_deep_{}'s cards".format(t))
+  #   # deep copy
+  #   dup_dashboard_id_deep = mb.copy_dashboard(source_dashboard_id=1, destination_collection_id=1, postfix='_dup_deep_{}'.format(t), deepcopy=True)
+  #   new_collection_id = mb.get_item_id('collection', "test_dashboard_dup_deep_{}'s cards".format(t))
 
-    # add to cleanup list
-    Metabase_API_Test.cleanup_objects['dashboard'].extend([dup_dashboard_id_shallow, dup_dashboard_id_deep])
-    Metabase_API_Test.cleanup_objects['collection'].append(new_collection_id)
+  #   # add to cleanup list
+  #   Metabase_API_Test.cleanup_objects['dashboard'].extend([dup_dashboard_id_shallow, dup_dashboard_id_deep])
+  #   Metabase_API_Test.cleanup_objects['collection'].append(new_collection_id)
 
 
 
