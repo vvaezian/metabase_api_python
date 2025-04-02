@@ -79,9 +79,10 @@ class Metabase_API():
         Search for Metabase objects and return their basic info. 
         We can limit the search to a certain item type by providing a value for item_type keyword. 
 
-        Keyword arguments:
-        q -- search input
-        item_type -- to limit the search to certain item types (default:None, means no limit)
+        Parameters
+        ----------
+        q : search input
+        item_type : to limit the search to certain item types (default:None, means no limit)
         """
         assert item_type in [None, 'card', 'dashboard', 'collection', 'table', 'pulse', 'segment', 'metric' ]
 
@@ -100,14 +101,15 @@ class Metabase_API():
         '''
         Run the query associated with a card and get the results.
 
-        Keyword arguments:
-        data_format -- specifies the format of the returned data:
+        Parameters
+        ----------
+        data_format : specifies the format of the returned data:
             - 'json': every row is a dictionary of <column-header, cell> key-value pairs    
             - 'csv': the entire result is returned as a string, where rows are separated by newlines and cells with commas.
-        parameters -- can be used to pass filter values:
+        parameters : can be used to pass filter values:
             The format is like [{"type":"category","value":["val1","val2"],"target":["dimension",["template-tag","filter_variable_name"]]}]
             See the network tab when exporting the results using the web interface to get the proper format pattern.
-        format_rows -- whether the returned results should be formatted or not
+        format_rows : whether the returned results should be formatted or not
         '''
         assert data_format in [ 'json', 'csv' ]
         if parameters:
@@ -151,14 +153,15 @@ class Metabase_API():
             - The column names used in filters need to be the same in the source and target table (except the ones that are ignored by 'ignore_these_filters' param).
             - The source and target tables need to be in the same DB. 
 
-        Keyword arguments:
-        card_id -- id of the card
-        source_table_id -- The table that the filters of the card are based on
-        target_table_id -- The table that the filters of the cloned card would be based on
-        new_card_name -- Name of the cloned card. If not provided, the name of the source card is used.
-        new_card_collection_id -- The id of the collection that the cloned card should be saved in
-        ignore_these_filters -- A list of variable names of filters. The source of these filters would not change in the cloning process.
-        return_card -- Whether to return the info of the created card (default False)
+        Parameters
+        ----------
+        card_id : id of the card
+        source_table_id : The table that the filters of the card are based on
+        target_table_id : The table that the filters of the cloned card would be based on
+        new_card_name : Name of the cloned card. If not provided, the name of the source card is used.
+        new_card_collection_id : The id of the collection that the cloned card should be saved in
+        ignore_these_filters : A list of variable names of filters. The source of these filters would not change in the cloning process.
+        return_card : Whether to return the info of the created card (default False)
         """
         # Make sure we have the data we need
         if not source_table_id:

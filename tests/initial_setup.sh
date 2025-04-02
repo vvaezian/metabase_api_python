@@ -28,8 +28,8 @@ wget -O metabase.jar -q https://downloads.metabase.com/v$MB_VERSION/metabase.jar
 # starting metabase jar locally
 java -jar metabase.jar > logs 2>&1 &
 
-# waiting 60 seconds for the initialization to complete
-sleep 60
+# waiting 120 seconds for the initialization to complete
+sleep 120
 
 # checking whether the metabase initialization has completed. If not, wait another 45 seconds
 success='False'

@@ -1,3 +1,8 @@
+## 3.4.5
+### Changed
+- Fix [#59](https://github.com/vvaezian/metabase_api_python/issues/59)
+- Improve docs styling
+
 ## 3.4.4
 ### Changed
 - Make sure the provided API key is correct.

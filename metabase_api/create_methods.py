@@ -6,21 +6,22 @@ def create_card(self, card_name=None, collection_name=None, collection_id=None,
     Create a card using the given arguments utilizing the endpoint 'POST /api/card/'. 
     If collection is not given, the root collection is used.
 
-    Keyword arguments:
-    card_name -- the name used to create the card (default None) 
-    collection_name -- name of the collection to place the card (default None).
-    collection_id -- id of the collection to place the card (default None) 
-    db_name -- name of the db that is used as the source of data (default None)    
-    db_id -- id of the db used as the source of data (default None) 
-    table_name -- name of the table used as the source of data (default None)
-    table_id -- id of the table used as the source of data (default None) 
-    column_order -- order for showing columns. Accepted values are 'alphabetical', 'db_table_order' (default) 
+    Parameters
+    ----------
+    card_name : the name used to create the card (default None) 
+    collection_name : name of the collection to place the card (default None).
+    collection_id : id of the collection to place the card (default None) 
+    db_name : name of the db that is used as the source of data (default None)    
+    db_id : id of the db used as the source of data (default None) 
+    table_name : name of the table used as the source of data (default None)
+    table_id : id of the table used as the source of data (default None) 
+    column_order : order for showing columns. Accepted values are 'alphabetical', 'db_table_order' (default) 
                                     or a list of column names
-    custom_json -- key-value pairs that can provide some or all the data needed for creating the card (default None).
+    custom_json : key-value pairs that can provide some or all the data needed for creating the card (default None).
                                     If you are providing only this argument, the keys 'name', 'dataset_query' and 'display' are required
                                     (https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#post-apicard).
-    verbose -- whether to print extra information (default False)
-    return_card --    whather to return the created card info (default False)
+    verbose : whether to print extra information (default False)
+    return_card :    whather to return the created card info (default False)
     """
     if custom_json:
         assert type(custom_json) == dict
@@ -178,11 +179,12 @@ def create_collection(self, collection_name, parent_collection_id=None, parent_c
     """
     Create an empty collection, in the given location, utilizing the endpoint 'POST /api/collection/'. 
 
-    Keyword arguments:
-    collection_name -- the name used for the created collection.
-    parent_collection_id -- id of the collection where the created collection resides in.
-    parent_collection_name -- name of the collection where the created collection resides in (use 'Root' for the root collection).
-    return_results -- whether to return the info of the created collection.
+    Parameters
+    ----------
+    collection_name : the name used for the created collection.
+    parent_collection_id : id of the collection where the created collection resides in.
+    parent_collection_name : name of the collection where the created collection resides in (use 'Root' for the root collection).
+    return_results : whether to return the info of the created collection.
     """
     # Making sure we have the data we need
     if not parent_collection_id:
@@ -204,16 +206,17 @@ def create_segment(self, segment_name, column_name, column_values, segment_descr
     """
     Create a segment using the given arguments utilizing the endpoint 'POST /api/segment/'. 
 
-    Keyword arguments:
-    segment_name -- the name used for the created segment.
-    column_name -- name of the column used for filtering.
-    column_values -- list of values for filtering in the given column.
-    segment_description -- description of the segment (default '') 
-    db_name -- name of the db that is used as the source of data (default None)    
-    db_id -- id of the db used as the source of data (default None) 
-    table_name -- name of the table used for creating the segmnet on it (default None)    
-    table_id -- id of the table used for creating the segmnet on it (default None)    
-    return_segment --    whather to return the created segment info (default False)
+    Parameters
+    ----------
+    segment_name : the name used for the created segment.
+    column_name : name of the column used for filtering.
+    column_values : list of values for filtering in the given column.
+    segment_description : description of the segment (default '') 
+    db_name : name of the db that is used as the source of data (default None)    
+    db_id : id of the db used as the source of data (default None) 
+    table_name : name of the table used for creating the segmnet on it (default None)    
+    table_id : id of the table used for creating the segmnet on it (default None)    
+    return_segment :    whather to return the created segment info (default False)
     """
     # Making sure we have the data needed
     if not table_name and not table_id:
