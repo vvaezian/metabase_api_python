@@ -1,6 +1,6 @@
 ## 3.5
 ### Added
-- Asynchronous API support using `aiohttp`
+- Asynchronous API support using `httpx`
 - New class `Metabase_API_Async` for async operations
 - Async versions of core API methods
 

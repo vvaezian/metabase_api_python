@@ -1,4 +1,4 @@
-import aiohttp
+import httpx
 import getpass
 from .metabase_api import Metabase_API
 
@@ -40,19 +40,19 @@ class Metabase_API_Async:
             'password': self.password
         }
 
-        async with aiohttp.ClientSession() as session:
-            auth = aiohttp.BasicAuth(self.email, self.password) if self.auth else None
-            async with session.post(
-                self.domain + '/api/session', 
-                json=conn_header, 
+        auth = (self.email, self.password) if self.auth else None
+        async with httpx.AsyncClient() as client:
+            res = await client.post(
+                self.domain + '/api/session',
+                json=conn_header,
                 auth=auth
-            ) as res:
-                if res.status != 200:
-                    raise Exception(f"Authentication failed with status {res.status}")
-                
-                data = await res.json()
-                self.session_id = data['id']
-                self.header = {'X-Metabase-Session': self.session_id}
+            )
+            if res.status_code != 200:
+                raise Exception(f"Authentication failed with status {res.status_code}")
+
+            data = res.json()
+            self.session_id = data['id']
+            self.header = {'X-Metabase-Session': self.session_id}
 
     async def validate_session_async(self):
         """Asynchronously get a new session ID if the previous one has expired"""
@@ -62,19 +62,19 @@ class Metabase_API_Async:
         if not self.session_id:  # First request
             return await self.authenticate_async()
 
-        async with aiohttp.ClientSession() as session:
-            auth = aiohttp.BasicAuth(self.email, self.password) if self.auth else None
-            async with session.get(
-                self.domain + '/api/user/current', 
+        auth = (self.email, self.password) if self.auth else None
+        async with httpx.AsyncClient() as client:
+            res = await client.get(
+                self.domain + '/api/user/current',
                 headers=self.header,
                 auth=auth
-            ) as res:
-                if res.status == 200:
-                    return True
-                elif res.status == 401:  # unauthorized
-                    return await self.authenticate_async()
-                else:
-                    raise Exception(f"Session validation failed with status {res.status}")
+            )
+            if res.status_code == 200:
+                return True
+            elif res.status_code == 401:  # unauthorized
+                return await self.authenticate_async()
+            else:
+                raise Exception(f"Session validation failed with status {res.status_code}")
 
 
 
@@ -152,8 +152,8 @@ class Metabase_API_Async:
 
         # return the results in the requested format
         if data_format == 'json':
-            text = await res.text()
+            text = res.text if hasattr(res, 'text') else await res.text()
             return json.loads(text)
         if data_format == 'csv':
-            text = await res.text()
+            text = res.text if hasattr(res, 'text') else await res.text()
             return text.replace('null', '')

@@ -15,7 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "requests",
-        "aiohttp",  # Added aiohttp dependency
+        "httpx",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

@@ -21,7 +21,7 @@ mb = Metabase_API('https://...', api_key='YOUR_API_KEY')
 ```
 
 ## Asynchronous Usage
-The library now supports asynchronous operations using `aiohttp`:
+The library now supports asynchronous operations using `httpx`:
 
 ```python
 import asyncio
