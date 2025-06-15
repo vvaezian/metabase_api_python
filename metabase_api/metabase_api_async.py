@@ -112,6 +112,8 @@ class Metabase_API_Async:
 
         return res
 
+
+
     async def get_card_data(self, card_name=None, card_id=None, collection_name=None, collection_id=None, 
                               data_format='json', parameters=None, format_rows=False):
         '''
@@ -156,3 +158,172 @@ class Metabase_API_Async:
         if data_format == 'csv':
             text = res.text if hasattr(res, 'text') else await res.text()
             return text.replace('null', '')
+
+
+
+    async def clone_card(self, card_id, 
+                        source_table_id=None, target_table_id=None, 
+                        source_table_name=None, target_table_name=None, 
+                        new_card_name=None, new_card_collection_id=None, 
+                        ignore_these_filters=None, return_card=False):
+        """
+        Async version of clone_card.
+        """
+        if not source_table_id:
+            if not source_table_name:
+                raise ValueError('Either the name or id of the source table needs to be provided.')
+            else:
+                source_table_id = await self.get_item_id('table', source_table_name)
+
+        if not target_table_id:
+            if not target_table_name:
+                raise ValueError('Either the name or id of the target table needs to be provided.')
+            else:
+                target_table_id = await self.get_item_id('table', target_table_name)
+
+        if ignore_these_filters:
+            assert type(ignore_these_filters) == list 
+
+        card_info = await self.get_item_info('card', card_id)
+        target_table_col_name_id_mapping = await self.get_columns_name_id(table_id=target_table_id)
+        source_table_col_id_name_mapping = await self.get_columns_name_id(table_id=source_table_id, column_id_name=True)
+
+        if card_info['dataset_query']['type'] == 'native':
+            filters_data = card_info['dataset_query']['native']['template-tags']
+            if not source_table_name:
+                source_table_name = await self.get_item_name('table', source_table_id)
+            if not target_table_name:
+                target_table_name = await self.get_item_name('table', target_table_id)
+            card_info['dataset_query']['native']['query'] = card_info['dataset_query']['native']['query'].replace(source_table_name, target_table_name)
+            for filter_variable_name, data in filters_data.items():
+                if ignore_these_filters is not None and filter_variable_name in ignore_these_filters:
+                    continue
+                column_id = data['dimension'][1]
+                column_name = source_table_col_id_name_mapping[column_id]
+                target_col_id = target_table_col_name_id_mapping[column_name]
+                card_info['dataset_query']['native']['template-tags'][filter_variable_name]['dimension'][1] = target_col_id
+
+        elif card_info['dataset_query']['type'] == 'query':
+            query_data = card_info['dataset_query']['query']
+            query_data['source-table'] = target_table_id
+            query_data_str = str(query_data)
+            import re
+            res = re.findall(r"\['field', .*?\]", query_data_str)
+            source_column_IDs = [ eval(i)[1] for i in res ]
+            for source_col_id in source_column_IDs:
+                source_col_name = source_table_col_id_name_mapping[source_col_id]
+                target_col_id = target_table_col_name_id_mapping[source_col_name]
+                query_data_str = query_data_str.replace("['field', {}, ".format(source_col_id), "['field', {}, ".format(target_col_id))
+            card_info['dataset_query']['query'] = eval(query_data_str)
+
+        new_card_json = {}
+        for key in ['dataset_query', 'display', 'visualization_settings']:
+            new_card_json[key] = card_info[key]
+
+        if new_card_name:
+            new_card_json['name'] = new_card_name
+        else:
+            new_card_json['name'] = card_info['name']
+
+        if new_card_collection_id:
+            new_card_json['collection_id'] = new_card_collection_id
+        else:
+            new_card_json['collection_id'] = card_info['collection_id']
+
+        if return_card:
+            return await self.create_card(custom_json=new_card_json, verbose=True, return_card=return_card)
+        else:
+            await self.create_card(custom_json=new_card_json, verbose=True)
+
+
+
+    async def move_to_archive(self, item_type, item_name=None, item_id=None, 
+                              collection_name=None, collection_id=None, table_id=None, verbose=False):
+        '''
+        Async version of move_to_archive.
+        '''
+        assert item_type in ['card', 'dashboard', 'collection', 'pulse', 'segment']
+
+        if not item_id:
+            if not item_name:
+                raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
+            if item_type == 'collection':
+                item_id = await self.get_item_id('collection', item_name)
+            elif item_type == 'segment':
+                item_id = await self.get_item_id('segment', item_name, table_id=table_id)
+            else:
+                item_id = await self.get_item_id(item_type, item_name, collection_id, collection_name)
+
+        if item_type == 'segment':
+            res = await self.put('/api/{}/{}'.format(item_type, item_id), json={'archived':True, 'revision_message':'archived!'})
+        else:
+            res = await self.put('/api/{}/{}'.format(item_type, item_id), json={'archived':True})
+
+        if res in [200, 202]:
+            await self.verbose_print(verbose, 'Successfully Archived.')    
+        else: 
+            print('Archiving Failed.')
+
+        return res
+
+
+
+    async def delete_item(self, item_type, item_name=None, item_id=None, 
+                         collection_name=None, collection_id=None, verbose=False):
+        '''
+        Async version of delete_item.
+        '''
+        assert item_type in ['card', 'dashboard', 'pulse']
+        if not item_id:
+            if not item_name:
+                raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
+            item_id = await self.get_item_id(item_type, item_name, collection_id, collection_name)
+
+        return await self.delete('/api/{}/{}'.format(item_type, item_id))
+
+
+
+    async def update_column(self, params, column_id=None, column_name=None, 
+                            table_id=None, table_name=None, db_id=None, db_name=None):
+        '''
+        Async version of update_column.
+        '''
+        assert type(params) == dict
+
+        if not column_id:
+            if not column_name:
+                raise ValueError('Either the name or id of the column needs to be provided.')
+
+            if not table_id:
+                if not table_name:
+                    raise ValueError('When column_id is not given, either the name or id of the table needs to be provided.')
+                table_id = await self.get_item_id('table', table_name, db_id=db_id, db_name=db_name)
+
+            columns_name_id_mapping = await self.get_columns_name_id(table_name=table_name, table_id=table_id, db_name=db_name, db_id=db_id)
+            column_id = columns_name_id_mapping.get(column_name)
+            if column_id is None:
+                raise ValueError('There is no column named {} in the provided table'.format(column_name))
+
+        res_status_code = await self.put('/api/field/{}'.format(column_id), json=params)
+        if res_status_code != 200:
+            print('Column Update Failed.')
+
+        return res_status_code
+
+
+
+    async def add_card_to_dashboard(self, card_id, dashboard_id):
+        params = {
+            'cardId': card_id
+        }
+        await self.post(f'/api/dashboard/{dashboard_id}/cards', json=params)
+
+    @staticmethod
+    async def make_json(raw_json, prettyprint=False):
+        """Async version of make_json."""
+        import json
+        ret_dict = json.loads(raw_json)
+        if prettyprint:
+            import pprint
+            pprint.pprint(ret_dict)
+        return ret_dict
