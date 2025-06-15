@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="metabase-api",
-    version="3.4.5.1",
+    version="3.5",  # Increased version number
     author="Vahid Vaezian",
     author_email="vahid.vaezian@gmail.com",
     description="A Python Wrapper for Metabase API",
@@ -15,6 +15,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "requests",
+        "aiohttp",  # Added aiohttp dependency
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

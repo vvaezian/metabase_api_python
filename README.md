@@ -19,10 +19,39 @@ mb = Metabase_API('https://...', 'username', 'password')  # if password is not g
 # authentication using API key
 mb = Metabase_API('https://...', api_key='YOUR_API_KEY')
 ```
+
+## Asynchronous Usage
+The library now supports asynchronous operations using `aiohttp`:
+
+```python
+import asyncio
+from metabase_api import Metabase_API_Async
+
+async def main():
+    # authentication using username/password
+    mb_async = Metabase_API_Async('https://...', 'username', 'password')
+    
+    # authentication using API key
+    # mb_async = Metabase_API_Async('https://...', api_key='YOUR_API_KEY')
+    
+    # Get data from a card
+    data = await mb_async.get_card_data_async(card_id=123)
+    print(data)
+    
+    # Search for items
+    search_results = await mb_async.search_async('query_term')
+    print(search_results)
+
+# Run the async function
+asyncio.run(main())
+```
+
 ## Functions
 ### REST functions (get, post, put, delete)
 Calling Metabase API endpoints (documented [here](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md)) can be done using the corresponding REST function in the wrapper.  
 E.g. to call the [endpoint](https://github.com/metabase/metabase/blob/master/docs/api-documentation.md#get-apidatabase) `GET /api/database/`, use `mb.get('/api/database/')`.
+
+For async operations, use `await mb_async.get('/api/database/')`.
 
 ### Helper Functions
 You usually don't need to deal with these functions directly (e.g. [get_item_info](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L89), [get_item_id](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L128), [get_item_name](https://github.com/vvaezian/metabase_api_python/blob/77ef837972bc169f96a3ca520da769e0b933e8a8/metabase_api/metabase_api.py#L116))

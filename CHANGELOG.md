@@ -1,3 +1,9 @@
+## 3.5
+### Added
+- Asynchronous API support using `aiohttp`
+- New class `Metabase_API_Async` for async operations
+- Async versions of core API methods
+
 ## 3.4.5.1
 ### Changed
 - Fix [#59](https://github.com/vvaezian/metabase_api_python/issues/59)
