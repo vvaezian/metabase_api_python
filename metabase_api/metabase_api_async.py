@@ -1,6 +1,5 @@
 import httpx
 import getpass
-from .metabase_api import Metabase_API
 
 class Metabase_API_Async:
     """
