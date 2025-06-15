@@ -10,6 +10,8 @@ pip install metabase-api
 ```
 
 ## Initializing
+
+#### Synchronous
 ```python
 from metabase_api import Metabase_API
 
@@ -20,51 +22,16 @@ mb = Metabase_API('https://...', 'username', 'password')  # if password is not g
 mb = Metabase_API('https://...', api_key='YOUR_API_KEY')
 ```
 
-## Asynchronous Usage
-The library now supports asynchronous operations using `httpx`:
+#### Async
 
 ```python
-import asyncio
 from metabase_api import Metabase_API_Async
 
-async def main():
-    # authentication using username/password
-    mb_async = Metabase_API_Async('https://...', 'username', 'password')
-    
-    # authentication using API key
-    # mb_async = Metabase_API_Async('https://...', api_key='YOUR_API_KEY')
-    
-    # Get data from a card
-    data = await mb_async.get_card_data_async(card_id=123)
-    print(data)
-    
-    # Search for items
-    search_results = await mb_async.search_async('query_term')
-    print(search_results)
-    
-    # Create a card
-    card = await mb_async.create_card(
-        card_name='My Async Card',
-        table_name='my_table',
-        collection_name='My Collection'
-    )
-    
-    # Copy a dashboard
-    new_dashboard_id = await mb_async.copy_dashboard(
-        source_dashboard_name='Source Dashboard',
-        destination_collection_name='Destination Collection',
-        deepcopy=True
-    )
-    
-    # Copy a collection
-    await mb_async.copy_collection(
-        source_collection_name='Source Collection',
-        destination_parent_collection_name='Destination Parent',
-        deepcopy_dashboards=True
-    )
+# authentication using username/password
+mb = Metabase_API_Async('https://...', 'username', 'password')  # if password is not given, it will prompt for password
 
-# Run the async function
-asyncio.run(main())
+# authentication using API key
+mb = Metabase_API_Async('https://...', api_key='YOUR_API_KEY')
 ```
 
 ## Functions
