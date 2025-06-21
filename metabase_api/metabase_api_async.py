@@ -7,7 +7,7 @@ class Metabase_API_Async:
     Provides asynchronous methods to interact with the Metabase API.
     """
 
-    def __init__(self, domain, email=None, password=None, api_key=None, basic_auth=False, is_admin=True):
+    def __init__(self, domain, email=None, password=None, api_key=None, basic_auth=False, is_admin=True, timeout=None):
         assert email is not None or api_key is not None
         self.domain = domain.rstrip('/')
         self.email = email
@@ -16,6 +16,7 @@ class Metabase_API_Async:
         self.session_id = None
         self.header = None
         self.is_admin = is_admin
+        self.timeout = timeout
 
         if email:
             self.password = getpass.getpass(prompt='Please enter your password: ') if password is None else password

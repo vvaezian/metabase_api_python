@@ -5,7 +5,7 @@ async def get(self, endpoint, *args, **kwargs):
     await self.validate_session_async()
     auth = (self.email, self.password) if self.auth else None
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=self.timeout) as client:
         res = await client.get(
             self.domain + endpoint,
             headers=self.header,
@@ -22,7 +22,7 @@ async def post(self, endpoint, *args, **kwargs):
     await self.validate_session_async()
     auth = (self.email, self.password) if self.auth else None
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=self.timeout) as client:
         res = await client.post(
             self.domain + endpoint,
             headers=self.header,
@@ -39,7 +39,7 @@ async def put(self, endpoint, *args, **kwargs):
     await self.validate_session_async()
     auth = (self.email, self.password) if self.auth else None
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=self.timeout) as client:
         res = await client.put(
             self.domain + endpoint,
             headers=self.header,
@@ -56,7 +56,7 @@ async def delete(self, endpoint, *args, **kwargs):
     await self.validate_session_async()
     auth = (self.email, self.password) if self.auth else None
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=self.timeout) as client:
         res = await client.delete(
             self.domain + endpoint,
             headers=self.header,
