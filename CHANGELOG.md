@@ -1,3 +1,11 @@
+## 3.5.2
+### Changed
+- Add `response_format` parameter to `get_item_info` function 
+
+## 3.5.1
+### Changed
+- Add timeout argument for the async client
+
 ## 3.5
 ### Added
 - Asynchronous API support using `httpx`

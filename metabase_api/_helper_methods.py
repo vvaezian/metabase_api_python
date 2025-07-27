@@ -2,7 +2,7 @@
 def get_item_info(self, item_type
                 , item_id=None, item_name=None
                 , collection_id=None, collection_name=None
-                , params=None):
+                , params=None, response_mode=None):
     '''
     Return the info for the given item.
     Use 'params' for providing arguments. E.g. to include tables in the result for databases, use: params={'include':'tables'}
@@ -18,11 +18,15 @@ def get_item_info(self, item_type
             raise ValueError('Either the name or id of the {} must be provided.'.format(item_type))
         item_id = self.get_item_id(item_type, item_name, collection_id=collection_id, collection_name=collection_name)
 
-    res = self.get("/api/{}/{}".format(item_type, item_id), params=params)
-    if res:
+    if response_mode == 'raw':
+        res = self.get("/api/{}/{}".format(item_type, item_id), 'raw', params=params)
         return res
     else:
-        raise ValueError('There is no {} with the id "{}"'.format(item_type, item_id))
+        res = self.get("/api/{}/{}".format(item_type, item_id), params=params)
+        if res:
+            return res
+        else:
+            raise ValueError('There is no {} with the id "{}"'.format(item_type, item_id))
 
 
 

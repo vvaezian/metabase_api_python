@@ -1,7 +1,7 @@
 
 async def get_item_info(self, item_type, item_id=None, item_name=None,
                             collection_id=None, collection_name=None,
-                            params=None):
+                            params=None, response_mode=None):
     """Async version of get_item_info"""
     assert item_type in ['database', 'table', 'card', 'collection', 'dashboard', 'pulse', 'segment']
 
@@ -13,11 +13,15 @@ async def get_item_info(self, item_type, item_id=None, item_name=None,
             raise ValueError(f'Either the name or id of the {item_type} must be provided.')
         item_id = await self.get_item_id(item_type, item_name, collection_id=collection_id, collection_name=collection_name)
 
-    res = await self.get(f"/api/{item_type}/{item_id}", params=params)
-    if res:
+    if response_mode == 'raw':
+        res = await self.get(f"/api/{item_type}/{item_id}", 'raw', params=params)
         return res
     else:
-        raise ValueError(f'There is no {item_type} with the id "{item_id}"')
+        res = await self.get(f"/api/{item_type}/{item_id}", params=params)
+        if res:
+            return res
+        else:
+            raise ValueError(f'There is no {item_type} with the id "{item_id}"')
 
 
 
