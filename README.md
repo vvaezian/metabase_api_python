@@ -4,6 +4,9 @@
 [![codecov](https://codecov.io/gh/vvaezian/metabase_api_python/branch/master/graph/badge.svg?token=FNH20CUC4F)](https://codecov.io/gh/vvaezian/metabase_api_python)
 [![GitHub license](https://img.shields.io/github/license/vvaezian/metabase_api_python.svg)](https://github.com/vvaezian/metabase_api_python/blob/master/LICENSE)
 
+*We built [DataBot](https://github.com/Intellimenta/DataBot) utilizing this repository as one of its core packages. DataBot is a GenAI-powered chatbot that allows users to explore, visualize, analyze, and forecast their data in natural language.  
+With seamless Metabase integration, it can even use your existing Metabase dashboards as a data source, making insights more accessible than ever.*
+
 ## Installation
 ```python
 pip install metabase-api
