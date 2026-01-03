@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/vvaezian/metabase_api_python/branch/master/graph/badge.svg?token=FNH20CUC4F)](https://codecov.io/gh/vvaezian/metabase_api_python)
 [![GitHub license](https://img.shields.io/github/license/vvaezian/metabase_api_python.svg)](https://github.com/vvaezian/metabase_api_python/blob/master/LICENSE)
 
-*We built [DataBot](https://github.com/Intellimenta/DataBot) utilizing this repository as one of its core packages. DataBot is a self-hosted AI assistant for data analytics. It enables users to explore, visualize, analyze, and forecast data using natural language (with Metabase integration).*
+*We built [DataBot](https://intellimenta.com/products/databot/) utilizing this repository as one of its core packages. DataBot is a self-hosted AI assistant for data analytics. It enables users to explore, visualize, analyze, and forecast data using natural language (with Metabase integration).*
 
 ## Installation
 ```python
