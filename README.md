@@ -6,6 +6,8 @@
 
 *We built [DataBot](https://intellimenta.com/products/databot/) utilizing this repository as one of its core packages. DataBot is a self-hosted AI assistant for data analytics. It enables users to explore, visualize, analyze, and forecast data using natural language (with Metabase integration).*
 
+*We've also built [Sealed Intelligence](https://sealedintelligence.com/), a zero-data-exposure conversational analytics app for enteprises that can't compromise on data privacy.*
+
 ## Installation
 ```python
 pip install metabase-api
