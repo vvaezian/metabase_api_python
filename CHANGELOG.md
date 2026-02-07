@@ -1,10 +1,13 @@
+## 3.6
+- Improved async client
+
 ## 3.5.2
 ### Changed
-- Add `response_format` parameter to `get_item_info` function 
+- Added `response_format` parameter to `get_item_info` function 
 
 ## 3.5.1
 ### Changed
-- Add timeout argument for the async client
+- Added timeout argument for the async client
 
 ## 3.5
 ### Added
@@ -14,12 +17,12 @@
 
 ## 3.4.5.1
 ### Changed
-- Fix [#59](https://github.com/vvaezian/metabase_api_python/issues/59)
-- Improve docs styling
+- Fixed [#59](https://github.com/vvaezian/metabase_api_python/issues/59)
+- Improved docs styling
 
 ## 3.4.4
 ### Changed
-- Make sure the provided API key is correct.
+- Ensured the provided API key is correct.
 
 ## 3.4.3
 ### Changed
@@ -31,16 +34,16 @@
 
 ## 3.4.1
 ### Changed
-- PR #54 (fixes a typo in the `clone_card` function)
+- PR #54 (fixed a typo in the `clone_card` function)
 
 ## 3.4
 ### Changed
-- New versioning format (3.4 instead of 0.3.4)
+- Changed versioning format (3.4 instead of 0.3.4)
 - Added `format_rows` option to `get_card_data` function
 
 ## 0.3.3
 ### Changed
-- Authentication using API key
+- Enabled authentication using API key
 
 ## 0.3.2
 ### Changed
@@ -52,8 +55,8 @@
 
 ## 0.3.0
 ### Changed
-- Option for local unittest is added. Also GitHub Actions Workflow is modified to use local testing.
-- Fixed the issue #37 ([Make wrapper more maintenance-proof with non-breaking refactor](https://github.com/vvaezian/metabase_api_python/issues/37))
+- Added option for local unittest. Also modified GitHub Actions Workflow to use local testing.
+- Fixed the issue #37 ([Made wrapper more maintenance-proof with non-breaking refactor](https://github.com/vvaezian/metabase_api_python/issues/37))
 
 ## 0.2.16
 ### Changed
@@ -69,21 +72,21 @@
 
 ## 0.2.14
 ### Added
-- "Allow passing filter values to `get_card_data` function" ([#25](https://github.com/vvaezian/metabase_api_python/issues/25)).
-- "Add `add_card_to_dashboard` custom function" (PR [#26](https://github.com/vvaezian/metabase_api_python/pull/26)).
+- "Allowed passing filter values to `get_card_data` function" ([#25](https://github.com/vvaezian/metabase_api_python/issues/25)).
+- "Added `add_card_to_dashboard` custom function" (PR [#26](https://github.com/vvaezian/metabase_api_python/pull/26)).
 - `get_item_info` function
 ### Changed
-- "Copy collection to root collection does not work" ([#23](https://github.com/vvaezian/metabase_api_python/issues/23)).
+- "Fixed copy collection to root collection" ([#23](https://github.com/vvaezian/metabase_api_python/issues/23)).
 - Expanded the `get_item_id` and `get_item_name` functions to cover all item types ([#28](https://github.com/vvaezian/metabase_api_python/issues/28)).
-- `clone_card` function now also works for simple/custom questions ([#27](https://github.com/vvaezian/metabase_api_python/issues/27)).
-- `clone_card` function now replaces table name in the query text for native questions.
+- Updated `clone_card` function to work for simple/custom questions ([#27](https://github.com/vvaezian/metabase_api_python/issues/27)).
+- Updated `clone_card` function to replace table name in the query text for native questions.
 
 ## 0.2.13
 ### Added
 - `create_collection` function
 ### Changed
 - Fixed the issues #20 and #22.
-- Changed the behavior of the `copy_collection` function. Previously it would copy only the content of the source collection, but now copies the contents together with source collection itself.  
+- Changed the behavior of the `copy_collection` function. Previously it would copy only the content of the source collection, but now copied the contents together with source collection itself.  
 In other words, now a new collection with the same name as the source collection is created in the destination and the content of the source collection is copied into it.
 - Improved the function `make_json`.
 
