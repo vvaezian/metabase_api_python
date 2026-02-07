@@ -2,14 +2,10 @@ import httpx
 import getpass
 
 class Metabase_API_Async:
-    """
-    Async version of the Metabase API wrapper.
-    Provides asynchronous methods to interact with the Metabase API.
-    """
-
-    def __init__(self, domain, email=None, password=None, api_key=None, basic_auth=False, is_admin=True, timeout=None):
+    def __init__(self,domain,email=None,password=None,api_key=None,basic_auth=False,is_admin=True,timeout=None,
+                 *,trust_env=False,http2=False,limits=None,verify=True):
         assert email is not None or api_key is not None
-        self.domain = domain.rstrip('/')
+        self.domain = domain.rstrip("/")
         self.email = email
         self.auth = None
         self.password = None
@@ -19,62 +15,70 @@ class Metabase_API_Async:
         self.timeout = timeout
 
         if email:
-            self.password = getpass.getpass(prompt='Please enter your password: ') if password is None else password
-            if basic_auth:
-                self.auth = True  # We'll use aiohttp.BasicAuth in the request methods
-            else:
-                self.auth = None
+            self.password = getpass.getpass(prompt="Please enter your password: ") if password is None else password
+            self.auth = True if basic_auth else None
         else:
             self.header = {"X-API-KEY": api_key}
-        
+
+        # Connection pooling and keep-alive
+        self._limits = limits or httpx.Limits(max_connections=20, max_keepalive_connections=20)
+        self._client = httpx.AsyncClient(
+            base_url=self.domain,
+            timeout=self.timeout,
+            trust_env=trust_env,
+            http2=http2,
+            limits=self._limits,
+            verify=verify,
+            headers=self.header,  # default headers; can be updated after auth
+        )
+
         if not self.is_admin:
-            print('''
-                Ask your Metabase admin to disable "Friendly Table and Field Names" (in Admin Panel > Settings > General).
-                Without this some of the functions of the current package may not work as expected.
-            ''')
-    
-    async def authenticate_async(self):
-        """Asynchronously get a Session ID"""
-        conn_header = {
-            'username': self.email,
-            'password': self.password
-        }
-
-        auth = (self.email, self.password) if self.auth else None
-        async with httpx.AsyncClient() as client:
-            res = await client.post(
-                self.domain + '/api/session',
-                json=conn_header,
-                auth=auth
+            print(
+                """
+Ask your Metabase admin to disable "Friendly Table and Field Names" (in Admin Panel > Settings > General).
+Without this some of the functions of the current package may not work as expected.
+"""
             )
-            if res.status_code != 200:
-                raise Exception(f"Authentication failed with status {res.status_code}")
 
-            data = res.json()
-            self.session_id = data['id']
-            self.header = {'X-Metabase-Session': self.session_id}
+    async def aclose(self):
+        await self._client.aclose()
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.aclose()
+
+    async def authenticate_async(self):
+        conn_header = {"username": self.email, "password": self.password}
+        auth = (self.email, self.password) if self.auth else None
+
+        res = await self._client.post("/api/session", json=conn_header, auth=auth)
+        if res.status_code != 200:
+            raise Exception(f"Authentication failed with status {res.status_code}")
+
+        self.session_id = res.json()["id"]
+        self.header = {"X-Metabase-Session": self.session_id}
+
+        # Update default headers used by the pooled client
+        self._client.headers.clear()
+        self._client.headers.update(self.header)
 
     async def validate_session_async(self):
-        """Asynchronously get a new session ID if the previous one has expired"""
         if not self.email:  # Using API key
             return
 
-        if not self.session_id:  # First request
+        if not self.session_id:
             return await self.authenticate_async()
 
         auth = (self.email, self.password) if self.auth else None
-        async with httpx.AsyncClient() as client:
-            res = await client.get(
-                self.domain + '/api/user/current',
-                headers=self.header,
-                auth=auth
-            )
-            if res.status_code == 200:
-                return True
-            elif res.status_code == 401:  # unauthorized
-                return await self.authenticate_async()
-            else:
-                raise Exception(f"Session validation failed with status {res.status_code}")
+        res = await self._client.get("/api/user/current", auth=auth)
+
+        if res.status_code == 200:
+            return True
+        if res.status_code == 401:
+            return await self.authenticate_async()
+        raise Exception(f"Session validation failed with status {res.status_code}")
 
 
 
