@@ -4,9 +4,9 @@
 [![codecov](https://codecov.io/gh/vvaezian/metabase_api_python/branch/master/graph/badge.svg?token=FNH20CUC4F)](https://codecov.io/gh/vvaezian/metabase_api_python)
 [![GitHub license](https://img.shields.io/github/license/vvaezian/metabase_api_python.svg)](https://github.com/vvaezian/metabase_api_python/blob/master/LICENSE)
 
-*We built [DataBot](https://intellimenta.com/products/databot/) utilizing this repository as one of its core packages. DataBot is a self-hosted AI assistant for data analytics. It enables users to explore, visualize, analyze, and forecast data using natural language (with Metabase integration).*
+*We built [DataBot](https://databot-analytics.com) utilizing this repository as one of its core packages. DataBot is a self-hosted AI assistant for data analytics. It enables users to explore, visualize, analyze, and forecast data using natural language (with Metabase integration).*
 
-*We've also built [Sealed Intelligence](https://sealedintelligence.com/), a zero-data-exposure conversational analytics app for enteprises that can't compromise on data privacy.*
+*We've also built [Sealed Intelligence](https://sealedintelligence.com/), a private AI platform for analytics, knowledge search and secure web search. It's fully self-hosted (including the LLM), resulting in zero data exposure, ideal for enternprises with high data privacy standards (with Metabase integration).*
 
 ## Installation
 ```python
